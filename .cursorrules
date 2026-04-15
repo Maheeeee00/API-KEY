@@ -1,0 +1,15 @@
+# Project Context
+
+## Project Overview
+This repository is named API-KEY. It is used for managing and documenting API keys and related secrets.
+
+## Guidelines
+- Never commit actual API keys, secrets, tokens, or credentials directly into the codebase.
+- Use environment variables or a secrets manager for sensitive values.
+- Document API key usage with placeholders (e.g. `YOUR_API_KEY_HERE`) rather than real values.
+- Keep `.env` files out of version control (ensure they are listed in `.gitignore`).
+
+## Code Style
+- Prefer clarity and explicitness over brevity when dealing with secrets and credentials.
+- Always validate that required environment variables are set before using them.
+- Provide clear error messages when a required API key is missing.
