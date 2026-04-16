@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admission Reports | START WELL EDUCATION</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+.report-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  padding: 0; overflow: hidden;
+  transition: all var(--transition);
+}
+.report-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.report-card-header {
+  padding: 16px 18px; border-bottom: 1px solid var(--card-border);
+  display: flex; align-items: center; gap: 12px;
+}
+.report-card-icon {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #fff; flex-shrink: 0;
+}
+.report-card-title { flex: 1; }
+.report-card-title strong { font-size: 13px; font-weight: 600; color: var(--text-main); display: block; }
+.report-card-title span { font-size: 12px; color: var(--text-muted); }
+.report-card-body { padding: 16px 18px; }
+.report-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.report-action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; text-decoration: none; border: 1.5px solid var(--card-border);
+  background: var(--input-bg); color: var(--text-main);
+  transition: all var(--transition);
+}
+.report-action-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.stat-highlight {
+  font-size: 28px; font-weight: 700; color: var(--text-main); line-height: 1;
+}
+.report-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.report-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media(max-width:900px) { .report-grid-3 { grid-template-columns: 1fr 1fr; } }
+@media(max-width:600px) { .report-grid-2,.report-grid-3 { grid-template-columns: 1fr; } }
+.tip-note {
+  font-size: 12px; color: var(--text-muted);
+  padding: 12px 16px; border-radius: 8px;
+  background: var(--input-bg); border: 1px solid var(--card-border);
+  display: flex; align-items: flex-start; gap: 8px; margin-top: 20px;
+}
+.tip-note i { color: var(--orange); margin-top: 1px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header class="top-header">
+  <div class="header-left">
+    <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="logo-wrap"><div class="logo-icon">S</div><div class="logo-text">START WELL <span>EDUCATION</span></div></div>
+  </div>
+  <div class="header-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search students, staff, fees…"></div>
+  <div class="header-right">
+    <button class="theme-toggle" id="themeToggle"><div class="tog-ball" id="togBall">🌙</div></button>
+    <div class="h-btn"><i class="fa-solid fa-list-check"></i><span class="badge">3</span></div>
+    <div class="h-btn"><i class="fa-solid fa-envelope"></i><span class="badge">7</span></div>
+    <div class="h-btn"><i class="fa-solid fa-bell"></i><span class="badge">12</span></div>
+    <div class="user-menu" id="userMenu">
+      <div class="user-trigger" onclick="toggleDropdown()"><div class="user-avatar">AH</div><span>Ali Hussnain</span><i class="fa-solid fa-chevron-down"></i></div>
+      <div class="dropdown-menu" id="userDropdown">
+        <a href="#"><i class="fa-solid fa-user"></i> My Profile</a><a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
+        <div class="dropdown-divider"></div><a href="#" style="color:#e74c3c"><i class="fa-solid fa-right-from-bracket"></i> Log Out</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="layout">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sb-search"><div class="sb-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="menuSearch" placeholder="Search module…"></div></div>
+  <div class="nav-section-label">Main</div>
+  <ul class="main-menu" id="mainMenu">
+    <li><a href="index.html" data-label="Dashboard"><span class="menu-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="menu-label">Dashboard</span></a></li>
+    <li class="has-sub open"><a href="#" data-label="Admissions" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-user-plus"></i></span><span class="menu-label">Admission Management</span><i class="fa-solid fa-angle-right arrow-icon"></i></a>
+      <ul class="submenu open">
+        <li><a href="admitstudent.html"><i class="fa-regular fa-circle fa-fw"></i> Admit Student</a></li>
+        <li><a href="bulkadmitstudent.html"><i class="fa-regular fa-circle fa-fw"></i> Admit Bulk Student</a></li>
+        <li><a href="admissionrequest.html"><i class="fa-regular fa-circle fa-fw"></i> Admission Requests <span class="menu-badge">0</span></a></li>
+        <li class="has-sub"><a href="#" onclick="toggleMenu(this);return false;"><i class="fa-regular fa-circle fa-fw"></i> Admission Inquiries <i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Manage Inquiries</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Send SMS</a></li></ul></li>
+        <li class="active"><a href="admissionreport.html"><i class="fa-regular fa-circle fa-fw"></i> Admission Reports</a></li>
+      </ul>
+    </li>
+    <li class="has-sub"><a href="#" data-label="Students" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-users"></i></span><span class="menu-label">Student Management</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Student Information</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Student Promotion</a></li></ul></li>
+    <div class="nav-section-label">Operations</div>
+    <li><a href="#" data-label="Tasks"><span class="menu-icon"><i class="fa-solid fa-list-check"></i></span><span class="menu-label">Task Management <span class="menu-badge">3</span></span></a></li>
+    <li><a href="#" data-label="Fee Payment"><span class="menu-icon"><i class="fa-solid fa-money-bill-wave"></i></span><span class="menu-label">Fee Payment</span></a></li>
+    <li class="has-sub"><a href="#" data-label="Accounting" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-briefcase"></i></span><span class="menu-label">Accounting</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Generate Monthly Fee</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Fee Structure</a></li></ul></li>
+    <li class="has-sub"><a href="#" data-label="Attendance" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-calendar-check"></i></span><span class="menu-label">Manage Attendance</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Students Attendance</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Staff Attendance</a></li></ul></li>
+    <div class="nav-section-label">System</div>
+    <li class="has-sub"><a href="#" data-label="Settings" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-gear"></i></span><span class="menu-label">Settings</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> General Settings</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> School Profile</a></li></ul></li>
+  </ul>
+</nav>
+
+<main class="main-content" id="mainContent">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><i class="fa-solid fa-chart-bar"></i> Admission Reports</h1>
+      <div class="breadcrumb"><i class="fa-solid fa-house" style="font-size:11px"></i><span>/</span><span>Admission Management</span><span>/</span><span style="color:var(--text-muted)">Admission Reports</span></div>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn btn-outline btn-sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Print All</button>
+      <a href="admitstudent.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-user-plus"></i> Admit Student</a>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <div class="mini-stat-icon red"><i class="fa-solid fa-calendar-day"></i></div>
+      <div>
+        <div class="mini-stat-body"><strong>0</strong><span>Admissions Today</span></div>
+        <a href="https://startwell.easyschoolin.com/index.php?admin/print_today_admission_report/2" target="_blank" class="mini-stat-footer"><i class="fa-solid fa-arrow-right"></i> View Report</a>
+      </div>
+    </div>
+    <div class="mini-stat">
+      <div class="mini-stat-icon yellow"><i class="fa-solid fa-calendar-week"></i></div>
+      <div>
+        <div class="mini-stat-body"><strong>9</strong><span>Admissions This Month</span></div>
+        <a href="https://startwell.easyschoolin.com/index.php?admin/print_month_admission_report/2" target="_blank" class="mini-stat-footer"><i class="fa-solid fa-arrow-right"></i> View Report</a>
+      </div>
+    </div>
+    <div class="mini-stat">
+      <div class="mini-stat-icon blue"><i class="fa-solid fa-users"></i></div>
+      <div>
+        <div class="mini-stat-body"><strong>174</strong><span>Active Students</span></div>
+        <a href="#" class="mini-stat-footer"><i class="fa-solid fa-arrow-right"></i> View Report</a>
+      </div>
+    </div>
+    <div class="mini-stat">
+      <div class="mini-stat-icon dark"><i class="fa-solid fa-user-slash"></i></div>
+      <div>
+        <div class="mini-stat-body"><strong>57</strong><span>Deactivated Students</span></div>
+        <a href="#" class="mini-stat-footer"><i class="fa-solid fa-arrow-right"></i> View Report</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Printable Reports Section -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">
+      <h4><i class="fa-solid fa-print" style="color:var(--green)"></i> Printable Admission Reports</h4>
+      <span style="font-size:12px;color:var(--text-muted)">CITY CAMPUS BHIMBER</span>
+    </div>
+    <div class="card-body">
+      <div class="report-grid-2" style="gap:14px">
+
+        <!-- Today -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon" style="background:linear-gradient(135deg,#e74c3c,#c0392b)"><i class="fa-solid fa-calendar-day"></i></div>
+            <div class="report-card-title">
+              <strong>Admissions Today</strong>
+              <span>List of students admitted today so far</span>
+            </div>
+          </div>
+          <div class="report-card-body">
+            <div style="font-size:28px;font-weight:700;color:var(--text-main);margin-bottom:12px">0 <span style="font-size:13px;font-weight:400;color:var(--text-muted)">students</span></div>
+            <div class="report-btn-row">
+              <a href="https://startwell.easyschoolin.com/index.php?admin/print_today_admission_report/2" target="_blank" class="report-action-btn"><i class="fa-solid fa-print"></i> Print Report</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon" style="background:linear-gradient(135deg,#f39c12,#e67e22)"><i class="fa-solid fa-calendar-week"></i></div>
+            <div class="report-card-title">
+              <strong>Monthly Admissions</strong>
+              <span>Total admitted students this month</span>
+            </div>
+          </div>
+          <div class="report-card-body">
+            <div style="font-size:28px;font-weight:700;color:var(--text-main);margin-bottom:12px">9 <span style="font-size:13px;font-weight:400;color:var(--text-muted)">students</span></div>
+            <div class="report-btn-row">
+              <a href="https://startwell.easyschoolin.com/index.php?admin/print_month_admission_report/2" target="_blank" class="report-action-btn"><i class="fa-solid fa-print"></i> Print Report</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yearly -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon" style="background:linear-gradient(135deg,#3498db,#2980b9)"><i class="fa-solid fa-calendar"></i></div>
+            <div class="report-card-title">
+              <strong>Admissions This Year</strong>
+              <span>All admitted students in the current session</span>
+            </div>
+          </div>
+          <div class="report-card-body">
+            <div style="font-size:28px;font-weight:700;color:var(--text-main);margin-bottom:12px">174 <span style="font-size:13px;font-weight:400;color:var(--text-muted)">students</span></div>
+            <div class="report-btn-row">
+              <a href="https://startwell.easyschoolin.com/index.php?admin/print_year_admissions/2" target="_blank" class="report-action-btn"><i class="fa-solid fa-print"></i> Print Report</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admission Forms -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon" style="background:linear-gradient(135deg,#27ae60,#219653)"><i class="fa-solid fa-file-contract"></i></div>
+            <div class="report-card-title">
+              <strong>Admission Forms</strong>
+              <span>Class-wise printable admission forms</span>
+            </div>
+          </div>
+          <div class="report-card-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Print filled admission forms for any class and section.</p>
+            <div class="report-btn-row">
+              <button class="report-action-btn" onclick="alert('This opens admission forms — connect to your backend URL.')"><i class="fa-solid fa-print"></i> Print Forms</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blank Form -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon" style="background:linear-gradient(135deg,#8e44ad,#6c3483)"><i class="fa-solid fa-file-alt"></i></div>
+            <div class="report-card-title">
+              <strong>Blank Admission Form</strong>
+              <span>Print an empty form for manual filling</span>
+            </div>
+          </div>
+          <div class="report-card-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Useful for walk-in admissions where details are filled by hand.</p>
+            <div class="report-btn-row">
+              <a href="https://startwell.easyschoolin.com/index.php?admin/print_blank_admission_form/2" target="_blank" class="report-action-btn"><i class="fa-solid fa-print"></i> Print Blank Form</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Class-wise -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon" style="background:linear-gradient(135deg,#1abc9c,#17897e)"><i class="fa-solid fa-layer-group"></i></div>
+            <div class="report-card-title">
+              <strong>Class-wise Admission List</strong>
+              <span>Filter and print by class / section</span>
+            </div>
+          </div>
+          <div class="report-card-body">
+            <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+              <select style="flex:1;padding:7px 10px;border:1.5px solid var(--card-border);border-radius:8px;background:var(--input-bg);color:var(--text-main);font-size:13px;outline:none" id="reportClass">
+                <option value="">Select Class</option>
+                <option value="12">PG</option><option value="18">M1</option><option value="19">M2</option>
+                <option value="20">Class One</option><option value="21">TWO</option><option value="22">Class Three</option>
+                <option value="23">Four</option><option value="24">Class Five</option><option value="25">Class Six</option>
+                <option value="13">Seven</option><option value="15">Class Nine</option><option value="16">Class Ten</option>
+              </select>
+            </div>
+            <div class="report-btn-row">
+              <button class="report-action-btn" onclick="printClassReport()"><i class="fa-solid fa-print"></i> Print Report</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="tip-note">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>All reports are optimised for <strong>A4 paper size</strong>. Please ensure your printer is set to A4 for best results. Reports will open in a new tab — use your browser's print dialog to print or save as PDF.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;padding:14px 18px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--text-muted)">
+    <span><i class="fa-solid fa-clock" style="color:var(--orange)"></i> &nbsp;Running Session: <strong style="color:var(--text-main)">2026-2027</strong></span>
+    <span>START WELL EDUCATION — CITY CAMPUS BHIMBER</span>
+  </div>
+
+</main>
+</div>
+
+<script>
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.getElementById('mainContent');
+let collapsed = false;
+document.getElementById('menuToggle').addEventListener('click', () => {
+  if (window.innerWidth <= 768) { sidebar.classList.toggle('mobile-open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+  else { collapsed = !collapsed; sidebar.classList.toggle('collapsed', collapsed); mainContent.classList.toggle('expanded', collapsed); }
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => { sidebar.classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); });
+function toggleMenu(el) { const li = el.closest('li'); const sub = li.querySelector(':scope > .submenu'); if(!sub)return; li.classList.toggle('open'); sub.classList.toggle('open'); }
+document.getElementById('menuSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#mainMenu li').forEach(li => { if(!q){li.classList.remove('menu-hidden');return;} li.classList.toggle('menu-hidden',!li.textContent.toLowerCase().includes(q)); if(li.textContent.toLowerCase().includes(q)){let p=li.parentElement;while(p&&p.id!=='mainMenu'){if(p.classList.contains('submenu')){p.classList.add('open');const pl=p.closest('li.has-sub');if(pl)pl.classList.add('open');}p=p.parentElement;}} });
+});
+let dark = false;
+document.getElementById('themeToggle').addEventListener('click', () => { dark=!dark; document.documentElement.setAttribute('data-theme',dark?'dark':'light'); document.getElementById('togBall').textContent=dark?'☀️':'🌙'; });
+function toggleDropdown() { document.getElementById('userDropdown').classList.toggle('show'); }
+document.addEventListener('click', e => { if(!document.getElementById('userMenu').contains(e.target)) document.getElementById('userDropdown').classList.remove('show'); });
+function printClassReport() {
+  const cls = document.getElementById('reportClass').value;
+  if (!cls) { alert('Please select a class first.'); return; }
+  window.open('https://startwell.easyschoolin.com/index.php?admin/print_class_admission_report/' + cls + '/2', '_blank');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alex Morgan — Designer & Developer</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="nav" id="navbar">
+      <div class="nav__inner">
+        <a href="#" class="nav__logo">AM</a>
+        <ul class="nav__links">
+          <li><a href="#about">About</a></li>
+          <li><a href="#work">Work</a></li>
+          <li><a href="#skills">Skills</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <button class="nav__cta" onclick="scrollToContact()">Let's Talk</button>
+        <button class="nav__hamburger" id="hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <div class="nav__mobile" id="mobileMenu">
+        <ul>
+          <li><a href="#about" onclick="closeMenu()">About</a></li>
+          <li><a href="#work" onclick="closeMenu()">Work</a></li>
+          <li><a href="#skills" onclick="closeMenu()">Skills</a></li>
+          <li><a href="#contact" onclick="closeMenu()">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="home">
+      <div class="hero__bg">
+        <div class="blob blob--1"></div>
+        <div class="blob blob--2"></div>
+        <div class="blob blob--3"></div>
+      </div>
+      <div class="hero__content">
+        <p class="hero__eyebrow animate-in">Available for work ✦</p>
+        <h1 class="hero__title animate-in delay-1">
+          Design &amp; code<br />
+          <span class="gradient-text">beautiful things.</span>
+        </h1>
+        <p class="hero__subtitle animate-in delay-2">
+          I'm Alex, a product designer &amp; frontend developer crafting
+          high-impact digital experiences for startups and global brands.
+        </p>
+        <div class="hero__actions animate-in delay-3">
+          <a href="#work" class="btn btn--primary">View My Work</a>
+          <a href="#about" class="btn btn--ghost">Learn More</a>
+        </div>
+        <div class="hero__stats animate-in delay-4">
+          <div class="stat">
+            <span class="stat__num" data-target="48">0</span>
+            <span class="stat__label">Projects Shipped</span>
+          </div>
+          <div class="stat__divider"></div>
+          <div class="stat">
+            <span class="stat__num" data-target="6">0</span>
+            <span class="stat__label">Years Experience</span>
+          </div>
+          <div class="stat__divider"></div>
+          <div class="stat">
+            <span class="stat__num" data-target="32">0</span>
+            <span class="stat__label">Happy Clients</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero__image animate-in delay-2">
+        <div class="hero__avatar">
+          <div class="avatar__ring"></div>
+          <div class="avatar__photo">
+            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="80" r="45" fill="#c084fc" opacity="0.6"/>
+              <ellipse cx="100" cy="175" rx="70" ry="40" fill="#c084fc" opacity="0.5"/>
+              <circle cx="100" cy="80" r="35" fill="#e9d5ff"/>
+              <circle cx="100" cy="72" r="16" fill="#7c3aed"/>
+              <path d="M68 155 Q100 130 132 155" stroke="#7c3aed" stroke-width="3" fill="none"/>
+            </svg>
+          </div>
+          <div class="avatar__badge">
+            <span>&#9733;</span> Top Rated
+          </div>
+        </div>
+      </div>
+      <div class="scroll-indicator">
+        <span>Scroll</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>
+
+    <!-- Marquee -->
+    <div class="marquee-wrap">
+      <div class="marquee">
+        <span>UI Design</span><span class="dot">•</span>
+        <span>Web Development</span><span class="dot">•</span>
+        <span>Brand Identity</span><span class="dot">•</span>
+        <span>Motion Design</span><span class="dot">•</span>
+        <span>Product Strategy</span><span class="dot">•</span>
+        <span>UX Research</span><span class="dot">•</span>
+        <span>UI Design</span><span class="dot">•</span>
+        <span>Web Development</span><span class="dot">•</span>
+        <span>Brand Identity</span><span class="dot">•</span>
+        <span>Motion Design</span><span class="dot">•</span>
+        <span>Product Strategy</span><span class="dot">•</span>
+        <span>UX Research</span><span class="dot">•</span>
+      </div>
+    </div>
+
+    <!-- About -->
+    <section class="section about" id="about">
+      <div class="container">
+        <div class="about__grid">
+          <div class="about__text">
+            <p class="section__eyebrow">About Me</p>
+            <h2 class="section__title">Turning ideas into<br />pixel-perfect reality.</h2>
+            <p class="about__body">
+              With 6+ years at the intersection of design and engineering, I help
+              companies launch products people actually love to use. My process
+              blends research-driven UX with clean, performant code — because great
+              design only matters if it ships.
+            </p>
+            <p class="about__body">
+              Previously at <strong>Spotify</strong>, <strong>Figma</strong>, and
+              two early-stage startups. Now taking on select freelance projects.
+            </p>
+            <div class="about__chips">
+              <span class="chip">Figma</span>
+              <span class="chip">React</span>
+              <span class="chip">TypeScript</span>
+              <span class="chip">Tailwind CSS</span>
+              <span class="chip">Framer</span>
+              <span class="chip">Node.js</span>
+            </div>
+          </div>
+          <div class="about__cards">
+            <div class="about__card about__card--accent">
+              <div class="card-icon">&#128161;</div>
+              <h3>Design Thinking</h3>
+              <p>Research-backed decisions that solve real user problems, not just aesthetic preferences.</p>
+            </div>
+            <div class="about__card">
+              <div class="card-icon">&#9889;</div>
+              <h3>Fast Delivery</h3>
+              <p>From wireframe to production in weeks, not months — without cutting corners.</p>
+            </div>
+            <div class="about__card">
+              <div class="card-icon">&#127881;</div>
+              <h3>Pixel Perfect</h3>
+              <p>Every detail matters. Obsessive attention to spacing, type, and interaction states.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Work -->
+    <section class="section work" id="work">
+      <div class="container">
+        <div class="section__header">
+          <p class="section__eyebrow">Selected Work</p>
+          <h2 class="section__title">Projects I'm proud of.</h2>
+        </div>
+        <div class="work__grid">
+          <article class="project project--featured">
+            <div class="project__image project__image--1">
+              <div class="project__overlay">
+                <a href="#" class="project__link">View Case Study &#8599;</a>
+              </div>
+            </div>
+            <div class="project__info">
+              <div class="project__tags">
+                <span>UI Design</span><span>React</span>
+              </div>
+              <h3>Luminary — SaaS Dashboard</h3>
+              <p>End-to-end design and development of an analytics platform serving 12,000+ users.</p>
+            </div>
+          </article>
+          <article class="project">
+            <div class="project__image project__image--2">
+              <div class="project__overlay">
+                <a href="#" class="project__link">View Case Study &#8599;</a>
+              </div>
+            </div>
+            <div class="project__info">
+              <div class="project__tags">
+                <span>Branding</span><span>Web</span>
+              </div>
+              <h3>Verdant — Eco Startup</h3>
+              <p>Full brand identity and marketing site for a climate-tech company.</p>
+            </div>
+          </article>
+          <article class="project">
+            <div class="project__image project__image--3">
+              <div class="project__overlay">
+                <a href="#" class="project__link">View Case Study &#8599;</a>
+              </div>
+            </div>
+            <div class="project__info">
+              <div class="project__tags">
+                <span>Mobile</span><span>UX</span>
+              </div>
+              <h3>Petal — Finance App</h3>
+              <p>Mobile-first budgeting app with 4.8★ rating on the App Store.</p>
+            </div>
+          </article>
+          <article class="project">
+            <div class="project__image project__image--4">
+              <div class="project__overlay">
+                <a href="#" class="project__link">View Case Study &#8599;</a>
+              </div>
+            </div>
+            <div class="project__info">
+              <div class="project__tags">
+                <span>Design System</span>
+              </div>
+              <h3>Nova Design System</h3>
+              <p>Scalable component library adopted by a 50-person engineering team.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills -->
+    <section class="section skills" id="skills">
+      <div class="container">
+        <div class="skills__inner">
+          <div class="skills__left">
+            <p class="section__eyebrow">Skills &amp; Tools</p>
+            <h2 class="section__title">My creative<br />stack.</h2>
+            <p class="skills__body">
+              I stay tool-agnostic and pick the right technology for the job.
+              Here's what I reach for most often.
+            </p>
+            <a href="#contact" class="btn btn--primary" style="margin-top:2rem;">Work With Me</a>
+          </div>
+          <div class="skills__bars">
+            <div class="skill-item">
+              <div class="skill-item__header">
+                <span>UI / UX Design</span><span class="skill-item__pct">95%</span>
+              </div>
+              <div class="skill-bar"><div class="skill-bar__fill" data-width="95"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__header">
+                <span>React / Next.js</span><span class="skill-item__pct">90%</span>
+              </div>
+              <div class="skill-bar"><div class="skill-bar__fill" data-width="90"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__header">
+                <span>CSS / Tailwind</span><span class="skill-item__pct">92%</span>
+              </div>
+              <div class="skill-bar"><div class="skill-bar__fill" data-width="92"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__header">
+                <span>TypeScript</span><span class="skill-item__pct">85%</span>
+              </div>
+              <div class="skill-bar"><div class="skill-bar__fill" data-width="85"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__header">
+                <span>Figma / Framer</span><span class="skill-item__pct">98%</span>
+              </div>
+              <div class="skill-bar"><div class="skill-bar__fill" data-width="98"></div></div>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__header">
+                <span>Node.js / APIs</span><span class="skill-item__pct">78%</span>
+              </div>
+              <div class="skill-bar"><div class="skill-bar__fill" data-width="78"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section testimonials">
+      <div class="container">
+        <div class="section__header">
+          <p class="section__eyebrow">Testimonials</p>
+          <h2 class="section__title">What clients say.</h2>
+        </div>
+        <div class="testimonials__grid">
+          <blockquote class="testimonial testimonial--featured">
+            <p>"Alex completely transformed our product. The redesign led to a 40% increase in user retention within the first quarter. Truly exceptional work."</p>
+            <footer>
+              <div class="testimonial__avatar tav--1"></div>
+              <div>
+                <strong>Sarah Chen</strong>
+                <span>CEO, Luminary</span>
+              </div>
+            </footer>
+          </blockquote>
+          <blockquote class="testimonial">
+            <p>"Incredible attention to detail and delivered ahead of schedule. Our engineering team loved working with the design system Alex built."</p>
+            <footer>
+              <div class="testimonial__avatar tav--2"></div>
+              <div>
+                <strong>James Okafor</strong>
+                <span>CTO, Nova Tech</span>
+              </div>
+            </footer>
+          </blockquote>
+          <blockquote class="testimonial">
+            <p>"The Verdant brand identity exceeded every expectation. Alex gets it — design has to tell a story."</p>
+            <footer>
+              <div class="testimonial__avatar tav--3"></div>
+              <div>
+                <strong>Mia Russo</strong>
+                <span>Founder, Verdant</span>
+              </div>
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section contact" id="contact">
+      <div class="container">
+        <div class="contact__inner">
+          <div class="contact__left">
+            <p class="section__eyebrow">Get In Touch</p>
+            <h2 class="section__title">Let's build something<br />great together.</h2>
+            <p class="contact__body">
+              Have a project in mind? I'd love to hear about it. Send me a message
+              and I'll get back to you within 24 hours.
+            </p>
+            <div class="contact__details">
+              <div class="contact__item">
+                <div class="contact__icon">&#9993;</div>
+                <span>hello@alexmorgan.design</span>
+              </div>
+              <div class="contact__item">
+                <div class="contact__icon">&#127758;</div>
+                <span>San Francisco, CA (Remote-friendly)</span>
+              </div>
+            </div>
+            <div class="contact__social">
+              <a href="#" aria-label="Twitter">&#120143;</a>
+              <a href="#" aria-label="GitHub">&#9729;</a>
+              <a href="#" aria-label="LinkedIn">in</a>
+              <a href="#" aria-label="Dribbble">&#9826;</a>
+            </div>
+          </div>
+          <form class="contact__form" id="contactForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="Your name" required />
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="subject">Subject</label>
+              <input type="text" id="subject" name="subject" placeholder="What's this about?" />
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" rows="5" placeholder="Tell me about your project..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary btn--full">
+              Send Message <span class="btn__arrow">&#8594;</span>
+            </button>
+            <div class="form__success" id="formSuccess">
+              &#10003; Message sent! I'll be in touch soon.
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer__inner">
+          <span class="footer__logo">AM</span>
+          <p class="footer__copy">&copy; 2026 Alex Morgan. Crafted with care.</p>
+          <div class="footer__links">
+            <a href="#home">Back to top &#8593;</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
