@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admit Bulk Students | START WELL EDUCATION</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+.method-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.method-card {
+  border: 2px solid var(--card-border); border-radius: 10px;
+  padding: 16px 20px; cursor: pointer; background: var(--card-bg);
+  display: flex; align-items: center; gap: 14px;
+  transition: all var(--transition);
+}
+.method-card:hover { border-color: var(--primary); }
+.method-card.selected { border-color: var(--primary); background: rgba(231,76,60,.06); }
+.method-card input[type="radio"] { display: none; }
+.method-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; flex-shrink: 0; }
+.method-icon.red { background: linear-gradient(135deg,#e74c3c,#c0392b); }
+.method-icon.blue { background: linear-gradient(135deg,#3498db,#2980b9); }
+.method-text strong { font-size: 13px; font-weight: 600; color: var(--text-main); display: block; }
+.method-text span { font-size: 12px; color: var(--text-muted); }
+.student-card-grid {
+  display: grid; grid-template-columns: repeat(6,1fr); gap: 12px 16px;
+  padding: 18px 20px; border-bottom: 1px solid var(--card-border);
+  background: var(--input-bg); border-radius: 0 0 0 0;
+}
+.student-card-grid:first-child { border-radius: 0; }
+.student-card-grid:last-child { border-bottom: none; border-radius: 0 0 10px 10px; }
+.student-card-num {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+  position: absolute; top: -10px; left: 16px;
+}
+.student-form-block { position: relative; }
+.instructions-list { list-style: none; counter-reset: step; }
+.instructions-list li { counter-increment: step; display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--card-border); font-size: 13px; color: var(--text-muted); }
+.instructions-list li:last-child { border-bottom: none; }
+.instructions-list li::before { content: counter(step); min-width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header class="top-header">
+  <div class="header-left">
+    <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+    <div class="logo-wrap"><div class="logo-icon">S</div><div class="logo-text">START WELL <span>EDUCATION</span></div></div>
+  </div>
+  <div class="header-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Search students, staff, fees…"></div>
+  <div class="header-right">
+    <button class="theme-toggle" id="themeToggle"><div class="tog-ball" id="togBall">🌙</div></button>
+    <div class="h-btn"><i class="fa-solid fa-list-check"></i><span class="badge">3</span></div>
+    <div class="h-btn"><i class="fa-solid fa-envelope"></i><span class="badge">7</span></div>
+    <div class="h-btn"><i class="fa-solid fa-bell"></i><span class="badge">12</span></div>
+    <div class="user-menu" id="userMenu">
+      <div class="user-trigger" onclick="toggleDropdown()"><div class="user-avatar">AH</div><span>Ali Hussnain</span><i class="fa-solid fa-chevron-down"></i></div>
+      <div class="dropdown-menu" id="userDropdown">
+        <a href="#"><i class="fa-solid fa-user"></i> My Profile</a>
+        <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
+        <div class="dropdown-divider"></div>
+        <a href="#" style="color:#e74c3c"><i class="fa-solid fa-right-from-bracket"></i> Log Out</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="layout">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sb-search"><div class="sb-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="menuSearch" placeholder="Search module…"></div></div>
+  <div class="nav-section-label">Main</div>
+  <ul class="main-menu" id="mainMenu">
+    <li><a href="index.html" data-label="Dashboard"><span class="menu-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="menu-label">Dashboard</span></a></li>
+    <li class="has-sub open"><a href="#" data-label="Admissions" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-user-plus"></i></span><span class="menu-label">Admission Management</span><i class="fa-solid fa-angle-right arrow-icon"></i></a>
+      <ul class="submenu open">
+        <li><a href="admitstudent.html"><i class="fa-regular fa-circle fa-fw"></i> Admit Student</a></li>
+        <li class="active"><a href="bulkadmitstudent.html"><i class="fa-regular fa-circle fa-fw"></i> Admit Bulk Student</a></li>
+        <li><a href="admissionrequest.html"><i class="fa-regular fa-circle fa-fw"></i> Admission Requests <span class="menu-badge">0</span></a></li>
+        <li class="has-sub"><a href="#" onclick="toggleMenu(this);return false;"><i class="fa-regular fa-circle fa-fw"></i> Admission Inquiries <i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Manage Inquiries</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Send SMS</a></li></ul></li>
+        <li><a href="admissionreport.html"><i class="fa-regular fa-circle fa-fw"></i> Admission Reports</a></li>
+      </ul>
+    </li>
+    <li class="has-sub"><a href="#" data-label="Students" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-users"></i></span><span class="menu-label">Student Management</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Student Information</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Student Promotion</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Student Transfer</a></li></ul></li>
+    <div class="nav-section-label">Operations</div>
+    <li><a href="#" data-label="Tasks"><span class="menu-icon"><i class="fa-solid fa-list-check"></i></span><span class="menu-label">Task Management <span class="menu-badge">3</span></span></a></li>
+    <li><a href="#" data-label="Fee Payment"><span class="menu-icon"><i class="fa-solid fa-money-bill-wave"></i></span><span class="menu-label">Fee Payment</span></a></li>
+    <li class="has-sub"><a href="#" data-label="Accounting" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-briefcase"></i></span><span class="menu-label">Accounting</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Generate Monthly Fee</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Fee Structure</a></li></ul></li>
+    <li class="has-sub"><a href="#" data-label="Attendance" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-calendar-check"></i></span><span class="menu-label">Manage Attendance</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Students Attendance</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> Staff Attendance</a></li></ul></li>
+    <div class="nav-section-label">System</div>
+    <li class="has-sub"><a href="#" data-label="Settings" onclick="toggleMenu(this);return false;"><span class="menu-icon"><i class="fa-solid fa-gear"></i></span><span class="menu-label">Settings</span><i class="fa-solid fa-angle-right arrow-icon"></i></a><ul class="submenu"><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> General Settings</a></li><li><a href="#"><i class="fa-regular fa-circle fa-fw"></i> School Profile</a></li></ul></li>
+  </ul>
+</nav>
+
+<main class="main-content" id="mainContent">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><i class="fa-solid fa-users"></i> Admit Bulk Students</h1>
+      <div class="breadcrumb"><i class="fa-solid fa-house" style="font-size:11px"></i><span>/</span><span>Admission Management</span><span>/</span><span style="color:var(--text-muted)">Bulk Admit</span></div>
+    </div>
+    <div class="page-header-actions">
+      <a href="admitstudent.html" class="btn btn-outline btn-sm"><i class="fa-solid fa-user-plus"></i> Single Admit</a>
+    </div>
+  </div>
+
+  <!-- Input Method Selection -->
+  <div class="form-section" style="margin-bottom:20px">
+    <div class="form-section-header"><i class="fa-solid fa-sliders"></i><h5>Input Method Selection</h5></div>
+    <div class="form-section-body">
+      <div class="method-cards">
+        <label class="method-card selected" id="methodManualCard">
+          <input type="radio" name="input_method" value="manual" checked onchange="toggleInputMode()">
+          <div class="method-icon red"><i class="fa-solid fa-keyboard"></i></div>
+          <div class="method-text"><strong>Manual Entry</strong><span>Type student details directly into the form fields</span></div>
+        </label>
+        <label class="method-card" id="methodCsvCard">
+          <input type="radio" name="input_method" value="csv" onchange="toggleInputMode()">
+          <div class="method-icon blue"><i class="fa-solid fa-file-csv"></i></div>
+          <div class="method-text"><strong>CSV Upload</strong><span>Upload a CSV file with multiple student records</span></div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Class / Section Selection -->
+  <div class="form-section" style="margin-bottom:20px">
+    <div class="form-section-header"><i class="fa-solid fa-school"></i><h5>Class and Section Selection</h5></div>
+    <div class="form-section-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;align-items:end">
+        <div class="form-group">
+          <label>Select Class</label>
+          <div class="input-wrap"><span class="input-icon"><i class="fa-solid fa-book"></i></span>
+            <select id="class_id" onchange="getSections(this.value)">
+              <option value="">Select Class</option>
+              <option value="12">PG</option><option value="18">M1</option><option value="19">M2</option>
+              <option value="20">Class One</option><option value="21">TWO</option><option value="22">Class Three</option>
+              <option value="23">Four</option><option value="24">Class Five</option><option value="25">Class Six</option>
+              <option value="13">Seven</option><option value="26">Class Eight Blue</option><option value="27">Class Eight</option>
+              <option value="17">Pre Nineth</option><option value="15">Class Nine</option><option value="16">Class Ten</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Section</label>
+          <div class="input-wrap"><span class="input-icon"><i class="fa-solid fa-layer-group"></i></span><select id="section_id"><option value="">Select Class First</option></select></div>
+        </div>
+        <div class="form-group">
+          <label>Create Parent Accounts</label>
+          <div class="input-wrap"><span class="input-icon"><i class="fa-solid fa-envelope"></i></span><select id="parent_account"><option value="1">YES</option><option value="2">NO</option></select></div>
+        </div>
+        <div class="form-group" id="num_students_container">
+          <label>Number of Students</label>
+          <div class="input-wrap"><span class="input-icon"><i class="fa-solid fa-hashtag"></i></span><input type="number" id="num_students" min="1" max="50" value="1" onchange="generateStudentForms()"></div>
+        </div>
+        <div class="form-group" id="csv_file_container" style="display:none">
+          <label>CSV File</label>
+          <div class="input-wrap"><span class="input-icon"><i class="fa-solid fa-file-csv"></i></span><input type="file" id="csv_file" accept=".csv" style="padding:6px 0"></div>
+        </div>
+        <div class="form-group" id="csv_download_container" style="display:none">
+          <label>&nbsp;</label>
+          <button type="button" class="btn btn-outline" onclick="downloadSampleCSV()"><i class="fa-solid fa-download"></i> Sample CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Forms Container -->
+  <div id="student_forms_container"></div>
+
+  <!-- Submit Button -->
+  <div style="text-align:center;margin:24px 0" id="submit_button_container">
+    <button type="button" class="btn btn-primary" style="padding:12px 36px;font-size:14px" onclick="submitData()">
+      <i class="fa-solid fa-thumbs-up"></i> Import All Student Data
+      <i class="fa-solid fa-spinner fa-spin" id="submitLoader" style="display:none"></i>
+    </button>
+  </div>
+
+  <!-- Instructions -->
+  <div class="card" style="margin-top:10px">
+    <div class="card-header"><h4><i class="fa-solid fa-circle-info" style="color:var(--blue)"></i> Instructions for Bulk Admission</h4></div>
+    <div class="card-body">
+      <ul class="instructions-list">
+        <li>Select input method: <strong>Manual Entry</strong> or <strong>CSV Upload</strong>.</li>
+        <li>Select the <strong>Class</strong> and <strong>Section</strong> before entering student data.</li>
+        <li>For Manual: set number of students and fill in the forms below. Only non-empty rows are submitted.</li>
+        <li>For CSV: download the sample file, fill in student details, then upload the completed file.</li>
+        <li>Each student must have a <strong>unique Student Code</strong> — duplicates will be skipped.</li>
+        <li>Click <strong>"Import All Student Data"</strong> to process and save records.</li>
+        <li>After successful import you will receive a confirmation message with the count of added students.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;padding:14px 18px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--text-muted)">
+    <span><i class="fa-solid fa-clock" style="color:var(--orange)"></i> &nbsp;Running Session: <strong style="color:var(--text-main)">2026-2027</strong></span>
+    <span>START WELL EDUCATION — CITY CAMPUS BHIMBER</span>
+  </div>
+
+</main>
+</div>
+
+<script>
+/* ---- SIDEBAR ---- */
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.getElementById('mainContent');
+let collapsed = false;
+document.getElementById('menuToggle').addEventListener('click', () => {
+  if (window.innerWidth <= 768) { sidebar.classList.toggle('mobile-open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+  else { collapsed = !collapsed; sidebar.classList.toggle('collapsed', collapsed); mainContent.classList.toggle('expanded', collapsed); }
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => { sidebar.classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('active'); });
+function toggleMenu(el) { const li = el.closest('li'); const sub = li.querySelector(':scope > .submenu'); if(!sub)return; li.classList.toggle('open'); sub.classList.toggle('open'); }
+document.getElementById('menuSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#mainMenu li').forEach(li => { if(!q){li.classList.remove('menu-hidden');return;} li.classList.toggle('menu-hidden',!li.textContent.toLowerCase().includes(q)); if(li.textContent.toLowerCase().includes(q)){let p=li.parentElement;while(p&&p.id!=='mainMenu'){if(p.classList.contains('submenu')){p.classList.add('open');const pl=p.closest('li.has-sub');if(pl)pl.classList.add('open');}p=p.parentElement;}} });
+});
+let dark = false;
+document.getElementById('themeToggle').addEventListener('click', () => { dark=!dark; document.documentElement.setAttribute('data-theme',dark?'dark':'light'); document.getElementById('togBall').textContent=dark?'☀️':'🌙'; });
+function toggleDropdown() { document.getElementById('userDropdown').classList.toggle('show'); }
+document.addEventListener('click', e => { if(!document.getElementById('userMenu').contains(e.target)) document.getElementById('userDropdown').classList.remove('show'); });
+
+/* ---- METHOD CARDS ---- */
+document.querySelectorAll('.method-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+
+/* ---- MODE TOGGLE ---- */
+function toggleInputMode() {
+  const isCsv = document.querySelector('input[name="input_method"]:checked').value === 'csv';
+  document.getElementById('num_students_container').style.display = isCsv ? 'none' : '';
+  document.getElementById('csv_file_container').style.display = isCsv ? '' : 'none';
+  document.getElementById('csv_download_container').style.display = isCsv ? '' : 'none';
+  if (!isCsv) generateStudentForms();
+  else document.getElementById('student_forms_container').innerHTML = '';
+}
+
+/* ---- GENERATE STUDENT FORMS ---- */
+function generateStudentForms() {
+  const num = parseInt(document.getElementById('num_students').value) || 1;
+  const container = document.getElementById('student_forms_container');
+  container.innerHTML = '';
+  for (let i = 0; i < num; i++) {
+    const div = document.createElement('div');
+    div.className = 'form-section student-form-block';
+    div.style.marginBottom = '16px';
+    div.innerHTML = `
+      <div class="form-section-header" style="position:relative">
+        <i class="fa-solid fa-user-plus"></i>
+        <h5>Student ${i+1} Information</h5>
+        <span style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700">#${i+1}</span>
+      </div>
+      <div class="form-section-body">
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px 14px">
+          ${field('Student Code *','student_code_'+i,'text','e.g. ST00025')}
+          ${field('Name *','name_'+i,'text','Full name')}
+          ${selectGender('sex_'+i)}
+          ${field('Father Name','pname_'+i,'text','Father full name')}
+          ${field('Father CNIC','cnic_'+i,'text','Without dashes')}
+          ${field('Father Phone','phone_'+i,'tel','e.g. 3001234567')}
+          ${field('Mother Phone','mphone_'+i,'tel','e.g. 3001234567')}
+          ${field('Birthday','birthday_'+i,'text','DD-MM-YYYY')}
+          ${field('Monthly Fee','fee_'+i,'number','PKR amount')}
+          ${field('Arrears','arrears_'+i,'number','Previous dues')}
+          <div class="form-group" style="grid-column:span 2"><label>Home Address</label><div class="input-wrap"><input type="text" name="address_${i}" placeholder="Full address"></div></div>
+        </div>
+      </div>`;
+    container.appendChild(div);
+  }
+}
+
+function field(label, name, type, placeholder) {
+  return `<div class="form-group"><label>${label}</label><div class="input-wrap"><input type="${type}" name="${name}" placeholder="${placeholder}"></div></div>`;
+}
+function selectGender(name) {
+  return `<div class="form-group"><label>Gender *</label><div class="input-wrap"><select name="${name}"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div></div>`;
+}
+
+/* ---- SECTIONS AJAX ---- */
+function getSections(classId) {
+  if (!classId) return;
+  fetch('https://startwell.easyschoolin.com/index.php?admin/get_sections/' + classId)
+    .then(r => r.text()).then(html => { document.getElementById('section_id').outerHTML = html || '<select id="section_id"><option value="">No sections</option></select>'; })
+    .catch(() => {});
+}
+
+/* ---- DOWNLOAD SAMPLE CSV ---- */
+function downloadSampleCSV() {
+  const csv = 'student_code,name,sex,pname,cnic,phone,mphone,birthday,address,fee,arrears\nST001,Ahmed Ali,Male,Ali Hassan,3740100000001,3001234567,3001234568,01-01-2015,House 1 Street A,3000,0\n';
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'bulk_student_sample.csv';
+  a.click();
+}
+
+/* ---- SUBMIT ---- */
+function submitData() {
+  const classId = document.getElementById('class_id').value;
+  const sectionId = document.getElementById('section_id').value;
+  if (!classId || !sectionId) { alert('Please select Class and Section first.'); return; }
+
+  const isCsv = document.querySelector('input[name="input_method"]:checked').value === 'csv';
+  const loader = document.getElementById('submitLoader');
+  loader.style.display = '';
+
+  const fd = new FormData();
+  fd.append('class_id', classId);
+  fd.append('section_id', sectionId);
+  fd.append('parent_account', document.getElementById('parent_account').value);
+
+  if (isCsv) {
+    const file = document.getElementById('csv_file').files[0];
+    if (!file || !file.name.endsWith('.csv')) { loader.style.display='none'; alert('Please upload a valid CSV file.'); return; }
+    fd.append('userfile', file);
+  } else {
+    const num = parseInt(document.getElementById('num_students').value) || 1;
+    const students = [];
+    const codes = new Set();
+    for (let i = 0; i < num; i++) {
+      const code = (document.querySelector(`[name="student_code_${i}"]`) || {}).value || '';
+      const name = (document.querySelector(`[name="name_${i}"]`) || {}).value || '';
+      const sex  = (document.querySelector(`[name="sex_${i}"]`) || {}).value || '';
+      if (!code || !name || !sex) continue;
+      if (codes.has(code)) { loader.style.display='none'; alert('Duplicate Student Code: ' + code); return; }
+      codes.add(code);
+      students.push({ student_code:code, name, sex,
+        pname:(document.querySelector(`[name="pname_${i}"]`)||{}).value||'',
+        cnic:(document.querySelector(`[name="cnic_${i}"]`)||{}).value||'',
+        phone:(document.querySelector(`[name="phone_${i}"]`)||{}).value||'',
+        mphone:(document.querySelector(`[name="mphone_${i}"]`)||{}).value||'',
+        birthday:(document.querySelector(`[name="birthday_${i}"]`)||{}).value||'',
+        address:(document.querySelector(`[name="address_${i}"]`)||{}).value||'',
+        fee:(document.querySelector(`[name="fee_${i}"]`)||{}).value||'',
+        arrears:(document.querySelector(`[name="arrears_${i}"]`)||{}).value||''
+      });
+    }
+    if (!students.length) { loader.style.display='none'; alert('Please fill in at least one student\'s required fields (Code, Name, Gender).'); return; }
+    fd.append('students', JSON.stringify(students));
+  }
+
+  fetch('https://startwell.easyschoolin.com/index.php?admin/bulk_student_add_using_csv/import', { method:'POST', body:fd })
+    .then(r => r.json()).then(msg => {
+      loader.style.display = 'none';
+      if (msg.added > 0) alert(`${msg.added} student(s) added successfully!${msg.skipped?' '+msg.skipped+' skipped (duplicate codes).':''}`);
+      else if (msg.skipped > 0) alert('No new students added — all rows had duplicate student codes.');
+      else alert('No data processed. Please check your input.');
+    }).catch(() => { loader.style.display='none'; alert('Network error. Please try again.'); });
+}
+
+/* ---- INIT ---- */
+generateStudentForms();
+</script>
+</body>
+</html>
