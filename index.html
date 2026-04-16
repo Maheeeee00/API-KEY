@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hassan — Web Developer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav class="nav" id="nav">
+    <div class="nav__container">
+      <a href="#home" class="nav__logo">H<span>.</span></a>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="#about" class="nav__link">About</a></li>
+        <li><a href="#skills" class="nav__link">Skills</a></li>
+        <li><a href="#projects" class="nav__link">Projects</a></li>
+        <li><a href="#contact" class="nav__link">Contact</a></li>
+      </ul>
+      <button class="nav__hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" id="home">
+    <div class="hero__bg">
+      <div class="hero__blob hero__blob--1"></div>
+      <div class="hero__blob hero__blob--2"></div>
+      <div class="hero__grid"></div>
+    </div>
+    <div class="hero__container">
+      <div class="hero__badge">
+        <span class="hero__badge-dot"></span>
+        Available for work
+      </div>
+      <h1 class="hero__title">
+        Hi, I'm <span class="hero__name">Hassan</span><br />
+        <span class="hero__typed" id="typedText"></span><span class="hero__cursor">|</span>
+      </h1>
+      <p class="hero__subtitle">
+        I craft fast, accessible, and beautiful web experiences — from pixel-perfect UIs to robust back-end APIs.
+      </p>
+      <div class="hero__cta">
+        <a href="#projects" class="btn btn--primary">View My Work</a>
+        <a href="#contact" class="btn btn--ghost">Get In Touch</a>
+      </div>
+      <div class="hero__socials">
+        <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener" class="hero__social-link" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        </a>
+        <a href="mailto:hassan@example.com" class="hero__social-link" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener" class="hero__social-link" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="hero__scroll">
+      <span>Scroll</span>
+      <div class="hero__scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ── About ── -->
+  <section class="about section" id="about">
+    <div class="container">
+      <div class="section__header" data-aos>
+        <span class="section__label">About Me</span>
+        <h2 class="section__title">Turning ideas into <span class="highlight">digital reality</span></h2>
+      </div>
+      <div class="about__grid">
+        <div class="about__image-wrap" data-aos>
+          <div class="about__image-frame">
+            <div class="about__avatar">
+              <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="100" fill="url(#grad1)"/>
+                <circle cx="100" cy="80" r="35" fill="rgba(255,255,255,0.9)"/>
+                <ellipse cx="100" cy="160" rx="55" ry="40" fill="rgba(255,255,255,0.9)"/>
+                <defs>
+                  <linearGradient id="grad1" x1="0" y1="0" x2="200" y2="200">
+                    <stop offset="0%" stop-color="#6366f1"/>
+                    <stop offset="100%" stop-color="#8b5cf6"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="about__image-deco about__image-deco--1"></div>
+            <div class="about__image-deco about__image-deco--2"></div>
+          </div>
+          <div class="about__stats">
+            <div class="about__stat">
+              <span class="about__stat-num" data-count="2">0</span>+
+              <span class="about__stat-label">Years Exp.</span>
+            </div>
+            <div class="about__stat">
+              <span class="about__stat-num" data-count="20">0</span>+
+              <span class="about__stat-label">Projects</span>
+            </div>
+            <div class="about__stat">
+              <span class="about__stat-num" data-count="15">0</span>+
+              <span class="about__stat-label">Clients</span>
+            </div>
+          </div>
+        </div>
+        <div class="about__content" data-aos>
+          <p class="about__text">
+            I'm <strong>Hassan</strong>, a passionate web developer who loves building modern, high-performance web applications. I specialise in creating seamless user experiences that merge beautiful design with clean, maintainable code.
+          </p>
+          <p class="about__text">
+            From crafting responsive front-end interfaces to engineering scalable back-end systems, I bring a full-stack perspective to every project. I'm driven by the challenge of solving real-world problems through elegant, well-crafted software.
+          </p>
+          <div class="about__tags">
+            <span class="tag">Problem Solver</span>
+            <span class="tag">Clean Code Advocate</span>
+            <span class="tag">Open Source Fan</span>
+            <span class="tag">Lifelong Learner</span>
+          </div>
+          <a href="#contact" class="btn btn--primary">Let's Work Together</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Skills ── -->
+  <section class="skills section" id="skills">
+    <div class="container">
+      <div class="section__header" data-aos>
+        <span class="section__label">What I Know</span>
+        <h2 class="section__title">My <span class="highlight">Tech Stack</span></h2>
+      </div>
+      <div class="skills__categories" data-aos>
+        <div class="skills__category">
+          <h3 class="skills__category-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            Front End
+          </h3>
+          <div class="skills__list">
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--html">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.565-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/></svg>
+              </div>
+              <span>HTML5</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--css">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.565-2.438L1.5 0zm17.09 4.413L5.41 4.41l.213 2.622 10.125.002-.255 2.716h-6.64l.24 2.573h6.182l-.366 3.523-2.91.804-2.956-.81-.188-2.11h-2.61l.29 3.855L12 19.288l5.373-1.53L18.59 4.414z"/></svg>
+              </div>
+              <span>CSS3</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--js">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/></svg>
+              </div>
+              <span>JavaScript</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--react">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.269-1.45.815-1.943 3.099-.948 6.347.062.214.131.428.208.645-.845.358-1.62.752-2.302 1.168C.343 9.985-.226 11.728.076 13.397c.277 1.527 1.36 2.572 2.805 2.572.41 0 .85-.07 1.31-.2.43-.123.87-.3 1.318-.522.438.22.888.41 1.34.544.51.148 1.012.222 1.5.222 1.118 0 2.155-.332 2.963-1.008.714.596 1.55.932 2.376.932 1.265 0 2.426-.671 3.043-1.784.578-1.051.623-2.401.13-3.843a12.5 12.5 0 0 0-.358-.875c.524-.282 1.014-.588 1.46-.906 1.413-.997 2.243-2.122 2.243-3.177 0-1.647-1.613-3.13-4.225-3.13zm-1.586 11.89c-.535.311-1.113.487-1.696.487-.586 0-1.17-.179-1.707-.492a9.764 9.764 0 0 0 .787-1.104 9.51 9.51 0 0 0 .916-2.355 9.51 9.51 0 0 0 .923 2.354 9.79 9.79 0 0 0 .777 1.11zm-7.434.004a9.79 9.79 0 0 0 .777-1.11 9.51 9.51 0 0 0 .923-2.354 9.51 9.51 0 0 0 .916 2.355 9.764 9.764 0 0 0 .787 1.104c-.537.313-1.12.492-1.707.492-.583 0-1.161-.176-1.696-.487zm-1.32-1.83c-.326-.2-.64-.42-.937-.653a12.5 12.5 0 0 1-.95-.86 12.56 12.56 0 0 1 .95-.862c.296-.232.611-.453.937-.652a11.04 11.04 0 0 0-.06.81c0 .507.028 1.005.06 1.217zm9.954 0c.032-.212.06-.71.06-1.217 0-.282-.02-.556-.06-.81.326.199.641.42.937.652.347.27.66.556.95.862-.29.306-.603.59-.95.86-.296.233-.611.453-.937.653zm1.1-7.553c.553 1.362.655 2.63.28 3.572-.307.764-.893 1.261-1.661 1.416a9.83 9.83 0 0 0-.636-1.532 9.87 9.87 0 0 0-1.065-1.674c.248-.703.416-1.39.499-2.04.056-.428.081-.85.081-1.262 0-.357-.023-.705-.069-1.042.89.53 1.875 1.47 2.571 2.562zM12 4.855c.278.314.549.661.806 1.035a9.98 9.98 0 0 1 .757 1.474 9.98 9.98 0 0 1-.757 1.475A10.03 10.03 0 0 1 12 9.875a10.03 10.03 0 0 1-.806-1.036 9.98 9.98 0 0 1-.757-1.475 9.98 9.98 0 0 1 .757-1.474A10.03 10.03 0 0 1 12 4.855zm-3.4-.58c-.046.337-.069.685-.069 1.042 0 .412.025.834.081 1.262.083.65.251 1.337.499 2.04A9.87 9.87 0 0 0 8.046 10.3a9.83 9.83 0 0 0-.636 1.532c-.768-.155-1.354-.652-1.661-1.416-.375-.942-.273-2.21.28-3.572.696-1.092 1.68-2.032 2.571-2.562zM4.9 9.535c.032-.212.06-.71.06-1.217 0-.282-.02-.556-.06-.81.326.199.641.42.937.652.347.27.66.556.95.862-.29.306-.603.59-.95.86-.296.233-.611.453-.937.653.032-.212.06-.5.06-.81v-.19zm-.14 4.465c-.553-1.362-.655-2.63-.28-3.572.307-.764.893-1.261 1.661-1.416a9.83 9.83 0 0 0 .636 1.532 9.87 9.87 0 0 0 1.065 1.674c-.248.703-.416 1.39-.499 2.04-.056.428-.081.85-.081 1.262 0 .357.023.705.069 1.042-.89-.53-1.875-1.47-2.571-2.562zm13.76 3.572c-.307.764-.893 1.261-1.661 1.416a9.83 9.83 0 0 0-.636-1.532 9.87 9.87 0 0 0-1.065-1.674c.248-.703.416-1.39.499-2.04.056-.428.081-.85.081-1.262 0-.357-.023-.705-.069-1.042.89.53 1.875 1.47 2.571 2.562.553 1.362.655 2.63.28 3.572z"/></svg>
+              </div>
+              <span>React</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--ts">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.75c.612 0 1.154.037 1.627.111a6.38 6.38 0 0 1 1.306.34v2.458a3.95 3.95 0 0 0-.643-.361 5.093 5.093 0 0 0-.717-.26 5.453 5.453 0 0 0-1.426-.2c-.3 0-.573.028-.819.086a2.1 2.1 0 0 0-.623.242c-.17.104-.3.229-.393.374a.888.888 0 0 0-.14.49c0 .196.053.373.156.529.104.156.252.304.443.444s.423.276.696.41c.273.135.582.274.926.416.47.197.892.407 1.266.628.374.222.695.473.963.753.268.279.472.598.614.957.142.359.214.776.214 1.253 0 .657-.125 1.21-.373 1.656a3.033 3.033 0 0 1-1.012 1.093 4.478 4.478 0 0 1-1.504.577 8.3 8.3 0 0 1-1.843.196 9.776 9.776 0 0 1-1.dept-1-.897-.075a10.366 10.366 0 0 1-1.18-.269v-2.543a5.5 5.5 0 0 0 .959.553 5.8 5.8 0 0 0 .894.276 6.48 6.48 0 0 0 1.595.221c.339 0 .632-.028.881-.087.249-.058.456-.144.623-.258a1.09 1.09 0 0 0 .378-.407.9.9 0 0 0 .126-.49c0-.21-.061-.403-.183-.579a2.03 2.03 0 0 0-.5-.444 5.37 5.37 0 0 0-.726-.38c-.28-.12-.585-.25-.914-.39-.457-.193-.876-.4-1.257-.617a5.072 5.072 0 0 1-.988-.75 3.19 3.19 0 0 1-.647-.942 2.968 2.968 0 0 1-.23-1.202c0-.627.118-1.168.353-1.622.236-.454.56-.835.974-1.143a4.49 4.49 0 0 1 1.472-.707 6.51 6.51 0 0 1 1.785-.242zm-8.961-.106c.86 0 1.63.095 2.313.286.682.19 1.267.479 1.754.868.488.388.862.875 1.12 1.46.258.585.388 1.264.388 2.036v.278a2.52 2.52 0 0 1-.022.319H8.344v.118c0 .498.066.943.198 1.337.133.393.328.727.584 1.002.256.276.565.487.927.633.362.146.772.219 1.23.219.533 0 1.035-.075 1.506-.226a5.07 5.07 0 0 0 1.22-.623l.994 1.881a6.94 6.94 0 0 1-1.687.806 6.65 6.65 0 0 1-2.098.317c-.85 0-1.612-.131-2.285-.394a4.813 4.813 0 0 1-1.708-1.116 4.877 4.877 0 0 1-1.07-1.742c-.249-.678-.374-1.438-.374-2.28 0-.84.128-1.603.384-2.287a5.025 5.025 0 0 1 1.078-1.74 4.773 4.773 0 0 1 1.671-1.105c.648-.255 1.366-.383 2.154-.383zm.24 1.994c-.747 0-1.34.215-1.78.644-.44.43-.7 1.032-.78 1.806h4.956c-.013-.774-.22-1.376-.624-1.806-.403-.43-.98-.644-1.772-.644z"/></svg>
+              </div>
+              <span>TypeScript</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--tailwind">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z"/></svg>
+              </div>
+              <span>Tailwind CSS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="skills__category">
+          <h3 class="skills__category-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></svg>
+            Back End
+          </h3>
+          <div class="skills__list">
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--node">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.998 24c-.321 0-.641-.084-.922-.247l-2.936-1.737c-.438-.245-.224-.332-.08-.383.585-.203.703-.25 1.328-.604.065-.037.151-.023.218.017l2.256 1.339c.082.045.198.045.275 0l8.795-5.076c.082-.047.134-.141.134-.238V6.921c0-.099-.053-.192-.137-.242L11.994 1.604a.271.271 0 0 0-.275 0L3.924 6.68c-.084.05-.139.145-.139.243v10.148c0 .097.055.19.139.237l2.409 1.392c1.307.654 2.108-.116 2.108-.891V7.787c0-.142.114-.253.256-.253h1.115c.139 0 .255.111.255.253v10.021c0 1.745-.95 2.745-2.604 2.745-.508 0-.909 0-2.026-.551L2.975 18.6C2.413 18.272 2 17.676 2 17.028V6.921c0-.647.413-1.246.975-1.574l8.795-5.082c.549-.315 1.278-.315 1.823 0l8.795 5.082c.561.328.977.929.977 1.574v10.107c0 .647-.416 1.245-.977 1.573l-8.795 5.078c-.28.163-.6.247-.921.247zM19 14.048c0-1.744-1.179-2.209-3.659-2.535-2.512-.33-2.765-.501-2.765-1.085 0-.482.213-1.125 2.049-1.125 1.644 0 2.25.354 2.501 1.463a.254.254 0 0 0 .247.197h1.141c.071 0 .138-.03.186-.082.047-.053.069-.124.062-.195-.161-1.906-1.428-2.794-4.137-2.794-2.364 0-3.776.999-3.776 2.673 0 1.817 1.405 2.319 3.663 2.542 2.709.264 2.761.658 2.761 1.188 0 .918-.737 1.308-2.466 1.308-2.172 0-2.648-.545-2.809-1.624a.255.255 0 0 0-.251-.215h-1.137a.254.254 0 0 0-.254.255c0 1.482.808 3.248 4.451 3.248 2.664 0 4.194-1.051 4.194-2.881V14.048z"/></svg>
+              </div>
+              <span>Node.js</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--express">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 18.588a1.529 1.529 0 0 1-1.895-.72l-3.45-4.771-.5-.667-4.003 5.444a1.466 1.466 0 0 1-1.802.708l5.158-6.92-4.798-6.251a1.595 1.595 0 0 1 1.9.666l3.576 4.83 3.596-4.81a1.435 1.435 0 0 1 1.788-.668L21.708 7.9l-2.522 3.283a.666.666 0 0 0 0 .994l4.804 6.412zM.002 11.576l.42-2.075c1.154-4.103 5.858-5.81 9.094-3.27 1.895 1.489 2.368 3.597 2.275 5.973H1.116C.943 16.447 4.005 19.009 7.92 17.7a4.078 4.078 0 0 0 2.582-2.876c.207-.666.548-.78 1.174-.588a5.417 5.417 0 0 1-2.589 3.957 6.272 6.272 0 0 1-7.306-.933 6.575 6.575 0 0 1-1.64-3.858c0-.235-.08-.455-.134-.82zm1.127-.077h7.654c-.075-3.018-2.019-5.882-3.935-5.847-2.08.038-3.664 2.158-3.72 5.847z"/></svg>
+              </div>
+              <span>Express.js</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--mongo">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.193 9.555c-1.264-5.58-4.252-7.414-4.573-8.115-.28-.394-.53-.954-.735-1.44-.036.495-.055.685-.523 1.184-.723.566-4.438 3.682-4.74 10.02-.3 6.338 4.183 8.98 5.726 9.65 1.543.67 3.56-.044 4.962-1.58C19.278 17.24 18.46 15.135 17.193 9.555zM12.12 21.95c-.5-.044-.985-.14-1.44-.248-.074-.1-.012-.254.06-.223 1.43.14 2.93-.09 3.95-.753.204-.197.45-.048.432.143-.572.62-1.836 1.12-3.002 1.081z"/></svg>
+              </div>
+              <span>MongoDB</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--sql">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
+              </div>
+              <span>SQL</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--python">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05L0 11.97l.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05 1.07.13zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01.21.03zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"/></svg>
+              </div>
+              <span>Python</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--git">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.546 10.93L13.067.452c-.604-.603-1.582-.603-2.188 0L8.708 2.627l2.76 2.76c.645-.215 1.379-.07 1.889.441.516.515.658 1.258.438 1.9l2.658 2.66c.645-.223 1.387-.078 1.9.435.721.72.721 1.884 0 2.604-.719.719-1.881.719-2.6 0-.539-.541-.674-1.337-.404-1.996L12.86 8.955v6.525c.176.086.342.203.488.348.713.721.713 1.883 0 2.6-.719.721-1.889.721-2.609 0-.719-.719-.719-1.879 0-2.598.182-.18.387-.316.605-.406V8.835c-.217-.091-.424-.222-.604-.404-.541-.541-.674-1.341-.396-2.004L7.636 3.7.45 10.881c-.6.605-.6 1.584 0 2.189l10.48 10.477c.604.604 1.582.604 2.186 0l10.43-10.43c.605-.603.605-1.582 0-2.187"/></svg>
+              </div>
+              <span>Git</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="skills__category">
+          <h3 class="skills__category-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Tools & Platforms
+          </h3>
+          <div class="skills__list">
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--vscode">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 19.86V4.14a1.5 1.5 0 0 0-.85-1.553zm-5.146 14.861L10.826 12l7.178-5.448v10.896z"/></svg>
+              </div>
+              <span>VS Code</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--docker">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 0 0 .186-.186V3.574a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 0 0 .186-.186V6.29a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 0 0 .184-.186V6.29a.185.185 0 0 0-.185-.185H8.1a.185.185 0 0 0-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 0 0 .185-.186V6.29a.185.185 0 0 0-.185-.185H5.136a.186.186 0 0 0-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 0 0 .184-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 0 0 .185-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.186.186 0 0 0-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.186.186 0 0 0 .184-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 0 0-.75.748 11.376 11.376 0 0 0 .692 4.062c.545 1.428 1.355 2.483 2.41 3.13 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 0 0 3.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/></svg>
+              </div>
+              <span>Docker</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--vercel">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 22.525H0l12-21.05 12 21.05z"/></svg>
+              </div>
+              <span>Vercel</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--figma">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441c0 2.503-2.047 4.539-4.563 4.539zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.392 4.49zm-.098-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019c1.665 0 3.019-1.355 3.019-3.019s-1.354-3.019-3.019-3.019z"/></svg>
+              </div>
+              <span>Figma</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--nextjs">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.572 0c-.176 0-.31.001-.358.007a19.76 19.76 0 0 1-.364.033C7.443.346 4.25 2.185 2.228 5.012a11.875 11.875 0 0 0-2.119 5.243c-.096.659-.108.854-.108 1.747s.012 1.089.108 1.748c.652 4.506 3.86 8.292 8.209 9.695.779.25 1.6.422 2.534.525.363.04 1.935.04 2.299 0 1.611-.178 2.977-.577 4.323-1.264.207-.106.247-.134.219-.158-.02-.013-.9-1.193-1.955-2.62l-1.919-2.592-2.404-3.558a338.739 338.739 0 0 0-2.422-3.556c-.009-.002-.018 1.579-.023 3.51-.007 3.38-.01 3.515-.052 3.595a.426.426 0 0 1-.206.214c-.075.037-.14.044-.495.044H7.81l-.108-.068a.438.438 0 0 1-.157-.171l-.05-.106.006-4.703.007-4.705.072-.092a.645.645 0 0 1 .174-.143c.096-.047.134-.051.54-.051.478 0 .558.018.682.154.035.038 1.337 1.999 2.895 4.361a10760.433 10760.433 0 0 0 4.735 7.17l1.9 2.879.096-.063a12.317 12.317 0 0 0 2.466-2.163 11.944 11.944 0 0 0 2.824-6.134c.096-.66.108-.854.108-1.748 0-.893-.012-1.088-.108-1.747-.652-4.506-3.859-8.292-8.208-9.695a12.597 12.597 0 0 0-2.499-.523A33.119 33.119 0 0 0 11.573 0zm4.069 7.217c.347 0 .408.005.486.047a.473.473 0 0 1 .237.277c.018.06.023 1.365.018 4.304l-.006 4.218-.744-1.14-.746-1.14v-3.066c0-1.982.01-3.097.023-3.15a.478.478 0 0 1 .233-.296c.096-.05.13-.054.5-.054z"/></svg>
+              </div>
+              <span>Next.js</span>
+            </div>
+            <div class="skill-item">
+              <div class="skill-item__icon skill-item__icon--firebase">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.89 15.672L6.255.461A.542.542 0 0 1 7.27.288l2.543 4.771zm16.794 3.692l-2.25-14a.54.54 0 0 0-.919-.295L3.316 19.365l7.856 4.427a1.621 1.621 0 0 0 1.588 0zM14.3 7.147l-1.82-3.482a.542.542 0 0 0-.96 0L3.53 17.984z"/></svg>
+              </div>
+              <span>Firebase</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Projects ── -->
+  <section class="projects section" id="projects">
+    <div class="container">
+      <div class="section__header" data-aos>
+        <span class="section__label">My Work</span>
+        <h2 class="section__title">Featured <span class="highlight">Projects</span></h2>
+      </div>
+      <div class="projects__grid">
+
+        <article class="project-card" data-aos>
+          <div class="project-card__header project-card__header--1">
+            <div class="project-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+            </div>
+            <div class="project-card__links">
+              <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener" class="project-card__link" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" class="project-card__link" aria-label="Live Demo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3 class="project-card__title">E-Commerce Platform</h3>
+            <p class="project-card__desc">A full-stack online store with cart management, secure payments via Stripe, and a real-time inventory dashboard.</p>
+            <div class="project-card__tags">
+              <span>React</span><span>Node.js</span><span>MongoDB</span><span>Stripe</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-aos>
+          <div class="project-card__header project-card__header--2">
+            <div class="project-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91A16 16 0 0 0 15.09 16l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="project-card__links">
+              <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener" class="project-card__link" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" class="project-card__link" aria-label="Live Demo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3 class="project-card__title">Real-Time Chat App</h3>
+            <p class="project-card__desc">A messaging application with WebSocket-powered real-time communication, group rooms, and file sharing capabilities.</p>
+            <div class="project-card__tags">
+              <span>Socket.io</span><span>Express</span><span>React</span><span>Firebase</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-aos>
+          <div class="project-card__header project-card__header--3">
+            <div class="project-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="project-card__links">
+              <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener" class="project-card__link" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" class="project-card__link" aria-label="Live Demo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3 class="project-card__title">Auth API Service</h3>
+            <p class="project-card__desc">A robust REST API providing JWT-based authentication, role-based access control, OAuth2 integrations, and rate limiting.</p>
+            <div class="project-card__tags">
+              <span>Node.js</span><span>JWT</span><span>PostgreSQL</span><span>Redis</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-aos>
+          <div class="project-card__header project-card__header--4">
+            <div class="project-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <div class="project-card__links">
+              <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener" class="project-card__link" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener" class="project-card__link" aria-label="Live Demo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3 class="project-card__title">Portfolio Dashboard</h3>
+            <p class="project-card__desc">An admin dashboard for managing portfolio content with drag-and-drop reordering, image uploads, and live preview mode.</p>
+            <div class="project-card__tags">
+              <span>Next.js</span><span>TypeScript</span><span>Tailwind</span><span>Prisma</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+      <div class="projects__footer" data-aos>
+        <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener" class="btn btn--ghost">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          See All on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Contact ── -->
+  <section class="contact section" id="contact">
+    <div class="container">
+      <div class="section__header" data-aos>
+        <span class="section__label">Get In Touch</span>
+        <h2 class="section__title">Let's <span class="highlight">Work Together</span></h2>
+      </div>
+      <div class="contact__grid">
+        <div class="contact__info" data-aos>
+          <p class="contact__text">
+            I'm always excited to collaborate on new projects or discuss opportunities. Whether you have a project in mind or just want to say hi, my inbox is open.
+          </p>
+          <div class="contact__details">
+            <div class="contact__detail">
+              <div class="contact__detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </div>
+              <div>
+                <span class="contact__detail-label">Email</span>
+                <a href="mailto:hassan@example.com" class="contact__detail-value">hassan@example.com</a>
+              </div>
+            </div>
+            <div class="contact__detail">
+              <div class="contact__detail-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              </div>
+              <div>
+                <span class="contact__detail-label">GitHub</span>
+                <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener" class="contact__detail-value">github.com/Maheeeee00</a>
+              </div>
+            </div>
+            <div class="contact__detail">
+              <div class="contact__detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div>
+                <span class="contact__detail-label">Location</span>
+                <span class="contact__detail-value">Available Worldwide (Remote)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form class="contact__form" id="contactForm" data-aos>
+          <div class="form__row">
+            <div class="form__group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" placeholder="Your name" required />
+            </div>
+            <div class="form__group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="your@email.com" required />
+            </div>
+          </div>
+          <div class="form__group">
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" placeholder="What's this about?" required />
+          </div>
+          <div class="form__group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="5" placeholder="Tell me about your project..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn--primary btn--full">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Message
+          </button>
+          <div class="form__success" id="formSuccess">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Message sent! I'll get back to you soon.
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <a href="#home" class="footer__logo">H<span>.</span></a>
+        <p class="footer__copy">&copy; <span id="year"></span> Hassan. Crafted with passion.</p>
+        <div class="footer__links">
+          <a href="https://github.com/Maheeeee00" target="_blank" rel="noopener">GitHub</a>
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
