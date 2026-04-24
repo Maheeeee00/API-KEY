@@ -6,14 +6,13 @@
   <title>Sallybus generator</title>
   <style>
     :root {
-      --bg: #0f1419;
-      --surface: #1a222d;
-      --surface2: #232d3b;
-      --border: #2f3d4f;
-      --text: #e8eef4;
-      --muted: #8b9cb0;
-      --accent: #3d9cf5;
-      --accent-dim: #2b6cb0;
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface2: #f4f6f8;
+      --border: #d8dee4;
+      --text: #1a1a1a;
+      --muted: #5c6570;
+      --accent: #1a56db;
       --radius: 10px;
       --font: "Segoe UI", system-ui, -apple-system, sans-serif;
     }
@@ -48,9 +47,7 @@
       gap: 0;
     }
     @media (max-width: 800px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
+      .layout { grid-template-columns: 1fr; }
     }
     .col-form {
       padding: 1.25rem;
@@ -113,11 +110,67 @@
       padding: 0.5rem 0.6rem;
       font: inherit;
       color: var(--text);
-      background: var(--surface2);
+      background: #fff;
       border: 1px solid var(--border);
       border-radius: 6px;
     }
-    textarea { min-height: 88px; resize: vertical; }
+    select:disabled,
+    .topic-block.is-disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .topic-block {
+      margin-bottom: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface2);
+    }
+    .topic-block .topic-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .topic-block .topic-head label {
+      margin: 0;
+      font-weight: 600;
+      color: var(--text);
+    }
+    button.linkish {
+      font: inherit;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--accent);
+      cursor: pointer;
+    }
+    button.linkish:hover {
+      border-color: var(--accent);
+    }
+    .topic-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .topic-list label.row-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0;
+      font-weight: normal;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .topic-list input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    textarea { min-height: 72px; resize: vertical; }
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -140,38 +193,71 @@
       cursor: pointer;
       font-weight: 600;
     }
-    button.primary:hover { filter: brightness(1.08); }
+    button.primary:hover { filter: brightness(1.05); }
     button.secondary {
       font: inherit;
       padding: 0.55rem 1rem;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: var(--surface2);
+      background: #fff;
       color: var(--text);
       cursor: pointer;
     }
+    .selection-summary {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      border: 1px dashed var(--border);
+      background: #fff;
+    }
+    .selection-summary strong { color: var(--text); }
   </style>
 </head>
 <body>
   <header>
     <h1>Sallybus generator</h1>
-    <p>Fill the form on the left; your syllabus appears on the right.</p>
+    <p>White layout: pick class, then subject, unit, pages, and topics (one-click “Select all topics”). Preview on the right.</p>
   </header>
 
   <div class="layout">
     <div class="col-form">
       <fieldset>
-        <legend>Course details</legend>
-        <div class="row">
-          <div>
-            <label for="sy-class">Class / grade</label>
-            <input id="sy-class" type="text" placeholder="e.g. Class 8" />
+        <legend>Quick selection</legend>
+        <p class="selection-summary" id="selection-hint">Start by choosing a <strong>class</strong>. Each next list opens after the previous choice.</p>
+
+        <label for="sel-class">1. Select class</label>
+        <select id="sel-class" autocomplete="off">
+          <option value="">— Select class —</option>
+        </select>
+
+        <label for="sel-subject">2. Select subject</label>
+        <select id="sel-subject" disabled autocomplete="off">
+          <option value="">— Select subject —</option>
+        </select>
+
+        <label for="sel-unit">3. Select unit</label>
+        <select id="sel-unit" disabled autocomplete="off">
+          <option value="">— Select unit —</option>
+        </select>
+
+        <label for="sel-pages">4. Select pages</label>
+        <select id="sel-pages" disabled autocomplete="off">
+          <option value="">— Select pages —</option>
+        </select>
+
+        <div id="topic-block" class="topic-block is-disabled" aria-disabled="true">
+          <div class="topic-head">
+            <label>5. Select topics</label>
+            <button type="button" class="linkish" id="btn-select-all-topics" title="Select every topic for this page range">Select all topics</button>
           </div>
-          <div>
-            <label for="sy-subject">Subject</label>
-            <input id="sy-subject" type="text" placeholder="e.g. Mathematics" />
-          </div>
+          <div id="topic-list" class="topic-list" role="group" aria-label="Topics for selected pages"></div>
         </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Term details (optional)</legend>
         <div class="row">
           <div>
             <label for="sy-term">Academic term</label>
@@ -182,10 +268,8 @@
             <input id="sy-weeks" type="number" min="1" max="52" value="12" />
           </div>
         </div>
-        <label for="sy-topics">Topics / units (one per line)</label>
-        <textarea id="sy-topics" placeholder="Algebra basics&#10;Geometry&#10;Data handling"></textarea>
         <label for="sy-outcomes">Learning outcomes (optional, one per line)</label>
-        <textarea id="sy-outcomes" placeholder="Students will solve linear equations."></textarea>
+        <textarea id="sy-outcomes" placeholder="Students will …"></textarea>
         <div class="actions">
           <button type="button" class="primary" id="sy-generate">Generate syllabus</button>
           <button type="button" class="secondary" id="sy-copy">Copy</button>
@@ -195,12 +279,306 @@
 
     <aside class="col-preview" aria-labelledby="preview-heading">
       <h2 id="preview-heading">Syllabus (preview)</h2>
-      <div id="sy-output" class="preview-box is-empty" role="region" aria-live="polite">Generated syllabus will show here after you click Generate.</div>
+      <div id="sy-output" class="preview-box is-empty" role="region" aria-live="polite">Your selection summary and generated syllabus will appear here.</div>
     </aside>
   </div>
 
   <script>
     (function () {
+      /**
+       * Sample curriculum — replace with your real class / book data later.
+       * Structure: className -> subjectName -> array of units ->
+       *   { name, pages: [ { label, topics: [] } ] }
+       */
+      var CURRICULUM = {
+        "Class 6": {
+          Mathematics: [
+            {
+              name: "Unit 1: Knowing Our Numbers",
+              pages: [
+                { label: "Pages 1–8", topics: ["Comparing numbers", "Large numbers in practice", "Estimation"] },
+                { label: "Pages 9–18", topics: ["Using brackets", "Roman numerals", "Exercise review"] }
+              ]
+            },
+            {
+              name: "Unit 2: Whole Numbers",
+              pages: [
+                { label: "Pages 19–28", topics: ["Natural numbers", "Properties of whole numbers", "Number line patterns"] }
+              ]
+            }
+          ],
+          Science: [
+            {
+              name: "Unit 1: Food — Where Does It Come From?",
+              pages: [
+                { label: "Pages 1–6", topics: ["Food sources", "Plant parts we eat", "Animal products"] },
+                { label: "Pages 7–12", topics: ["Food chain basics", "Keywords summary"] }
+              ]
+            }
+          ]
+        },
+        "Class 8": {
+          Mathematics: [
+            {
+              name: "Unit 1: Rational Numbers",
+              pages: [
+                { label: "Pages 1–10", topics: ["Introduction to rationals", "Representing on number line", "Standard form"] },
+                { label: "Pages 11–22", topics: ["Operations on rationals", "Word problems", "Revision"] }
+              ]
+            },
+            {
+              name: "Unit 2: Linear Equations in One Variable",
+              pages: [
+                { label: "Pages 23–38", topics: ["Setting up equations", "Solving by transposing", "Applications"] }
+              ]
+            }
+          ],
+          Science: [
+            {
+              name: "Unit 1: Crop Production and Management",
+              pages: [
+                { label: "Pages 1–9", topics: ["Agricultural practices", "Soil preparation", "Irrigation"] },
+                { label: "Pages 10–18", topics: ["Storage and food from animals", "Revision"] }
+              ]
+            }
+          ]
+        },
+        "Class 10": {
+          Mathematics: [
+            {
+              name: "Unit 1: Real Numbers",
+              pages: [
+                { label: "Pages 1–8", topics: ["Euclid’s division lemma", "Fundamental theorem", "Irrational numbers"] },
+                { label: "Pages 9–16", topics: ["Decimal expansions", "Exercise set"] }
+              ]
+            }
+          ],
+          Science: [
+            {
+              name: "Unit 1: Chemical Reactions and Equations",
+              pages: [
+                { label: "Pages 1–10", topics: ["Types of reactions", "Balancing equations", "Effects of oxidation"] }
+              ]
+            }
+          ]
+        }
+      };
+
+      var elClass = document.getElementById("sel-class");
+      var elSubject = document.getElementById("sel-subject");
+      var elUnit = document.getElementById("sel-unit");
+      var elPages = document.getElementById("sel-pages");
+      var topicBlock = document.getElementById("topic-block");
+      var topicList = document.getElementById("topic-list");
+      var btnSelectAll = document.getElementById("btn-select-all-topics");
+      var outEl = document.getElementById("sy-output");
+      var hintEl = document.getElementById("selection-hint");
+
+      function setOptions(select, placeholder, labels) {
+        select.innerHTML = "";
+        var opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = placeholder;
+        select.appendChild(opt0);
+        labels.forEach(function (label) {
+          var o = document.createElement("option");
+          o.value = label;
+          o.textContent = label;
+          select.appendChild(o);
+        });
+      }
+
+      function resetFromSubject() {
+        setOptions(elSubject, "— Select subject —", []);
+        elSubject.value = "";
+        elSubject.disabled = true;
+        resetFromUnit();
+      }
+
+      function resetFromUnit() {
+        setOptions(elUnit, "— Select unit —", []);
+        elUnit.value = "";
+        elUnit.disabled = true;
+        resetFromPages();
+      }
+
+      function resetFromPages() {
+        setOptions(elPages, "— Select pages —", []);
+        elPages.value = "";
+        elPages.disabled = true;
+        resetTopics();
+      }
+
+      function resetTopics() {
+        topicList.innerHTML = "";
+        topicBlock.classList.add("is-disabled");
+        topicBlock.setAttribute("aria-disabled", "true");
+      }
+
+      function fillClasses() {
+        var names = Object.keys(CURRICULUM).sort();
+        setOptions(elClass, "— Select class —", names);
+      }
+
+      function getSubjects(className) {
+        var bag = CURRICULUM[className];
+        if (!bag) return [];
+        return Object.keys(bag).sort();
+      }
+
+      function getUnits(className, subject) {
+        var bag = CURRICULUM[className];
+        if (!bag || !bag[subject]) return [];
+        return bag[subject];
+      }
+
+      function updateHint(text) {
+        hintEl.innerHTML = text;
+      }
+
+      elClass.addEventListener("change", function () {
+        resetFromSubject();
+        var c = elClass.value;
+        if (!c) {
+          updateHint("Start by choosing a <strong>class</strong>.");
+          refreshPreviewSummary();
+          return;
+        }
+        var subs = getSubjects(c);
+        setOptions(elSubject, "— Select subject —", subs);
+        elSubject.disabled = subs.length === 0;
+        updateHint("Class set. Now choose a <strong>subject</strong>.");
+        refreshPreviewSummary();
+      });
+
+      elSubject.addEventListener("change", function () {
+        resetFromUnit();
+        var c = elClass.value;
+        var s = elSubject.value;
+        if (!c || !s) {
+          refreshPreviewSummary();
+          return;
+        }
+        var units = getUnits(c, s);
+        var labels = units.map(function (u) { return u.name; });
+        setOptions(elUnit, "— Select unit —", labels);
+        elUnit.disabled = labels.length === 0;
+        updateHint("Subject set. Pick a <strong>unit</strong>, then pages and topics.");
+        refreshPreviewSummary();
+      });
+
+      elUnit.addEventListener("change", function () {
+        resetFromPages();
+        var c = elClass.value;
+        var s = elSubject.value;
+        var uLabel = elUnit.value;
+        if (!c || !s || !uLabel) {
+          refreshPreviewSummary();
+          return;
+        }
+        var units = getUnits(c, s);
+        var unit = units.filter(function (x) { return x.name === uLabel; })[0];
+        if (!unit || !unit.pages) {
+          refreshPreviewSummary();
+          return;
+        }
+        var labels = unit.pages.map(function (p) { return p.label; });
+        setOptions(elPages, "— Select pages —", labels);
+        elPages.disabled = labels.length === 0;
+        refreshPreviewSummary();
+      });
+
+      function currentPageEntry() {
+        var c = elClass.value;
+        var s = elSubject.value;
+        var uLabel = elUnit.value;
+        var pLabel = elPages.value;
+        if (!c || !s || !uLabel || !pLabel) return null;
+        var units = getUnits(c, s);
+        var unit = units.filter(function (x) { return x.name === uLabel; })[0];
+        if (!unit) return null;
+        return unit.pages.filter(function (p) { return p.label === pLabel; })[0] || null;
+      }
+
+      function renderTopics() {
+        topicList.innerHTML = "";
+        var page = currentPageEntry();
+        if (!page || !page.topics || !page.topics.length) {
+          resetTopics();
+          refreshPreviewSummary();
+          return;
+        }
+        topicBlock.classList.remove("is-disabled");
+        topicBlock.setAttribute("aria-disabled", "false");
+        page.topics.forEach(function (t, i) {
+          var id = "tp-" + i;
+          var wrap = document.createElement("label");
+          wrap.className = "row-check";
+          wrap.setAttribute("for", id);
+          var cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.id = id;
+          cb.value = t;
+          cb.dataset.topic = t;
+          cb.addEventListener("change", refreshPreviewSummary);
+          wrap.appendChild(cb);
+          wrap.appendChild(document.createTextNode(t));
+          topicList.appendChild(wrap);
+        });
+        updateHint("Topics loaded. Tick what you need, or use <strong>Select all topics</strong> in one click.");
+        refreshPreviewSummary();
+      }
+
+      elPages.addEventListener("change", function () {
+        resetTopics();
+        if (!elPages.value) {
+          refreshPreviewSummary();
+          return;
+        }
+        renderTopics();
+      });
+
+      btnSelectAll.addEventListener("click", function () {
+        if (topicBlock.classList.contains("is-disabled")) return;
+        var boxes = topicList.querySelectorAll('input[type="checkbox"]');
+        var anyUnchecked = false;
+        boxes.forEach(function (b) {
+          if (!b.checked) anyUnchecked = true;
+        });
+        boxes.forEach(function (b) {
+          b.checked = anyUnchecked;
+        });
+        refreshPreviewSummary();
+      });
+
+      function getCheckedTopics() {
+        var out = [];
+        topicList.querySelectorAll('input[type="checkbox"]:checked').forEach(function (b) {
+          out.push(b.value);
+        });
+        return out;
+      }
+
+      function refreshPreviewSummary() {
+        var lines = [];
+        lines.push("CURRENT SELECTION");
+        lines.push("-----------------");
+        lines.push("Class:   " + (elClass.value || "—"));
+        lines.push("Subject: " + (elSubject.value || "—"));
+        lines.push("Unit:    " + (elUnit.value || "—"));
+        lines.push("Pages:   " + (elPages.value || "—"));
+        var tops = getCheckedTopics();
+        lines.push("Topics:  " + (tops.length ? tops.join("; ") : "—"));
+        lines.push("");
+        lines.push("(Click Generate syllabus below to merge this with term settings.)");
+        setOutput(lines.join("\n"));
+      }
+
+      function setOutput(text) {
+        outEl.textContent = text;
+        outEl.classList.toggle("is-empty", !text);
+      }
+
       function splitLines(text) {
         return text
           .split(/\r?\n/)
@@ -208,22 +586,20 @@
           .filter(Boolean);
       }
 
-      var outEl = document.getElementById("sy-output");
-
-      function setOutput(text) {
-        outEl.textContent = text;
-        outEl.classList.toggle("is-empty", !text);
-      }
-
       document.getElementById("sy-generate").addEventListener("click", function () {
-        var cls = document.getElementById("sy-class").value.trim() || "(class)";
-        var subject = document.getElementById("sy-subject").value.trim() || "(subject)";
+        var cls = elClass.value.trim() || "(class)";
+        var subject = elSubject.value.trim() || "(subject)";
+        var unit = elUnit.value.trim() || "(unit)";
+        var pages = elPages.value.trim() || "(pages)";
+        var picked = getCheckedTopics();
+        var topics = picked.length ? picked.slice() : [];
+        if (!picked.length) {
+          topics.push("(no topics selected — use checkboxes or Select all topics)");
+        }
+
         var term = document.getElementById("sy-term").value.trim() || "(term)";
         var weeks = parseInt(document.getElementById("sy-weeks").value, 10) || 12;
-        var topics = splitLines(document.getElementById("sy-topics").value);
         var outcomes = splitLines(document.getElementById("sy-outcomes").value);
-
-        if (topics.length === 0) topics.push("(add topics in the form)");
 
         var per = Math.max(1, Math.ceil(weeks / topics.length));
         var lines = [];
@@ -231,8 +607,16 @@
         lines.push("================");
         lines.push("Class: " + cls);
         lines.push("Subject: " + subject);
+        lines.push("Unit: " + unit);
+        lines.push("Pages: " + pages);
         lines.push("Term: " + term);
         lines.push("Planned weeks: " + weeks);
+        lines.push("");
+        lines.push("FOCUS TOPICS (from your selection)");
+        lines.push("-----------------------------------");
+        topics.forEach(function (t, i) {
+          lines.push((i + 1) + ". " + t);
+        });
         lines.push("");
         lines.push("WEEKLY SEQUENCE (approx. " + per + " week(s) per topic block)");
         lines.push("--------------------------------------------------");
@@ -264,17 +648,23 @@
         }
 
         lines.push("");
-        lines.push("Notes: Adjust pacing for holidays and exams. Align with your board and textbook chapters.");
+        lines.push("Notes: Replace sample data in the HTML file with your textbook page ranges when ready.");
 
         setOutput(lines.join("\n"));
       });
 
       document.getElementById("sy-copy").addEventListener("click", function () {
-        if (!outEl.textContent || outEl.classList.contains("is-empty")) return;
+        if (!outEl.textContent) return;
         navigator.clipboard.writeText(outEl.textContent).catch(function () {
           alert("Copy failed — select the text in the preview and copy manually.");
         });
       });
+
+      fillClasses();
+      elClass.value = "";
+      resetFromSubject();
+      updateHint("Start by choosing a <strong>class</strong>.");
+      refreshPreviewSummary();
     })();
   </script>
 </body>
