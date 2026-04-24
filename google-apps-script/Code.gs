@@ -10,16 +10,22 @@
  * 4. Deploy → New deployment → Type: Web app
  *    - Execute as: Me
  *    - Who has access: Anyone (or Anyone with Google account, if you prefer)
- * 5. Copy the Web app URL into enroll.html (Google Sheet sync field).
+ * 5. Copy the Web app URL into enroll.html or enroll-config.json (appsScriptWebAppUrl).
+ *
+ * DEFAULT_SPREADSHEET_ID below matches the shared master sheet when the script runs
+ * standalone (no bound spreadsheet). Override with Script property SPREADSHEET_ID.
  *
  * BEHAVIOR
- * - POST JSON: { "action": "saveStudent", "student": { ... }, "apiSecret": "optional" }
+ * - POST JSON: { "action": "saveStudent", "student": { ... }, "spreadsheetId": "optional", "apiSecret": "optional" }
  * - Ensures a master tab "Students" with headers; upserts one row by RollId (case-insensitive).
  * - Creates or replaces a tab named after the roll ID (sanitized) with two columns: Field | Value.
  *
  * NOTE: Browsers on other origins often cannot read the response (CORS). The HTML page uses
  * mode "no-cors" for the POST; success is assumed if the request is sent. Check the Sheet to verify.
  */
+
+/** Master Google Sheet (Start Well). Used when not bound to a spreadsheet. */
+var DEFAULT_SPREADSHEET_ID = "1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4";
 
 var STUDENTS_SHEET_NAME = "Students";
 var HEADERS = [
@@ -37,16 +43,35 @@ var HEADERS = [
   "VoucherValidity",
 ];
 
-function getSpreadsheet_() {
+function spreadsheetUrl_(id) {
+  if (!id) {
+    return "";
+  }
+  return "https://docs.google.com/spreadsheets/d/" + id + "/edit";
+}
+
+/**
+ * Resolves spreadsheet: Script property SPREADSHEET_ID, then POST body spreadsheetId,
+ * then DEFAULT_SPREADSHEET_ID, then active spreadsheet if bound.
+ * @param {Object} body Parsed POST body (optional).
+ */
+function getSpreadsheet_(body) {
+  body = body || {};
   var props = PropertiesService.getScriptProperties();
-  var id = props.getProperty("SPREADSHEET_ID");
+  var id = String(props.getProperty("SPREADSHEET_ID") || "").trim();
+  if (!id) {
+    id = String(body.spreadsheetId || "").trim();
+  }
+  if (!id && DEFAULT_SPREADSHEET_ID) {
+    id = String(DEFAULT_SPREADSHEET_ID).trim();
+  }
   if (id) {
     return SpreadsheetApp.openById(id);
   }
   var active = SpreadsheetApp.getActiveSpreadsheet();
   if (!active) {
     throw new Error(
-      "No spreadsheet: bind this script to a Sheet (Extensions → Apps Script from the file) or set SPREADSHEET_ID in Script properties."
+      "No spreadsheet: bind this script to a Sheet, set SPREADSHEET_ID in Script properties, or set DEFAULT_SPREADSHEET_ID in Code.gs."
     );
   }
   return active;
@@ -186,7 +211,8 @@ function doPost(e) {
     }
 
     var student = body.student || {};
-    var ss = getSpreadsheet_();
+    var ss = getSpreadsheet_(body);
+    var fileId = ss.getId();
     var master = ensureStudentsSheet_(ss);
     upsertStudentsRow_(master, student);
     var detailTab = syncStudentDetailTab_(ss, student);
@@ -194,6 +220,8 @@ function doPost(e) {
     return jsonResponse_({
       ok: true,
       message: "Saved",
+      spreadsheetId: fileId,
+      spreadsheetUrl: spreadsheetUrl_(fileId),
       studentsTab: STUDENTS_SHEET_NAME,
       detailTab: detailTab,
     });
@@ -207,9 +235,17 @@ function doPost(e) {
 
 /** Optional: open the web app URL in a browser to confirm deployment (returns JSON). */
 function doGet() {
+  var id = "";
+  try {
+    id = getSpreadsheet_({}).getId();
+  } catch (ignore) {
+    id = String(DEFAULT_SPREADSHEET_ID || "").trim();
+  }
   return jsonResponse_({
     ok: true,
-    hint: "POST JSON with action saveStudent and student object.",
+    hint: "POST JSON with action saveStudent and student object. Optional spreadsheetId in body.",
     studentsTab: STUDENTS_SHEET_NAME,
+    spreadsheetId: id || undefined,
+    spreadsheetUrl: id ? spreadsheetUrl_(id) : undefined,
   });
 }

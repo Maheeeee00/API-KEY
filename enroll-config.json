@@ -1,0 +1,40 @@
+{
+  "schoolName": "Start Well Education",
+  "spreadsheetId": "1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4/edit?usp=sharing",
+  "studentsSheetName": "Students",
+  "appsScriptWebAppUrl": "",
+  "syncToSheetOnSave": false,
+  "studentColumns": [
+    "RollId",
+    "Name",
+    "Parent",
+    "Class",
+    "Section",
+    "Campus",
+    "Voucher",
+    "Subtotal",
+    "Total",
+    "LateFee",
+    "DueDate",
+    "VoucherValidity"
+  ],
+  "postBodyExample": {
+    "action": "saveStudent",
+    "student": {
+      "RollId": "101",
+      "Name": "",
+      "Parent": "",
+      "Class": "",
+      "Section": "",
+      "Campus": "",
+      "Voucher": "",
+      "Subtotal": "",
+      "Total": "",
+      "LateFee": "",
+      "DueDate": "",
+      "VoucherValidity": ""
+    },
+    "apiSecret": "optional-if-set-in-script-properties"
+  }
+}

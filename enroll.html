@@ -107,6 +107,19 @@
       margin: 0;
       cursor: pointer;
     }
+    .sheet-link {
+      margin: 0 0 20px;
+      text-align: center;
+    }
+    .sheet-link a {
+      color: var(--navy);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    .sheet-link a:hover {
+      color: var(--green);
+    }
     .links {
       display: flex;
       flex-wrap: wrap;
@@ -269,6 +282,10 @@
     <h1>Download Student Voucher</h1>
     <p class="subtitle">Please type student roll ID below to verify <span aria-hidden="true">🔒</span></p>
 
+    <p class="sheet-link" id="sheetLinkWrap">
+      <a id="sheetLink" href="#" target="_blank" rel="noopener noreferrer">Open master Google Sheet</a>
+    </p>
+
     <div class="file-row">
       <label for="xlsxFile">Load student data from Excel (.xlsx)</label>
       <input id="xlsxFile" type="file" accept=".xlsx,.xls" />
@@ -374,6 +391,17 @@
 
   <script>
     (function () {
+      /** Fallback if enroll-config.json cannot be fetched (e.g. file://). Keep in sync with enroll-config.json. */
+      const DEFAULT_ENROLL_CONFIG = {
+        spreadsheetId: "1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4",
+        spreadsheetUrl:
+          "https://docs.google.com/spreadsheets/d/1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4/edit?usp=sharing",
+        appsScriptWebAppUrl: "",
+        syncToSheetOnSave: false,
+      };
+
+      let enrollConfig = { ...DEFAULT_ENROLL_CONFIG };
+
       const SHEET_NAME = "Students";
       const HEADERS = [
         "RollId",
@@ -400,14 +428,60 @@
       const appsUrlInput = $("appsScriptUrl");
       const apiSecretInput = $("syncApiSecret");
       const syncCheckbox = $("syncToSheet");
+      const sheetLink = $("sheetLink");
+      const sheetLinkWrap = $("sheetLinkWrap");
 
-      try {
-        const savedUrl = localStorage.getItem("enroll_apps_script_url");
-        if (savedUrl) appsUrlInput.value = savedUrl;
-        const savedSecret = localStorage.getItem("enroll_api_secret");
-        if (savedSecret) apiSecretInput.value = savedSecret;
-        syncCheckbox.checked = localStorage.getItem("enroll_sync_enabled") === "1";
-      } catch (ignore) {}
+      function applyEnrollConfig() {
+        const url = String(enrollConfig.spreadsheetUrl || "").trim();
+        if (url) {
+          sheetLink.href = url;
+          sheetLinkWrap.style.display = "";
+        } else {
+          sheetLinkWrap.style.display = "none";
+        }
+        const web = String(enrollConfig.appsScriptWebAppUrl || "").trim();
+        if (web && !appsUrlInput.value.trim()) {
+          appsUrlInput.value = web;
+        }
+        if (enrollConfig.syncToSheetOnSave === true && localStorage.getItem("enroll_sync_enabled") !== "0") {
+          syncCheckbox.checked = true;
+        }
+      }
+
+      function mergeConfig(obj) {
+        if (!obj || typeof obj !== "object") {
+          return;
+        }
+        enrollConfig = { ...enrollConfig, ...obj };
+      }
+
+      applyEnrollConfig();
+
+      fetch("enroll-config.json", { cache: "no-store" })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (j) {
+          if (j) {
+            mergeConfig(j);
+          }
+        })
+        .catch(function () {})
+        .finally(function () {
+          applyEnrollConfig();
+          try {
+            const savedUrl = localStorage.getItem("enroll_apps_script_url");
+            if (savedUrl) appsUrlInput.value = savedUrl;
+            const savedSecret = localStorage.getItem("enroll_api_secret");
+            if (savedSecret) apiSecretInput.value = savedSecret;
+            if (localStorage.getItem("enroll_sync_enabled") === "1") {
+              syncCheckbox.checked = true;
+            }
+            if (localStorage.getItem("enroll_sync_enabled") === "0") {
+              syncCheckbox.checked = false;
+            }
+          } catch (ignore) {}
+        });
 
       appsUrlInput.addEventListener("change", function () {
         try {
@@ -567,6 +641,10 @@
           action: "saveStudent",
           student: collectFormStudent(),
         };
+        const sid = String(enrollConfig.spreadsheetId || "").trim();
+        if (sid) {
+          payload.spreadsheetId = sid;
+        }
         const secret = apiSecretInput.value.trim();
         if (secret) {
           payload.apiSecret = secret;
