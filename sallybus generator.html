@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sallybus generator</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a222d;
+      --surface2: #232d3b;
+      --border: #2f3d4f;
+      --text: #e8eef4;
+      --muted: #8b9cb0;
+      --accent: #3d9cf5;
+      --accent-dim: #2b6cb0;
+      --radius: 10px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    header p {
+      margin: 0.25rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
+      min-height: calc(100vh - 4.5rem);
+      gap: 0;
+    }
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .col-form {
+      padding: 1.25rem;
+      border-right: 1px solid var(--border);
+    }
+    @media (max-width: 800px) {
+      .col-form { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+    .col-preview {
+      padding: 1.25rem;
+      background: var(--surface2);
+      display: flex;
+      flex-direction: column;
+      min-height: 50vh;
+    }
+    .col-preview h2 {
+      margin: 0 0 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .preview-box {
+      flex: 1;
+      padding: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      white-space: pre-wrap;
+      font-size: 0.875rem;
+      overflow: auto;
+      min-height: 200px;
+    }
+    .preview-box.is-empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+    fieldset {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 0 0 1rem;
+      padding: 1rem;
+      background: var(--surface);
+    }
+    legend {
+      padding: 0 0.5rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    input, select, textarea {
+      width: 100%;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.6rem;
+      font: inherit;
+      color: var(--text);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+    }
+    @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    button.primary {
+      font: inherit;
+      padding: 0.55rem 1rem;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary:hover { filter: brightness(1.08); }
+    button.secondary {
+      font: inherit;
+      padding: 0.55rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sallybus generator</h1>
+    <p>Fill the form on the left; your syllabus appears on the right.</p>
+  </header>
+
+  <div class="layout">
+    <div class="col-form">
+      <fieldset>
+        <legend>Course details</legend>
+        <div class="row">
+          <div>
+            <label for="sy-class">Class / grade</label>
+            <input id="sy-class" type="text" placeholder="e.g. Class 8" />
+          </div>
+          <div>
+            <label for="sy-subject">Subject</label>
+            <input id="sy-subject" type="text" placeholder="e.g. Mathematics" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="sy-term">Academic term</label>
+            <input id="sy-term" type="text" placeholder="e.g. Term 1 — 2026" />
+          </div>
+          <div>
+            <label for="sy-weeks">Weeks in term</label>
+            <input id="sy-weeks" type="number" min="1" max="52" value="12" />
+          </div>
+        </div>
+        <label for="sy-topics">Topics / units (one per line)</label>
+        <textarea id="sy-topics" placeholder="Algebra basics&#10;Geometry&#10;Data handling"></textarea>
+        <label for="sy-outcomes">Learning outcomes (optional, one per line)</label>
+        <textarea id="sy-outcomes" placeholder="Students will solve linear equations."></textarea>
+        <div class="actions">
+          <button type="button" class="primary" id="sy-generate">Generate syllabus</button>
+          <button type="button" class="secondary" id="sy-copy">Copy</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <aside class="col-preview" aria-labelledby="preview-heading">
+      <h2 id="preview-heading">Syllabus (preview)</h2>
+      <div id="sy-output" class="preview-box is-empty" role="region" aria-live="polite">Generated syllabus will show here after you click Generate.</div>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      function splitLines(text) {
+        return text
+          .split(/\r?\n/)
+          .map(function (s) { return s.trim(); })
+          .filter(Boolean);
+      }
+
+      var outEl = document.getElementById("sy-output");
+
+      function setOutput(text) {
+        outEl.textContent = text;
+        outEl.classList.toggle("is-empty", !text);
+      }
+
+      document.getElementById("sy-generate").addEventListener("click", function () {
+        var cls = document.getElementById("sy-class").value.trim() || "(class)";
+        var subject = document.getElementById("sy-subject").value.trim() || "(subject)";
+        var term = document.getElementById("sy-term").value.trim() || "(term)";
+        var weeks = parseInt(document.getElementById("sy-weeks").value, 10) || 12;
+        var topics = splitLines(document.getElementById("sy-topics").value);
+        var outcomes = splitLines(document.getElementById("sy-outcomes").value);
+
+        if (topics.length === 0) topics.push("(add topics in the form)");
+
+        var per = Math.max(1, Math.ceil(weeks / topics.length));
+        var lines = [];
+        lines.push("SYLLABUS OUTLINE");
+        lines.push("================");
+        lines.push("Class: " + cls);
+        lines.push("Subject: " + subject);
+        lines.push("Term: " + term);
+        lines.push("Planned weeks: " + weeks);
+        lines.push("");
+        lines.push("WEEKLY SEQUENCE (approx. " + per + " week(s) per topic block)");
+        lines.push("--------------------------------------------------");
+
+        var w = 1;
+        var ti = 0;
+        while (w <= weeks && ti < topics.length) {
+          var end = Math.min(w + per - 1, weeks);
+          lines.push("Weeks " + w + (end > w ? "–" + end : "") + ": " + topics[ti]);
+          w = end + 1;
+          ti++;
+        }
+        while (w <= weeks) {
+          lines.push("Week " + w + ": Review / assessment / buffer");
+          w++;
+        }
+        while (ti < topics.length) {
+          lines.push("(Extra topic — extend term or merge): " + topics[ti]);
+          ti++;
+        }
+
+        if (outcomes.length) {
+          lines.push("");
+          lines.push("LEARNING OUTCOMES");
+          lines.push("----------------");
+          outcomes.forEach(function (o, i) {
+            lines.push((i + 1) + ". " + o);
+          });
+        }
+
+        lines.push("");
+        lines.push("Notes: Adjust pacing for holidays and exams. Align with your board and textbook chapters.");
+
+        setOutput(lines.join("\n"));
+      });
+
+      document.getElementById("sy-copy").addEventListener("click", function () {
+        if (!outEl.textContent || outEl.classList.contains("is-empty")) return;
+        navigator.clipboard.writeText(outEl.textContent).catch(function () {
+          alert("Copy failed — select the text in the preview and copy manually.");
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
