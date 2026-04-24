@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sallybus generator</title>
+  <title>startwell, sallybus generator</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -35,10 +35,64 @@
       font-size: 1.2rem;
       font-weight: 600;
     }
-    header p {
-      margin: 0.25rem 0 0;
+    header h1 .brand {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .header-sub {
+      margin-top: 0.65rem;
+    }
+    .header-step-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem 0.25rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .header-step-nav li {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .step-pill {
+      font: inherit;
       font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .step-pill:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: #f8fafc;
+    }
+    .step-pill.is-active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .step-pill:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .step-sep {
       color: var(--muted);
+      font-size: 0.75rem;
+      user-select: none;
+      padding: 0 0.1rem;
+    }
+    .header-tagline {
+      margin: 0.5rem 0 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-width: 52rem;
     }
     .page-stack {
       display: flex;
@@ -339,8 +393,18 @@
 </head>
 <body>
   <header>
-    <h1>Sallybus generator</h1>
-    <p>Step-by-step: class → subject → chapter → topics → pages → generate. Your syllabus appears only on the last step after you click Generate.</p>
+    <h1><span class="brand">startwell</span>, sallybus generator</h1>
+    <div class="header-sub">
+      <ul class="header-step-nav" id="header-step-nav" aria-label="Go to step">
+        <li><button type="button" class="step-pill is-active" data-wiz-goto="0" id="nav-step-0">Class</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="1" id="nav-step-1">Subject</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="2" id="nav-step-2">Chapter</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="3" id="nav-step-3">Topics</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="4" id="nav-step-4">Pages</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="5" id="nav-step-5">Generate</button></li>
+      </ul>
+      <p class="header-tagline">Click a step to jump (forward only when earlier steps are complete). <strong>Next</strong> in the form still works. Your syllabus shows only after <strong>Generate syllabus</strong> on the last step.</p>
+    </div>
   </header>
 
   <div class="page-stack">
@@ -348,7 +412,7 @@
     <div class="col-main">
       <fieldset>
         <legend>Quick selection</legend>
-        <p class="selection-summary" id="selection-hint">Use <strong>Next</strong> after each choice, or pick from a list to jump ahead. No syllabus preview until the last step.</p>
+        <p class="selection-summary" id="selection-hint">Use the <strong>step buttons in the header</strong> or <strong>Next</strong> below. No syllabus until the last step.</p>
         <p class="wiz-progress" id="wiz-progress" aria-live="polite">Step 1 of 6 — Class</p>
 
         <div class="wiz-track">
@@ -720,6 +784,31 @@
         return true;
       }
 
+      /** True if user may jump to step `target` (back freely; forward requires completed earlier steps). */
+      function canNavigateToStep(target) {
+        var t = Math.max(0, Math.min(WIZ_TOTAL - 1, target));
+        if (t <= wizStepIndex) return true;
+        var s;
+        for (s = wizStepIndex; s < t; s++) {
+          if (!validateWizardStep(s)) return false;
+        }
+        return true;
+      }
+
+      function syncHeaderStepPills() {
+        var nav = document.getElementById("header-step-nav");
+        if (!nav) return;
+        nav.querySelectorAll(".step-pill").forEach(function (btn) {
+          var idx = parseInt(btn.getAttribute("data-wiz-goto"), 10);
+          var active = idx === wizStepIndex;
+          btn.classList.toggle("is-active", active);
+          if (active) btn.setAttribute("aria-current", "step");
+          else btn.removeAttribute("aria-current");
+          var forwardBlocked = idx > wizStepIndex && !canNavigateToStep(idx);
+          btn.disabled = forwardBlocked;
+        });
+      }
+
       function syncWizardUI() {
         wizProgress.textContent =
           "Step " + (wizStepIndex + 1) + " of " + WIZ_TOTAL + " — " + WIZ_TITLES[wizStepIndex];
@@ -737,12 +826,18 @@
           wizNext.hidden = false;
           wizNext.disabled = !validateWizardStep(wizStepIndex);
         }
+        syncHeaderStepPills();
       }
 
       function goToStep(next) {
         var n = Math.max(0, Math.min(WIZ_TOTAL - 1, next));
-        if (n > wizStepIndex && !validateWizardStep(wizStepIndex)) return;
-        if (n === 3 && wizStepIndex !== 3) renderChapterTopics();
+        if (n > wizStepIndex) {
+          var s;
+          for (s = wizStepIndex; s < n; s++) {
+            if (!validateWizardStep(s)) return;
+          }
+        }
+        if (n === 3 && wizStepIndex < 3) renderChapterTopics();
         if (n === 4 && wizStepIndex !== 4) populatePagesFromTopics();
         wizStepIndex = n;
         syncWizardUI();
@@ -812,6 +907,14 @@
 
       wizBack.addEventListener("click", function () {
         goToStep(wizStepIndex - 1);
+      });
+
+      document.getElementById("header-step-nav").addEventListener("click", function (e) {
+        var btn = e.target.closest(".step-pill");
+        if (!btn || btn.disabled) return;
+        var idx = parseInt(btn.getAttribute("data-wiz-goto"), 10);
+        if (isNaN(idx)) return;
+        goToStep(idx);
       });
 
       btnSelectAll.addEventListener("click", function () {
