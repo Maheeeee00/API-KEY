@@ -76,6 +76,37 @@
       width: 100%;
       font-size: 0.8rem;
     }
+    .sync-block {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    .sync-block label {
+      display: block;
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .sync-block input[type="url"],
+    .sync-block input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      border: 1px solid #e0e4e8;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .sync-block .check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+    .sync-block .check input {
+      margin: 0;
+      cursor: pointer;
+    }
     .links {
       display: flex;
       flex-wrap: wrap;
@@ -247,6 +278,22 @@
       <button type="button" id="btnDownload">Download current sheet</button>
     </div>
 
+    <div class="sync-block">
+      <label for="appsScriptUrl">Google Sheet sync — Web App URL</label>
+      <input
+        id="appsScriptUrl"
+        type="url"
+        placeholder="https://script.google.com/macros/s/.../exec"
+        autocomplete="off"
+      />
+      <label for="syncApiSecret">API secret (only if you set API_SECRET in Apps Script)</label>
+      <input id="syncApiSecret" type="password" placeholder="Optional" autocomplete="off" />
+      <label class="check">
+        <input type="checkbox" id="syncToSheet" />
+        After save, send this row to Google Sheet (Apps Script)
+      </label>
+    </div>
+
     <input id="rollId" type="text" placeholder="Type roll id here..." autocomplete="off" />
     <button type="button" class="btn-primary" id="btnContinue">
       Continue <span aria-hidden="true">➔</span>
@@ -350,6 +397,33 @@
 
       const $ = (id) => document.getElementById(id);
       const statusEl = $("status");
+      const appsUrlInput = $("appsScriptUrl");
+      const apiSecretInput = $("syncApiSecret");
+      const syncCheckbox = $("syncToSheet");
+
+      try {
+        const savedUrl = localStorage.getItem("enroll_apps_script_url");
+        if (savedUrl) appsUrlInput.value = savedUrl;
+        const savedSecret = localStorage.getItem("enroll_api_secret");
+        if (savedSecret) apiSecretInput.value = savedSecret;
+        syncCheckbox.checked = localStorage.getItem("enroll_sync_enabled") === "1";
+      } catch (ignore) {}
+
+      appsUrlInput.addEventListener("change", function () {
+        try {
+          localStorage.setItem("enroll_apps_script_url", appsUrlInput.value.trim());
+        } catch (ignore) {}
+      });
+      apiSecretInput.addEventListener("change", function () {
+        try {
+          localStorage.setItem("enroll_api_secret", apiSecretInput.value);
+        } catch (ignore) {}
+      });
+      syncCheckbox.addEventListener("change", function () {
+        try {
+          localStorage.setItem("enroll_sync_enabled", syncCheckbox.checked ? "1" : "0");
+        } catch (ignore) {}
+      });
 
       function setStatus(msg, kind) {
         statusEl.textContent = msg || "";
@@ -467,6 +541,44 @@
         setStatus("Downloaded " + name + ".", "ok");
       }
 
+      function collectFormStudent() {
+        return {
+          RollId: $("fRollId").value.trim(),
+          Name: $("fName").value.trim(),
+          Parent: $("fParent").value.trim(),
+          Class: $("fClass").value.trim(),
+          Section: $("fSection").value.trim(),
+          Campus: $("fCampus").value.trim(),
+          Voucher: $("fVoucher").value.trim(),
+          Subtotal: $("fSubtotal").value.trim(),
+          Total: $("fTotal").value.trim(),
+          LateFee: $("fLateFee").value.trim(),
+          DueDate: $("fDueDate").value.trim(),
+          VoucherValidity: $("fValidity").value.trim(),
+        };
+      }
+
+      function postStudentToAppsScript() {
+        const url = appsUrlInput.value.trim();
+        if (!url) {
+          return;
+        }
+        const payload = {
+          action: "saveStudent",
+          student: collectFormStudent(),
+        };
+        const secret = apiSecretInput.value.trim();
+        if (secret) {
+          payload.apiSecret = secret;
+        }
+        fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body: JSON.stringify(payload),
+        }).catch(function () {});
+      }
+
       $("xlsxFile").addEventListener("change", function (e) {
         const f = e.target.files && e.target.files[0];
         if (!f) return;
@@ -561,7 +673,19 @@
         setCell(r, "DueDate", $("fDueDate").value.trim());
         setCell(r, "VoucherValidity", $("fValidity").value.trim());
         writeSheetBack();
-        setStatus("Row saved in memory. Use “Download current sheet” to save the .xlsx file.", "ok");
+        let msg = "Row saved in memory. Use “Download current sheet” to save the .xlsx file.";
+        if (syncCheckbox.checked) {
+          const url = appsUrlInput.value.trim();
+          if (!url) {
+            msg += " Paste the Web App URL to enable Google Sheet sync.";
+            setStatus(msg, "error");
+            return;
+          }
+          postStudentToAppsScript();
+          msg +=
+            " A sync request was sent to your Google Apps Script (open the spreadsheet to confirm; browsers cannot read the response).";
+        }
+        setStatus(msg, "ok");
       });
 
       $("btnBack").addEventListener("click", function () {
