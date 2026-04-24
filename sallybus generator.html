@@ -213,6 +213,109 @@
       background: #fff;
     }
     .selection-summary strong { color: var(--text); }
+    /* Floating admin (keybook upload) */
+    .fab-admin {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 1000;
+      width: 3.25rem;
+      height: 3.25rem;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(26, 86, 219, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fab-admin:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(26, 86, 219, 0.4);
+    }
+    .fab-admin:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+    .fab-admin svg { display: block; }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1001;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow: auto;
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+      padding: 1.25rem;
+    }
+    .modal-card h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1.1rem;
+    }
+    .modal-card .modal-lead {
+      margin: 0 0 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .modal-actions-top {
+      display: flex;
+      justify-content: flex-end;
+      margin: -0.25rem -0.25rem 0.5rem 0;
+    }
+    .btn-icon-close {
+      font: inherit;
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 1;
+      font-size: 1.25rem;
+    }
+    .btn-icon-close:hover { background: var(--surface2); color: var(--text); }
+    .admin-banner {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      background: var(--surface2);
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+    .admin-msg {
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      display: none;
+    }
+    .admin-msg.is-visible { display: block; }
+    .admin-msg.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+    .admin-msg.err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .admin-msg.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
   </style>
 </head>
 <body>
@@ -281,6 +384,48 @@
       <h2 id="preview-heading">Syllabus (preview)</h2>
       <div id="sy-output" class="preview-box is-empty" role="region" aria-live="polite">Your selection summary and generated syllabus will appear here.</div>
     </aside>
+  </div>
+
+  <button type="button" class="fab-admin" id="fab-admin" title="Admin: upload keybook" aria-label="Admin keybook upload">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      <path d="M12 8v8" />
+      <path d="M8 12h8" />
+    </svg>
+  </button>
+
+  <div class="modal-backdrop" id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title" hidden>
+    <div class="modal-card" role="document">
+      <div class="modal-actions-top">
+        <button type="button" class="btn-icon-close" id="admin-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <h2 id="admin-modal-title">Keybook upload (admin)</h2>
+      <p class="modal-lead">Only admins use this panel. Uploads stay in the browser until your backend is connected.</p>
+      <p class="admin-banner">Client-only gate: change the code in this HTML file before use. Replace with server login when the backend is ready.</p>
+
+      <div id="admin-step-login">
+        <label for="admin-pass">Admin passphrase</label>
+        <input id="admin-pass" type="password" autocomplete="current-password" placeholder="Enter admin passphrase" />
+        <div class="actions" style="margin-top:0.5rem">
+          <button type="button" class="primary" id="admin-unlock">Unlock</button>
+        </div>
+      </div>
+
+      <div id="admin-step-upload" hidden>
+        <p style="font-size:0.85rem;color:var(--muted);margin:0 0 0.75rem">Signed in as admin (this tab).</p>
+        <label for="kb-title">Keybook title (optional)</label>
+        <input id="kb-title" type="text" placeholder="e.g. Class 8 Maths Keybook 2026" />
+        <label for="kb-file">Keybook file</label>
+        <input id="kb-file" type="file" accept=".pdf,.doc,.docx,.epub,.txt" />
+        <div class="actions" style="margin-top:0.75rem">
+          <button type="button" class="primary" id="kb-submit">Queue upload</button>
+          <button type="button" class="secondary" id="admin-lock">Lock</button>
+        </div>
+      </div>
+
+      <div id="admin-msg" class="admin-msg" role="status"></div>
+    </div>
   </div>
 
   <script>
@@ -658,6 +803,130 @@
         navigator.clipboard.writeText(outEl.textContent).catch(function () {
           alert("Copy failed — select the text in the preview and copy manually.");
         });
+      });
+
+      /* —— Admin floating button + keybook upload (client-only until backend) —— */
+      var ADMIN_SESSION_KEY = "sallybus_admin_ok";
+      /** Change this before production. Real security will come from your backend. */
+      var ADMIN_PASSPHRASE = "changeme";
+
+      var fab = document.getElementById("fab-admin");
+      var modal = document.getElementById("admin-modal");
+      var modalClose = document.getElementById("admin-modal-close");
+      var stepLogin = document.getElementById("admin-step-login");
+      var stepUpload = document.getElementById("admin-step-upload");
+      var adminPass = document.getElementById("admin-pass");
+      var adminUnlock = document.getElementById("admin-unlock");
+      var adminLock = document.getElementById("admin-lock");
+      var kbTitle = document.getElementById("kb-title");
+      var kbFile = document.getElementById("kb-file");
+      var kbSubmit = document.getElementById("kb-submit");
+      var adminMsg = document.getElementById("admin-msg");
+
+      function showAdminMsg(kind, text) {
+        adminMsg.textContent = text;
+        adminMsg.className = "admin-msg is-visible " + (kind || "info");
+      }
+
+      function clearAdminMsg() {
+        adminMsg.textContent = "";
+        adminMsg.className = "admin-msg";
+      }
+
+      function isAdminSession() {
+        return sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
+      }
+
+      function setAdminSession(on) {
+        if (on) sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+        else sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      }
+
+      function syncAdminSteps() {
+        var ok = isAdminSession();
+        stepLogin.hidden = ok;
+        stepUpload.hidden = !ok;
+        if (!ok) adminPass.value = "";
+        clearAdminMsg();
+      }
+
+      function openAdminModal() {
+        modal.hidden = false;
+        modal.classList.add("is-open");
+        syncAdminSteps();
+        if (!isAdminSession()) {
+          setTimeout(function () {
+            adminPass.focus();
+          }, 50);
+        } else {
+          kbFile.focus();
+        }
+      }
+
+      function closeAdminModal() {
+        modal.classList.remove("is-open");
+        modal.hidden = true;
+        clearAdminMsg();
+      }
+
+      fab.addEventListener("click", function () {
+        openAdminModal();
+      });
+
+      modalClose.addEventListener("click", closeAdminModal);
+
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal) closeAdminModal();
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && modal.classList.contains("is-open")) {
+          closeAdminModal();
+        }
+      });
+
+      adminUnlock.addEventListener("click", function () {
+        clearAdminMsg();
+        if (adminPass.value === ADMIN_PASSPHRASE) {
+          setAdminSession(true);
+          syncAdminSteps();
+          showAdminMsg("ok", "Unlocked. You can add a keybook file below.");
+        } else {
+          showAdminMsg("err", "Wrong passphrase. Only an admin can upload.");
+        }
+      });
+
+      adminLock.addEventListener("click", function () {
+        setAdminSession(false);
+        syncAdminSteps();
+        kbTitle.value = "";
+        kbFile.value = "";
+        showAdminMsg("info", "Locked. Passphrase required again to upload.");
+      });
+
+      kbSubmit.addEventListener("click", function () {
+        clearAdminMsg();
+        if (!isAdminSession()) {
+          showAdminMsg("err", "Unlock with the admin passphrase first.");
+          return;
+        }
+        var f = kbFile.files && kbFile.files[0];
+        if (!f) {
+          showAdminMsg("err", "Choose a keybook file first.");
+          return;
+        }
+        var title = kbTitle.value.trim();
+        var sizeKb = (f.size / 1024).toFixed(1);
+        showAdminMsg(
+          "ok",
+          "Queued locally: \"" +
+            (title || f.name) +
+            "\" (" +
+            f.name +
+            ", " +
+            sizeKb +
+            " KB). No server yet — your backend will accept uploads here next."
+        );
       });
 
       fillClasses();
