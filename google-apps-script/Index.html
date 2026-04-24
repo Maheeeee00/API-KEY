@@ -99,6 +99,23 @@
       color: #c62828;
       line-height: 1.5;
     }
+    .app-url-line {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #eceff1;
+      font-size: 0.72rem;
+      color: #37474f;
+      line-height: 1.45;
+      word-break: break-all;
+    }
+    .app-url-line .app-url-label { font-weight: 600; color: #546e7a; display: block; margin-bottom: 6px; }
+    .app-url-line a { color: #0d47a1; font-weight: 600; }
+    .voucher-toolbar .toolbar-app-link {
+      margin-left: auto;
+      font-size: 0.85rem;
+      align-self: center;
+    }
+    .voucher-toolbar .toolbar-app-link a { color: #0d47a1; font-weight: 600; }
     .msg-error {
       color: #b71c1c;
       font-size: 0.88rem;
@@ -251,6 +268,10 @@
         <div>Student enroll ID can be found on an old voucher or student ID card.</div>
         <div>Please make sure to type the correct ID to get the accurate voucher.</div>
       </div>
+      <p class="app-url-line">
+        <span class="app-url-label">Voucher web app (bookmark or share)</span>
+        <a href="https://script.google.com/macros/s/AKfycbzSoEMuda0BuA18M1Ntmp_lV3dG2Ku48inxSA5AxS0jSosIb_z2LmZAbBEC7lVpdJ_s/exec" target="_blank" rel="noopener noreferrer">https://script.google.com/macros/s/AKfycbzSoEMuda0BuA18M1Ntmp_lV3dG2Ku48inxSA5AxS0jSosIb_z2LmZAbBEC7lVpdJ_s/exec</a>
+      </p>
     </div>
   </div>
 
@@ -258,6 +279,7 @@
     <div class="voucher-toolbar">
       <button type="button" id="btn-back">← Back</button>
       <button type="button" class="btn-print" id="btn-print">Print voucher</button>
+      <span class="toolbar-app-link"><a href="https://script.google.com/macros/s/AKfycbzSoEMuda0BuA18M1Ntmp_lV3dG2Ku48inxSA5AxS0jSosIb_z2LmZAbBEC7lVpdJ_s/exec" target="_blank" rel="noopener noreferrer">App link</a></span>
     </div>
     <div class="voucher-page" id="voucher-page"></div>
   </div>
