@@ -6,13 +6,22 @@
   <title>startwell, sallybus generator</title>
   <style>
     :root {
-      --bg: #ffffff;
-      --surface: #ffffff;
-      --surface2: #f4f6f8;
-      --border: #d8dee4;
-      --text: #1a1a1a;
-      --muted: #5c6570;
-      --accent: #1a56db;
+      /* Startwell-inspired: black, pale gold, amber path */
+      --sw-black: #000000;
+      --sw-black-soft: #0a0a0a;
+      --sw-gold: #f0e4c4;
+      --sw-gold-muted: #c4b896;
+      --sw-gold-dim: #8a7d5c;
+      --sw-orange: #f59e0b;
+      --sw-orange-deep: #d97706;
+      --sw-border: rgba(240, 228, 196, 0.28);
+      --bg: #0a0a0a;
+      --surface: #000000;
+      --surface2: #111111;
+      --border: var(--sw-border);
+      --text: var(--sw-gold);
+      --muted: var(--sw-gold-muted);
+      --accent: var(--sw-orange);
       --radius: 10px;
       --font: "Segoe UI", system-ui, -apple-system, sans-serif;
     }
@@ -26,73 +35,94 @@
       line-height: 1.5;
     }
     header {
-      padding: 0.85rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      padding: 1rem 1.25rem 1.15rem;
+      border-bottom: 1px solid var(--sw-border);
+      background: var(--sw-black);
+      text-align: center;
+    }
+    .header-inner {
+      max-width: 56rem;
+      margin: 0 auto;
     }
     header h1 {
       margin: 0;
-      font-size: 1.2rem;
+      font-size: 1.35rem;
       font-weight: 600;
+      color: var(--sw-gold);
+      letter-spacing: 0.02em;
     }
     header h1 .brand {
-      color: var(--accent);
-      font-weight: 700;
+      color: var(--sw-orange);
+      font-weight: 800;
+      text-transform: lowercase;
+    }
+    header h1 .title-rest {
+      font-weight: 600;
+      color: var(--sw-gold);
     }
     .header-sub {
-      margin-top: 0.65rem;
+      margin-top: 0.85rem;
     }
     .header-step-nav {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.35rem 0.25rem;
-      margin: 0;
+      justify-content: center;
+      gap: 0.35rem 0.2rem;
+      margin: 0 auto;
       padding: 0;
       list-style: none;
+      max-width: 100%;
     }
     .header-step-nav li {
       display: flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
     .step-pill {
       font: inherit;
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 0.4rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: capitalize;
+      padding: 0.45rem 0.85rem;
       border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
+      border: 1px solid var(--sw-border);
+      background: var(--sw-black-soft);
+      color: var(--sw-gold);
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
     }
     .step-pill:hover:not(:disabled) {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: #f8fafc;
+      border-color: var(--sw-orange);
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
     }
     .step-pill.is-active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
+      background: linear-gradient(165deg, var(--sw-orange) 0%, var(--sw-orange-deep) 100%);
+      border-color: var(--sw-orange);
+      color: #1a0f00;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
     }
     .step-pill:disabled {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: not-allowed;
     }
     .step-sep {
-      color: var(--muted);
-      font-size: 0.75rem;
+      color: var(--sw-gold-dim);
+      font-size: 0.72rem;
       user-select: none;
-      padding: 0 0.1rem;
+      padding: 0 0.05rem;
     }
     .header-tagline {
-      margin: 0.5rem 0 0;
+      margin: 0.65rem auto 0;
       font-size: 0.78rem;
-      color: var(--muted);
-      max-width: 52rem;
+      color: var(--sw-gold-muted);
+      max-width: 36rem;
+      text-align: center;
+      line-height: 1.45;
+    }
+    .header-tagline strong {
+      color: var(--sw-gold);
     }
     .page-stack {
       display: flex;
@@ -112,45 +142,59 @@
       margin-top: 1rem;
       padding: 1rem;
       border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface2);
+      border: 1px solid var(--sw-border);
+      background: var(--sw-black);
+      color: var(--sw-gold);
       white-space: pre-wrap;
       font-size: 0.875rem;
       overflow: auto;
       max-height: min(55vh, 480px);
       min-height: 120px;
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.08);
     }
     .syll-output.is-empty {
-      color: var(--muted);
+      color: var(--sw-gold-dim);
       font-style: italic;
     }
     fieldset {
-      border: 1px solid var(--border);
+      border: 1px solid var(--sw-border);
       border-radius: var(--radius);
       margin: 0 0 1rem;
       padding: 1rem;
-      background: var(--surface);
+      background: var(--sw-black);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
     }
     legend {
       padding: 0 0.5rem;
-      color: var(--muted);
+      color: var(--sw-gold-muted);
       font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
     label {
       display: block;
       margin-bottom: 0.3rem;
       font-size: 0.85rem;
-      color: var(--muted);
+      color: var(--sw-gold-muted);
     }
     input, select, textarea {
       width: 100%;
       margin-bottom: 0.75rem;
       padding: 0.5rem 0.6rem;
       font: inherit;
-      color: var(--text);
-      background: #fff;
-      border: 1px solid var(--border);
+      color: var(--sw-gold);
+      background: var(--sw-black-soft);
+      border: 1px solid var(--sw-border);
       border-radius: 6px;
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--sw-gold-dim);
+    }
+    select option {
+      background: #111;
+      color: var(--sw-gold);
     }
     .topic-block.is-disabled {
       opacity: 0.55;
@@ -159,9 +203,9 @@
     .topic-block {
       margin-bottom: 0.75rem;
       padding: 0.65rem 0.75rem;
-      border: 1px solid var(--border);
+      border: 1px solid var(--sw-border);
       border-radius: 6px;
-      background: var(--surface2);
+      background: var(--sw-black-soft);
     }
     .topic-block .topic-head {
       display: flex;
@@ -174,20 +218,21 @@
     .topic-block .topic-head label {
       margin: 0;
       font-weight: 600;
-      color: var(--text);
+      color: var(--sw-gold);
     }
     button.linkish {
       font: inherit;
       font-size: 0.8rem;
-      padding: 0.2rem 0.5rem;
-      border: 1px solid var(--border);
+      padding: 0.25rem 0.55rem;
+      border: 1px solid var(--sw-border);
       border-radius: 6px;
-      background: #fff;
-      color: var(--accent);
+      background: transparent;
+      color: var(--sw-orange);
       cursor: pointer;
     }
     button.linkish:hover {
-      border-color: var(--accent);
+      border-color: var(--sw-orange);
+      background: rgba(245, 158, 11, 0.1);
     }
     .topic-list {
       display: flex;
@@ -200,7 +245,7 @@
       gap: 0.5rem;
       margin: 0;
       font-weight: normal;
-      color: var(--text);
+      color: var(--sw-gold);
       cursor: pointer;
     }
     .topic-list input[type="checkbox"] {
@@ -225,31 +270,35 @@
       padding: 0.55rem 1rem;
       border: none;
       border-radius: var(--radius);
-      background: var(--accent);
-      color: #fff;
+      background: linear-gradient(165deg, var(--sw-orange) 0%, var(--sw-orange-deep) 100%);
+      color: #1a0f00;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
     }
-    button.primary:hover { filter: brightness(1.05); }
+    button.primary:hover { filter: brightness(1.08); }
     button.secondary {
       font: inherit;
       padding: 0.55rem 1rem;
-      border: 1px solid var(--border);
+      border: 1px solid var(--sw-border);
       border-radius: var(--radius);
-      background: #fff;
-      color: var(--text);
+      background: transparent;
+      color: var(--sw-gold);
       cursor: pointer;
+    }
+    button.secondary:hover {
+      border-color: var(--sw-gold-muted);
+      background: rgba(240, 228, 196, 0.06);
     }
     .selection-summary {
       font-size: 0.8rem;
-      color: var(--muted);
+      color: var(--sw-gold-muted);
       margin-bottom: 0.75rem;
-      padding: 0.5rem 0.65rem;
+      padding: 0.55rem 0.7rem;
       border-radius: 6px;
-      border: 1px dashed var(--border);
-      background: #fff;
+      border: 1px dashed var(--sw-border);
+      background: var(--sw-black-soft);
     }
-    .selection-summary strong { color: var(--text); }
+    .selection-summary strong { color: var(--sw-gold); }
     /* Floating admin (keybook upload) */
     .fab-admin {
       position: fixed;
@@ -259,11 +308,11 @@
       width: 3.25rem;
       height: 3.25rem;
       border-radius: 50%;
-      border: none;
-      background: var(--accent);
-      color: #fff;
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      background: linear-gradient(165deg, var(--sw-orange) 0%, var(--sw-orange-deep) 100%);
+      color: #1a0f00;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(26, 86, 219, 0.35);
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -271,10 +320,10 @@
     }
     .fab-admin:hover {
       transform: scale(1.05);
-      box-shadow: 0 6px 20px rgba(26, 86, 219, 0.4);
+      box-shadow: 0 6px 28px rgba(245, 158, 11, 0.5);
     }
     .fab-admin:focus-visible {
-      outline: 2px solid var(--accent);
+      outline: 2px solid var(--sw-orange);
       outline-offset: 3px;
     }
     .fab-admin svg { display: block; }
@@ -300,20 +349,22 @@
       max-width: 420px;
       max-height: 90vh;
       overflow: auto;
-      background: #fff;
+      background: var(--sw-black);
       border-radius: var(--radius);
-      border: 1px solid var(--border);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+      border: 1px solid var(--sw-border);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.65);
       padding: 1.25rem;
+      color: var(--sw-gold);
     }
     .modal-card h2 {
       margin: 0 0 0.35rem;
       font-size: 1.1rem;
+      color: var(--sw-gold);
     }
     .modal-card .modal-lead {
       margin: 0 0 1rem;
       font-size: 0.8rem;
-      color: var(--muted);
+      color: var(--sw-gold-muted);
     }
     .modal-actions-top {
       display: flex;
@@ -332,15 +383,16 @@
       line-height: 1;
       font-size: 1.25rem;
     }
-    .btn-icon-close:hover { background: var(--surface2); color: var(--text); }
+    .btn-icon-close { color: var(--sw-gold-muted); }
+    .btn-icon-close:hover { background: var(--sw-black-soft); color: var(--sw-gold); }
     .admin-banner {
       font-size: 0.75rem;
-      color: var(--muted);
+      color: var(--sw-gold-muted);
       padding: 0.5rem 0.65rem;
       border-radius: 6px;
-      background: var(--surface2);
+      background: var(--sw-black-soft);
       margin-bottom: 1rem;
-      border: 1px solid var(--border);
+      border: 1px solid var(--sw-border);
     }
     .admin-msg {
       font-size: 0.85rem;
@@ -360,8 +412,9 @@
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--sw-gold-muted);
       margin-bottom: 0.75rem;
+      text-align: center;
     }
     .wiz-step {
       display: none;
@@ -372,16 +425,25 @@
       margin: 0 0 0.65rem;
       font-size: 1rem;
       font-weight: 600;
-      color: var(--text);
+      color: var(--sw-gold);
+      text-align: center;
+    }
+    .wiz-form-hint {
+      font-size: 0.8rem;
+      color: var(--sw-gold-muted);
+      margin: 0 0 0.5rem;
+      text-align: center;
+      line-height: 1.45;
     }
     .wiz-nav {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
       align-items: center;
+      justify-content: center;
       margin-top: 1rem;
       padding-top: 0.75rem;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--sw-border);
     }
     .wiz-nav .spacer { flex: 1; min-width: 0.5rem; }
     #wiz-next[disabled] {
@@ -393,7 +455,8 @@
 </head>
 <body>
   <header>
-    <h1><span class="brand">startwell</span>, sallybus generator</h1>
+    <div class="header-inner">
+    <h1><span class="brand">startwell</span><span class="title-rest">, sallybus generator</span></h1>
     <div class="header-sub">
       <ul class="header-step-nav" id="header-step-nav" aria-label="Go to step">
         <li><button type="button" class="step-pill is-active" data-wiz-goto="0" id="nav-step-0">Class</button><span class="step-sep" aria-hidden="true">→</span></li>
@@ -404,6 +467,7 @@
         <li><button type="button" class="step-pill" data-wiz-goto="5" id="nav-step-5">Generate</button></li>
       </ul>
       <p class="header-tagline">Click a step to jump (forward only when earlier steps are complete). <strong>Next</strong> in the form still works. Your syllabus shows only after <strong>Generate syllabus</strong> on the last step.</p>
+    </div>
     </div>
   </header>
 
@@ -442,7 +506,7 @@
 
           <div class="wiz-step" data-wiz-step="3" id="wiz-step-3">
             <h3 class="wiz-title">Select topics</h3>
-            <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.5rem">Topics from this chapter (all page ranges). Tick at least one, or use Select all.</p>
+            <p class="wiz-form-hint">Topics from this chapter (all page ranges). Tick at least one, or use Select all.</p>
             <div id="topic-block" class="topic-block is-disabled" aria-disabled="true">
               <div class="topic-head">
                 <span class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Topics</span>
@@ -462,7 +526,7 @@
 
           <div class="wiz-step" data-wiz-step="5" id="wiz-step-5">
             <h3 class="wiz-title">Generate syllabus</h3>
-            <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.75rem">Optional term details, then use the button below. The syllabus text appears here only after you generate.</p>
+            <p class="wiz-form-hint" style="margin-bottom:0.75rem">Optional term details, then use the button below. The syllabus text appears here only after you generate.</p>
             <div class="row">
               <div>
                 <label for="sy-term">Academic term</label>
