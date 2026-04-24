@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Download Student Voucher — Start Well Education</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #e8f2f8;
+      --card: #ffffff;
+      --green: #2d8a4e;
+      --red: #c62828;
+      --navy: #1a2b4a;
+      --muted: #9aa0a6;
+      --shadow: 0 12px 40px rgba(26, 43, 74, 0.12);
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px 48px;
+    }
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 40px 36px 36px;
+      text-align: center;
+    }
+    .logo-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .subtitle {
+      margin: 0 0 28px;
+      font-size: 0.95rem;
+      color: var(--red);
+      line-height: 1.45;
+    }
+    .file-row {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .file-row label {
+      display: block;
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .file-row input[type="file"] {
+      width: 100%;
+      font-size: 0.8rem;
+    }
+    .sync-block {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    .sync-block label {
+      display: block;
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .sync-block input[type="url"],
+    .sync-block input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      border: 1px solid #e0e4e8;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .sync-block .check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+    .sync-block .check input {
+      margin: 0;
+      cursor: pointer;
+    }
+    .sheet-link {
+      margin: 0 0 20px;
+      text-align: center;
+    }
+    .sheet-link a {
+      color: var(--navy);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    .sheet-link a:hover {
+      color: var(--green);
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+    .links button {
+      background: none;
+      border: none;
+      color: var(--navy);
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0;
+    }
+    .links button:hover {
+      color: var(--green);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 16px 18px;
+      font-size: 1.05rem;
+      border: 1px solid #e0e4e8;
+      border-radius: 14px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+      margin-bottom: 16px;
+    }
+    input[type="text"]::placeholder {
+      color: var(--muted);
+    }
+    input[type="text"]:focus {
+      outline: 2px solid rgba(45, 138, 78, 0.35);
+      border-color: var(--green);
+    }
+    .btn-primary {
+      width: 100%;
+      padding: 16px 24px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--navy);
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn-primary:hover {
+      background: #243a5c;
+    }
+    .btn-primary:active {
+      transform: scale(0.99);
+    }
+    .footer-note {
+      margin-top: 26px;
+      font-size: 0.82rem;
+      color: var(--red);
+      line-height: 1.55;
+    }
+    .status {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      min-height: 1.2em;
+      color: #444;
+    }
+    .status.error {
+      color: var(--red);
+    }
+    .status.ok {
+      color: var(--green);
+    }
+    .panel {
+      display: none;
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #eee;
+      text-align: left;
+    }
+    .panel.visible {
+      display: block;
+    }
+    .panel h2 {
+      margin: 0 0 16px;
+      font-size: 1.05rem;
+      color: var(--navy);
+      text-align: center;
+    }
+    .field {
+      margin-bottom: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .field input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .actions-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .btn-secondary {
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--navy);
+      background: #eef2f7;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo-wrap" aria-hidden="true">
+      <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="#0a0a0a" />
+        <text x="50" y="16" text-anchor="middle" fill="#f5e6a8" font-size="9" font-weight="700" font-family="system-ui,sans-serif">STARTWELL</text>
+        <circle cx="50" cy="38" r="10" fill="#ff8c2a" opacity="0.95" />
+        <circle cx="50" cy="38" r="5" fill="#fff5e0" />
+        <path d="M18 82 Q35 70 42 55 L50 48 L58 55 Q72 68 82 82 Z" fill="#e86a1a" />
+        <path d="M22 80 Q38 68 46 54 L50 50" fill="none" stroke="#ffb347" stroke-width="1.2" />
+        <g transform="translate(40,58)">
+          <ellipse cx="4" cy="0" rx="2.5" ry="3" fill="#fff" />
+          <rect x="2" y="3" width="4" height="5" fill="#fff" />
+          <rect x="1.5" y="8" width="5" height="4" fill="#1a1a1a" />
+        </g>
+        <g transform="translate(52,62)">
+          <ellipse cx="3" cy="0" rx="2" ry="2.5" fill="#fff" />
+          <rect x="1.5" y="2.5" width="3" height="4" fill="#fff" />
+          <rect x="1" y="6.5" width="4" height="3" fill="#1a1a1a" />
+        </g>
+        <text x="50" y="96" text-anchor="middle" fill="#ffffff" font-size="8.5" font-weight="700" font-family="Georgia,serif">EDUCATION</text>
+      </svg>
+    </div>
+    <h1>Download Student Voucher</h1>
+    <p class="subtitle">Please type student roll ID below to verify <span aria-hidden="true">🔒</span></p>
+
+    <p class="sheet-link" id="sheetLinkWrap">
+      <a id="sheetLink" href="#" target="_blank" rel="noopener noreferrer">Open master Google Sheet</a>
+    </p>
+
+    <div class="file-row">
+      <label for="xlsxFile">Load student data from Excel (.xlsx)</label>
+      <input id="xlsxFile" type="file" accept=".xlsx,.xls" />
+    </div>
+    <div class="links">
+      <button type="button" id="btnTemplate">Download empty template</button>
+      <button type="button" id="btnDownload">Download current sheet</button>
+    </div>
+
+    <div class="sync-block">
+      <label for="appsScriptUrl">Google Sheet sync — Web App URL</label>
+      <input
+        id="appsScriptUrl"
+        type="url"
+        placeholder="https://script.google.com/macros/s/.../exec"
+        autocomplete="off"
+      />
+      <label for="syncApiSecret">API secret (only if you set API_SECRET in Apps Script)</label>
+      <input id="syncApiSecret" type="password" placeholder="Optional" autocomplete="off" />
+      <label class="check">
+        <input type="checkbox" id="syncToSheet" />
+        After save, send this row to Google Sheet (Apps Script)
+      </label>
+    </div>
+
+    <input id="rollId" type="text" placeholder="Type roll id here..." autocomplete="off" />
+    <button type="button" class="btn-primary" id="btnContinue">
+      Continue <span aria-hidden="true">➔</span>
+    </button>
+    <p class="status" id="status" role="status"></p>
+
+    <div class="footer-note">
+      Student roll ID can be found on an old voucher or student ID card.<br />
+      Please make sure to type the correct roll ID to get the accurate voucher.
+    </div>
+
+    <section class="panel" id="editPanel" aria-live="polite">
+      <h2>Edit &amp; save to workbook</h2>
+      <div class="field">
+        <label for="fRollId">Roll ID (enroll id)</label>
+        <input id="fRollId" type="text" readonly />
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="fName">Name</label>
+          <input id="fName" type="text" />
+        </div>
+        <div class="field">
+          <label for="fParent">Parent</label>
+          <input id="fParent" type="text" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="fClass">Class</label>
+          <input id="fClass" type="text" />
+        </div>
+        <div class="field">
+          <label for="fSection">Section</label>
+          <input id="fSection" type="text" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="fCampus">Campus</label>
+          <input id="fCampus" type="text" />
+        </div>
+        <div class="field">
+          <label for="fVoucher">Voucher</label>
+          <input id="fVoucher" type="text" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="fSubtotal">Subtotal</label>
+          <input id="fSubtotal" type="text" />
+        </div>
+        <div class="field">
+          <label for="fTotal">Total</label>
+          <input id="fTotal" type="text" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="fLateFee">Late fee</label>
+          <input id="fLateFee" type="text" />
+        </div>
+        <div class="field">
+          <label for="fDueDate">Due date</label>
+          <input id="fDueDate" type="text" placeholder="DD/MM/YYYY" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="fValidity">Voucher validity</label>
+        <input id="fValidity" type="text" placeholder="DD/MM/YYYY" />
+      </div>
+      <div class="actions-row">
+        <button type="button" class="btn-primary" id="btnSaveRow">Save row to workbook</button>
+        <button type="button" class="btn-secondary" id="btnBack">Look up another roll ID</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      /** Fallback if enroll-config.json cannot be fetched (e.g. file://). Keep in sync with enroll-config.json. */
+      const DEFAULT_ENROLL_CONFIG = {
+        spreadsheetId: "1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4",
+        spreadsheetUrl:
+          "https://docs.google.com/spreadsheets/d/1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4/edit?usp=sharing",
+        appsScriptWebAppUrl: "",
+        syncToSheetOnSave: false,
+      };
+
+      let enrollConfig = { ...DEFAULT_ENROLL_CONFIG };
+
+      const SHEET_NAME = "Students";
+      const HEADERS = [
+        "RollId",
+        "Name",
+        "Parent",
+        "Class",
+        "Section",
+        "Campus",
+        "Voucher",
+        "Subtotal",
+        "Total",
+        "LateFee",
+        "DueDate",
+        "VoucherValidity",
+      ];
+
+      let workbook = null;
+      let sheetName = SHEET_NAME;
+      let rows = [];
+      let currentIndex = -1;
+
+      const $ = (id) => document.getElementById(id);
+      const statusEl = $("status");
+      const appsUrlInput = $("appsScriptUrl");
+      const apiSecretInput = $("syncApiSecret");
+      const syncCheckbox = $("syncToSheet");
+      const sheetLink = $("sheetLink");
+      const sheetLinkWrap = $("sheetLinkWrap");
+
+      function applyEnrollConfig() {
+        const url = String(enrollConfig.spreadsheetUrl || "").trim();
+        if (url) {
+          sheetLink.href = url;
+          sheetLinkWrap.style.display = "";
+        } else {
+          sheetLinkWrap.style.display = "none";
+        }
+        const web = String(enrollConfig.appsScriptWebAppUrl || "").trim();
+        if (web && !appsUrlInput.value.trim()) {
+          appsUrlInput.value = web;
+        }
+        if (enrollConfig.syncToSheetOnSave === true && localStorage.getItem("enroll_sync_enabled") !== "0") {
+          syncCheckbox.checked = true;
+        }
+      }
+
+      function mergeConfig(obj) {
+        if (!obj || typeof obj !== "object") {
+          return;
+        }
+        enrollConfig = { ...enrollConfig, ...obj };
+      }
+
+      applyEnrollConfig();
+
+      fetch("enroll-config.json", { cache: "no-store" })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (j) {
+          if (j) {
+            mergeConfig(j);
+          }
+        })
+        .catch(function () {})
+        .finally(function () {
+          applyEnrollConfig();
+          try {
+            const savedUrl = localStorage.getItem("enroll_apps_script_url");
+            if (savedUrl) appsUrlInput.value = savedUrl;
+            const savedSecret = localStorage.getItem("enroll_api_secret");
+            if (savedSecret) apiSecretInput.value = savedSecret;
+            if (localStorage.getItem("enroll_sync_enabled") === "1") {
+              syncCheckbox.checked = true;
+            }
+            if (localStorage.getItem("enroll_sync_enabled") === "0") {
+              syncCheckbox.checked = false;
+            }
+          } catch (ignore) {}
+        });
+
+      appsUrlInput.addEventListener("change", function () {
+        try {
+          localStorage.setItem("enroll_apps_script_url", appsUrlInput.value.trim());
+        } catch (ignore) {}
+      });
+      apiSecretInput.addEventListener("change", function () {
+        try {
+          localStorage.setItem("enroll_api_secret", apiSecretInput.value);
+        } catch (ignore) {}
+      });
+      syncCheckbox.addEventListener("change", function () {
+        try {
+          localStorage.setItem("enroll_sync_enabled", syncCheckbox.checked ? "1" : "0");
+        } catch (ignore) {}
+      });
+
+      function setStatus(msg, kind) {
+        statusEl.textContent = msg || "";
+        statusEl.className = "status" + (kind ? " " + kind : "");
+      }
+
+      function normalizeHeader(h) {
+        return String(h || "")
+          .trim()
+          .replace(/\s+/g, "")
+          .toLowerCase();
+      }
+
+      function headerMap(firstRow) {
+        const map = {};
+        if (!firstRow) return map;
+        Object.keys(firstRow).forEach((k) => {
+          map[normalizeHeader(k)] = k;
+        });
+        return map;
+      }
+
+      function getCell(row, logical) {
+        const key = row["__keys__"][normalizeHeader(logical)];
+        return key !== undefined ? row[key] : "";
+      }
+
+      function setCell(row, logical, value) {
+        const keys = row["__keys__"];
+        const norm = normalizeHeader(logical);
+        let key = keys[norm];
+        if (!key) {
+          key = logical;
+          keys[norm] = key;
+          row[key] = value;
+        } else {
+          row[key] = value;
+        }
+      }
+
+      function emptyWorkbook() {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([HEADERS]);
+        XLSX.utils.book_append_sheet(wb, ws, SHEET_NAME);
+        return wb;
+      }
+
+      function rowsFromSheet(ws) {
+        const json = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        return json.map((r) => {
+          const keys = headerMap(r);
+          return { ...r, __keys__: keys };
+        });
+      }
+
+      function sheetFromRows(dataRows) {
+        const keys = HEADERS.slice();
+        const aoa = [keys];
+        dataRows.forEach((r) => {
+          aoa.push(keys.map((h) => getCell(r, h)));
+        });
+        return XLSX.utils.aoa_to_sheet(aoa);
+      }
+
+      function ensureWorkbook() {
+        if (!workbook) {
+          workbook = emptyWorkbook();
+          sheetName = SHEET_NAME;
+          const ws = workbook.Sheets[sheetName];
+          rows = rowsFromSheet(ws);
+          setStatus("Started with an empty sheet. Add a template or enter a new roll ID.", "ok");
+        }
+      }
+
+      function firstSheetName(wb) {
+        return wb.SheetNames[0] || SHEET_NAME;
+      }
+
+      function rowLooksLikeHeaderRow(r) {
+        if (!r) return false;
+        return HEADERS.every(function (h) {
+          return normalizeHeader(String(getCell(r, h))) === normalizeHeader(h);
+        });
+      }
+
+      function loadWorkbook(wb) {
+        workbook = wb;
+        sheetName = workbook.SheetNames.includes(SHEET_NAME) ? SHEET_NAME : firstSheetName(wb);
+        const ws = workbook.Sheets[sheetName];
+        rows = rowsFromSheet(ws);
+        while (rows.length && rowLooksLikeHeaderRow(rows[0])) {
+          rows.shift();
+        }
+        rows = rows.map(function (r) {
+          if (!r.__keys__) r.__keys__ = headerMap(r);
+          return r;
+        });
+      }
+
+      function findRowIndex(rollId) {
+        const want = String(rollId).trim().toLowerCase();
+        return rows.findIndex((r) => String(getCell(r, "RollId")).trim().toLowerCase() === want);
+      }
+
+      function writeSheetBack() {
+        const ws = sheetFromRows(rows);
+        workbook.Sheets[sheetName] = ws;
+        if (!workbook.SheetNames.includes(sheetName)) {
+          XLSX.utils.book_append_sheet(workbook, ws, sheetName);
+        }
+      }
+
+      function downloadBlob(name, wb) {
+        XLSX.writeFile(wb, name);
+        setStatus("Downloaded " + name + ".", "ok");
+      }
+
+      function collectFormStudent() {
+        return {
+          RollId: $("fRollId").value.trim(),
+          Name: $("fName").value.trim(),
+          Parent: $("fParent").value.trim(),
+          Class: $("fClass").value.trim(),
+          Section: $("fSection").value.trim(),
+          Campus: $("fCampus").value.trim(),
+          Voucher: $("fVoucher").value.trim(),
+          Subtotal: $("fSubtotal").value.trim(),
+          Total: $("fTotal").value.trim(),
+          LateFee: $("fLateFee").value.trim(),
+          DueDate: $("fDueDate").value.trim(),
+          VoucherValidity: $("fValidity").value.trim(),
+        };
+      }
+
+      function postStudentToAppsScript() {
+        const url = appsUrlInput.value.trim();
+        if (!url) {
+          return;
+        }
+        const payload = {
+          action: "saveStudent",
+          student: collectFormStudent(),
+        };
+        const sid = String(enrollConfig.spreadsheetId || "").trim();
+        if (sid) {
+          payload.spreadsheetId = sid;
+        }
+        const secret = apiSecretInput.value.trim();
+        if (secret) {
+          payload.apiSecret = secret;
+        }
+        fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body: JSON.stringify(payload),
+        }).catch(function () {});
+      }
+
+      $("xlsxFile").addEventListener("change", function (e) {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          try {
+            const data = new Uint8Array(ev.target.result);
+            const wb = XLSX.read(data, { type: "array" });
+            loadWorkbook(wb);
+            setStatus("Loaded " + f.name + " (" + rows.length + " data rows).", "ok");
+          } catch (err) {
+            setStatus("Could not read that file.", "error");
+          }
+        };
+        reader.readAsArrayBuffer(f);
+      });
+
+      $("btnTemplate").addEventListener("click", function () {
+        const wb = emptyWorkbook();
+        downloadBlob("students-template.xlsx", wb);
+      });
+
+      $("btnDownload").addEventListener("click", function () {
+        ensureWorkbook();
+        writeSheetBack();
+        downloadBlob("students-data.xlsx", workbook);
+      });
+
+      function showEdit(rollId) {
+        $("editPanel").classList.add("visible");
+        $("rollId").classList.add("hidden");
+        $("btnContinue").classList.add("hidden");
+        $("fRollId").value = rollId;
+        const r = rows[currentIndex];
+        $("fName").value = getCell(r, "Name");
+        $("fParent").value = getCell(r, "Parent");
+        $("fClass").value = getCell(r, "Class");
+        $("fSection").value = getCell(r, "Section");
+        $("fCampus").value = getCell(r, "Campus");
+        $("fVoucher").value = getCell(r, "Voucher");
+        $("fSubtotal").value = getCell(r, "Subtotal");
+        $("fTotal").value = getCell(r, "Total");
+        $("fLateFee").value = getCell(r, "LateFee");
+        $("fDueDate").value = getCell(r, "DueDate");
+        $("fValidity").value = getCell(r, "VoucherValidity");
+      }
+
+      function hideEdit() {
+        $("editPanel").classList.remove("visible");
+        $("rollId").classList.remove("hidden");
+        $("btnContinue").classList.remove("hidden");
+        currentIndex = -1;
+      }
+
+      $("btnContinue").addEventListener("click", function () {
+        ensureWorkbook();
+        const rollId = $("rollId").value.trim();
+        if (!rollId) {
+          setStatus("Please enter a roll ID.", "error");
+          return;
+        }
+        let idx = findRowIndex(rollId);
+        if (idx < 0) {
+          const blank = { __keys__: {} };
+          HEADERS.forEach((h) => setCell(blank, h, h === "RollId" ? rollId : ""));
+          rows.push(blank);
+          idx = rows.length - 1;
+          setStatus("No match — new row created. Fill details and save.", "ok");
+        } else {
+          setStatus("Student found. You can edit and save.", "ok");
+        }
+        currentIndex = idx;
+        showEdit(rollId);
+      });
+
+      $("btnSaveRow").addEventListener("click", function () {
+        if (currentIndex < 0 || !rows[currentIndex]) {
+          setStatus("Nothing to save.", "error");
+          return;
+        }
+        const r = rows[currentIndex];
+        setCell(r, "RollId", $("fRollId").value.trim());
+        setCell(r, "Name", $("fName").value.trim());
+        setCell(r, "Parent", $("fParent").value.trim());
+        setCell(r, "Class", $("fClass").value.trim());
+        setCell(r, "Section", $("fSection").value.trim());
+        setCell(r, "Campus", $("fCampus").value.trim());
+        setCell(r, "Voucher", $("fVoucher").value.trim());
+        setCell(r, "Subtotal", $("fSubtotal").value.trim());
+        setCell(r, "Total", $("fTotal").value.trim());
+        setCell(r, "LateFee", $("fLateFee").value.trim());
+        setCell(r, "DueDate", $("fDueDate").value.trim());
+        setCell(r, "VoucherValidity", $("fValidity").value.trim());
+        writeSheetBack();
+        let msg = "Row saved in memory. Use “Download current sheet” to save the .xlsx file.";
+        if (syncCheckbox.checked) {
+          const url = appsUrlInput.value.trim();
+          if (!url) {
+            msg += " Paste the Web App URL to enable Google Sheet sync.";
+            setStatus(msg, "error");
+            return;
+          }
+          postStudentToAppsScript();
+          msg +=
+            " A sync request was sent to your Google Apps Script (open the spreadsheet to confirm; browsers cannot read the response).";
+        }
+        setStatus(msg, "ok");
+      });
+
+      $("btnBack").addEventListener("click", function () {
+        hideEdit();
+        $("rollId").value = "";
+        setStatus("", "");
+      });
+    })();
+  </script>
+</body>
+</html>
