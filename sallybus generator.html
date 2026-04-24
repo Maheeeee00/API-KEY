@@ -46,48 +46,27 @@
       min-height: calc(100vh - 4.5rem);
     }
     .layout {
-      display: grid;
-      grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
       flex: 1;
-      gap: 0;
     }
-    @media (max-width: 800px) {
-      .layout { grid-template-columns: 1fr; }
-    }
-    .col-form {
+    .col-main {
       padding: 1.25rem;
-      border-right: 1px solid var(--border);
     }
-    @media (max-width: 800px) {
-      .col-form { border-right: none; border-bottom: 1px solid var(--border); }
-    }
-    .col-preview {
-      padding: 1.25rem;
-      background: var(--surface2);
-      display: flex;
-      flex-direction: column;
-      min-height: 50vh;
-    }
-    .col-preview h2 {
-      margin: 0 0 0.75rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .preview-box {
-      flex: 1;
+    .syll-output {
+      margin-top: 1rem;
       padding: 1rem;
       border-radius: var(--radius);
       border: 1px solid var(--border);
-      background: var(--surface);
+      background: var(--surface2);
       white-space: pre-wrap;
       font-size: 0.875rem;
       overflow: auto;
-      min-height: 200px;
+      max-height: min(55vh, 480px);
+      min-height: 120px;
     }
-    .preview-box.is-empty {
+    .syll-output.is-empty {
       color: var(--muted);
       font-style: italic;
     }
@@ -320,73 +299,6 @@
     .admin-msg.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
     .admin-msg.err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
     .admin-msg.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-    /* Google Drive keybooks panel */
-    .drive-section {
-      border-top: 1px solid var(--border);
-      padding: 1rem 1.25rem 1.5rem;
-      background: #fafbfc;
-    }
-    .drive-section h2 {
-      margin: 0 0 0.35rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .drive-section .drive-lead {
-      margin: 0 0 0.85rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-      max-width: 720px;
-    }
-    .drive-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: flex-end;
-      margin-bottom: 0.75rem;
-    }
-    .drive-toolbar .grow {
-      flex: 1;
-      min-width: 220px;
-    }
-    .drive-toolbar label { margin-bottom: 0.25rem; }
-    .drive-toolbar input { margin-bottom: 0; }
-    .drive-embed-wrap {
-      position: relative;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: #fff;
-      min-height: 420px;
-    }
-    .drive-embed-wrap iframe {
-      display: block;
-      width: 100%;
-      height: min(70vh, 640px);
-      border: 0;
-    }
-    .drive-placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      text-align: center;
-      font-size: 0.875rem;
-      color: var(--muted);
-      background: #fff;
-    }
-    .drive-placeholder[hidden] { display: none; }
-    .drive-msg {
-      font-size: 0.8rem;
-      margin: 0.5rem 0 0;
-      color: var(--muted);
-    }
-    .drive-msg.err { color: #b91c1c; }
-    .drive-msg.ok { color: #047857; }
     /* Quick selection wizard */
     .wiz-track { margin-top: 0.25rem; }
     .wiz-progress {
@@ -428,15 +340,15 @@
 <body>
   <header>
     <h1>Sallybus generator</h1>
-    <p>Quick selection is a step-by-step flow: class → subject → chapter → topics → pages → generate. Preview on the right. Drive keybooks section is below.</p>
+    <p>Step-by-step: class → subject → chapter → topics → pages → generate. Your syllabus appears only on the last step after you click Generate.</p>
   </header>
 
   <div class="page-stack">
   <div class="layout">
-    <div class="col-form">
+    <div class="col-main">
       <fieldset>
         <legend>Quick selection</legend>
-        <p class="selection-summary" id="selection-hint">Use <strong>Next</strong> after each choice, or pick from a list to jump ahead. Order: class → subject → chapter → topics → pages → generate.</p>
+        <p class="selection-summary" id="selection-hint">Use <strong>Next</strong> after each choice, or pick from a list to jump ahead. No syllabus preview until the last step.</p>
         <p class="wiz-progress" id="wiz-progress" aria-live="polite">Step 1 of 6 — Class</p>
 
         <div class="wiz-track">
@@ -486,7 +398,7 @@
 
           <div class="wiz-step" data-wiz-step="5" id="wiz-step-5">
             <h3 class="wiz-title">Generate syllabus</h3>
-            <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.75rem">Optional term details, then generate. Preview stays on the right.</p>
+            <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.75rem">Optional term details, then use the button below. The syllabus text appears here only after you generate.</p>
             <div class="row">
               <div>
                 <label for="sy-term">Academic term</label>
@@ -499,10 +411,11 @@
             </div>
             <label for="sy-outcomes">Learning outcomes (optional, one per line)</label>
             <textarea id="sy-outcomes" placeholder="Students will …"></textarea>
-            <div class="actions">
+            <div class="actions" style="margin-top:0.75rem">
               <button type="button" class="primary" id="sy-generate">Generate syllabus</button>
-              <button type="button" class="secondary" id="sy-copy">Copy</button>
             </div>
+            <p id="sy-output-label" class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Generated syllabus</p>
+            <div id="sy-output" class="syll-output is-empty" role="region" aria-labelledby="sy-output-label" aria-live="polite">Your syllabus will appear here after you click Generate syllabus.</div>
           </div>
 
           <div class="wiz-nav">
@@ -513,31 +426,6 @@
         </div>
       </fieldset>
     </div>
-
-    <aside class="col-preview" aria-labelledby="preview-heading">
-      <h2 id="preview-heading">Syllabus (preview)</h2>
-      <div id="sy-output" class="preview-box is-empty" role="region" aria-live="polite">Your selection summary and generated syllabus will appear here.</div>
-    </aside>
-  </div>
-
-  <section class="drive-section" aria-labelledby="drive-section-title">
-    <h2 id="drive-section-title">Keybooks on Google Drive</h2>
-    <p class="drive-lead">Paste your shared <strong>folder</strong> link (the one that opens the folder in Drive). This page embeds Google’s folder view so you can open PDFs and images next to the generator. You must be signed into a Google account that can open the folder. Pure HTML cannot read your private files without a backend and the Drive API.</p>
-    <div class="drive-toolbar">
-      <div class="grow">
-        <label for="drive-folder-url">Drive folder link</label>
-        <input id="drive-folder-url" type="url" placeholder="https://drive.google.com/drive/folders/…" autocomplete="off" />
-      </div>
-      <button type="button" class="primary" id="drive-embed-btn">Show folder here</button>
-      <button type="button" class="secondary" id="drive-open-tab">Open in new tab</button>
-      <button type="button" class="secondary" id="drive-save-link">Save on this device</button>
-    </div>
-    <p id="drive-parse-msg" class="drive-msg" hidden></p>
-    <div class="drive-embed-wrap">
-      <div id="drive-placeholder" class="drive-placeholder">Paste a folder link above, then click <strong>Show folder here</strong>. Optional: <strong>Save on this device</strong> remembers the link in this browser only.</div>
-      <iframe id="drive-folder-frame" title="Google Drive folder" hidden></iframe>
-    </div>
-  </section>
   </div>
 
   <button type="button" class="fab-admin" id="fab-admin" title="Admin: upload keybook" aria-label="Admin keybook upload">
@@ -753,7 +641,7 @@
         var unit = getCurrentUnitObj();
         if (!unit || !unit.pages || !unit.pages.length) {
           resetTopics();
-          refreshPreviewSummary();
+          syncWizardUI();
           return;
         }
         var seen = {};
@@ -768,7 +656,7 @@
         });
         if (!list.length) {
           resetTopics();
-          refreshPreviewSummary();
+          syncWizardUI();
           return;
         }
         topicBlock.classList.remove("is-disabled");
@@ -783,16 +671,13 @@
           cb.id = id;
           cb.value = t;
           cb.dataset.topic = t;
-          cb.addEventListener("change", function () {
-            refreshPreviewSummary();
-            syncWizardUI();
-          });
+          cb.addEventListener("change", syncWizardUI);
           wrap.appendChild(cb);
           wrap.appendChild(document.createTextNode(t));
           topicList.appendChild(wrap);
         });
         updateHint("Tick topics for this chapter, then <strong>Next</strong> to pick a page range.");
-        refreshPreviewSummary();
+        syncWizardUI();
       }
 
       function getCheckedTopicSet() {
@@ -873,14 +758,12 @@
         var c = elClass.value;
         if (!c) {
           updateHint("Choose a <strong>class</strong> (step 1).");
-          refreshPreviewSummary();
           goToStep(0);
           return;
         }
         var subs = getSubjects(c);
         setOptions(elSubject, "— Select subject —", subs);
         updateHint("Class set. Go to <strong>Next</strong> or continue in order.");
-        refreshPreviewSummary();
         syncWizardUI();
         if (wizStepIndex === 0 && c) goToStep(1);
       });
@@ -890,7 +773,6 @@
         var c = elClass.value;
         var s = elSubject.value;
         if (!c || !s) {
-          refreshPreviewSummary();
           syncWizardUI();
           return;
         }
@@ -900,7 +782,6 @@
         });
         setOptions(elUnit, "— Select chapter —", labels);
         updateHint("Pick a <strong>chapter</strong>, then Next.");
-        refreshPreviewSummary();
         syncWizardUI();
         if (wizStepIndex === 1 && s) goToStep(2);
       });
@@ -911,18 +792,15 @@
         var s = elSubject.value;
         var uLabel = elUnit.value;
         if (!c || !s || !uLabel) {
-          refreshPreviewSummary();
           syncWizardUI();
           return;
         }
         updateHint("Choose <strong>topics</strong> in the next step.");
-        refreshPreviewSummary();
         syncWizardUI();
         if (wizStepIndex === 2 && uLabel) goToStep(3);
       });
 
       elPages.addEventListener("change", function () {
-        refreshPreviewSummary();
         syncWizardUI();
         if (wizStepIndex === 4 && elPages.value) goToStep(5);
       });
@@ -946,7 +824,6 @@
         boxes.forEach(function (b) {
           b.checked = anyUnchecked;
         });
-        refreshPreviewSummary();
         syncWizardUI();
       });
 
@@ -956,21 +833,6 @@
           out.push(b.value);
         });
         return out;
-      }
-
-      function refreshPreviewSummary() {
-        var lines = [];
-        lines.push("CURRENT SELECTION");
-        lines.push("-----------------");
-        lines.push("Class:   " + (elClass.value || "—"));
-        lines.push("Subject: " + (elSubject.value || "—"));
-        lines.push("Chapter: " + (elUnit.value || "—"));
-        lines.push("Pages:   " + (elPages.value || "—"));
-        var tops = getCheckedTopics();
-        lines.push("Topics:  " + (tops.length ? tops.join("; ") : "—"));
-        lines.push("");
-        lines.push("(Final step: set term options if needed, then Generate syllabus.)");
-        setOutput(lines.join("\n"));
       }
 
       function setOutput(text) {
@@ -1050,13 +912,6 @@
         lines.push("Notes: Replace sample data in the HTML file with your textbook page ranges when ready.");
 
         setOutput(lines.join("\n"));
-      });
-
-      document.getElementById("sy-copy").addEventListener("click", function () {
-        if (!outEl.textContent) return;
-        navigator.clipboard.writeText(outEl.textContent).catch(function () {
-          alert("Copy failed — select the text in the preview and copy manually.");
-        });
       });
 
       /* —— Admin floating button + keybook upload (client-only until backend) —— */
@@ -1183,125 +1038,11 @@
         );
       });
 
-      /* —— Google Drive folder (embed + remember link) —— */
-      var DRIVE_URL_STORAGE = "sallybus_drive_folder_url";
-      var driveInput = document.getElementById("drive-folder-url");
-      var driveEmbedBtn = document.getElementById("drive-embed-btn");
-      var driveOpenTab = document.getElementById("drive-open-tab");
-      var driveSaveLink = document.getElementById("drive-save-link");
-      var driveFrame = document.getElementById("drive-folder-frame");
-      var drivePlaceholder = document.getElementById("drive-placeholder");
-      var driveParseMsg = document.getElementById("drive-parse-msg");
-
-      function extractDriveFolderId(raw) {
-        if (!raw || typeof raw !== "string") return null;
-        var s = raw.trim();
-        var m = s.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-        if (m) return m[1];
-        m = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-        if (m && /drive\.google\.com/i.test(s)) return m[1];
-        if (/^[a-zA-Z0-9_-]{10,}$/.test(s)) return s;
-        return null;
-      }
-
-      function setDriveParseMsg(text, isErr) {
-        if (!text) {
-          driveParseMsg.hidden = true;
-          driveParseMsg.textContent = "";
-          driveParseMsg.className = "drive-msg";
-          return;
-        }
-        driveParseMsg.hidden = false;
-        driveParseMsg.textContent = text;
-        driveParseMsg.className = "drive-msg" + (isErr ? " err" : " ok");
-      }
-
-      function showDriveEmbed(folderId) {
-        var src = "https://drive.google.com/embeddedfolderview?id=" + encodeURIComponent(folderId) + "#list";
-        driveFrame.src = src;
-        driveFrame.hidden = false;
-        drivePlaceholder.hidden = true;
-      }
-
-      function hideDriveEmbed() {
-        driveFrame.removeAttribute("src");
-        driveFrame.hidden = true;
-        drivePlaceholder.hidden = false;
-      }
-
-      function applyDriveFolderFromInput() {
-        var url = driveInput.value.trim();
-        setDriveParseMsg("", false);
-        if (!url) {
-          hideDriveEmbed();
-          setDriveParseMsg("Paste a folder link first.", true);
-          return null;
-        }
-        var id = extractDriveFolderId(url);
-        if (!id) {
-          hideDriveEmbed();
-          setDriveParseMsg("Could not find a folder ID. Use a link like …/drive/folders/FOLDER_ID", true);
-          return null;
-        }
-        showDriveEmbed(id);
-        setDriveParseMsg("Folder linked. If the area stays blank, use “Open in new tab” (Google sometimes blocks embeds).", false);
-        return id;
-      }
-
-      driveEmbedBtn.addEventListener("click", function () {
-        applyDriveFolderFromInput();
-      });
-
-      driveOpenTab.addEventListener("click", function () {
-        var url = driveInput.value.trim();
-        if (!url) {
-          setDriveParseMsg("Paste a folder link first.", true);
-          return;
-        }
-        var id = extractDriveFolderId(url);
-        if (id) {
-          window.open("https://drive.google.com/drive/folders/" + id, "_blank", "noopener,noreferrer");
-        } else if (/^https?:\/\//i.test(url)) {
-          window.open(url, "_blank", "noopener,noreferrer");
-        } else {
-          setDriveParseMsg("Invalid link.", true);
-        }
-      });
-
-      driveSaveLink.addEventListener("click", function () {
-        var url = driveInput.value.trim();
-        if (!url) {
-          setDriveParseMsg("Nothing to save. Paste your folder link first.", true);
-          return;
-        }
-        if (!extractDriveFolderId(url)) {
-          setDriveParseMsg("Save skipped: folder ID not found in that text.", true);
-          return;
-        }
-        try {
-          localStorage.setItem(DRIVE_URL_STORAGE, url);
-          setDriveParseMsg("Saved in this browser. Reloading the page will keep this link.", false);
-        } catch (e) {
-          setDriveParseMsg("Could not save (private mode or storage blocked).", true);
-        }
-      });
-
-      (function initDriveFromStorage() {
-        try {
-          var saved = localStorage.getItem(DRIVE_URL_STORAGE);
-          if (saved) {
-            driveInput.value = saved;
-            applyDriveFolderFromInput();
-          }
-        } catch (e) { /* ignore */ }
-      })();
-
       fillClasses();
       elClass.value = "";
       resetFromSubject();
       wizStepIndex = 0;
       updateHint("Start with <strong>Step 1 — Class</strong>, then use Next or keep selecting to move forward.");
-      refreshPreviewSummary();
       syncWizardUI();
     })();
   </script>
