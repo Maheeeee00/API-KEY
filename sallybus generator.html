@@ -40,10 +40,15 @@
       font-size: 0.8rem;
       color: var(--muted);
     }
+    .page-stack {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 4.5rem);
+    }
     .layout {
       display: grid;
       grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
-      min-height: calc(100vh - 4.5rem);
+      flex: 1;
       gap: 0;
     }
     @media (max-width: 800px) {
@@ -114,7 +119,6 @@
       border: 1px solid var(--border);
       border-radius: 6px;
     }
-    select:disabled,
     .topic-block.is-disabled {
       opacity: 0.55;
       pointer-events: none;
@@ -316,66 +320,196 @@
     .admin-msg.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
     .admin-msg.err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
     .admin-msg.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    /* Google Drive keybooks panel */
+    .drive-section {
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.25rem 1.5rem;
+      background: #fafbfc;
+    }
+    .drive-section h2 {
+      margin: 0 0 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .drive-section .drive-lead {
+      margin: 0 0 0.85rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      max-width: 720px;
+    }
+    .drive-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: flex-end;
+      margin-bottom: 0.75rem;
+    }
+    .drive-toolbar .grow {
+      flex: 1;
+      min-width: 220px;
+    }
+    .drive-toolbar label { margin-bottom: 0.25rem; }
+    .drive-toolbar input { margin-bottom: 0; }
+    .drive-embed-wrap {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+      min-height: 420px;
+    }
+    .drive-embed-wrap iframe {
+      display: block;
+      width: 100%;
+      height: min(70vh, 640px);
+      border: 0;
+    }
+    .drive-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--muted);
+      background: #fff;
+    }
+    .drive-placeholder[hidden] { display: none; }
+    .drive-msg {
+      font-size: 0.8rem;
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+    }
+    .drive-msg.err { color: #b91c1c; }
+    .drive-msg.ok { color: #047857; }
+    /* Quick selection wizard */
+    .wiz-track { margin-top: 0.25rem; }
+    .wiz-progress {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .wiz-step {
+      display: none;
+      padding: 0.15rem 0 0.5rem;
+    }
+    .wiz-step.is-active { display: block; }
+    .wiz-step h3.wiz-title {
+      margin: 0 0 0.65rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .wiz-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .wiz-nav .spacer { flex: 1; min-width: 0.5rem; }
+    #wiz-next[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: none;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>Sallybus generator</h1>
-    <p>White layout: pick class, then subject, unit, pages, and topics (one-click “Select all topics”). Preview on the right.</p>
+    <p>Quick selection is a step-by-step flow: class → subject → chapter → topics → pages → generate. Preview on the right. Drive keybooks section is below.</p>
   </header>
 
+  <div class="page-stack">
   <div class="layout">
     <div class="col-form">
       <fieldset>
         <legend>Quick selection</legend>
-        <p class="selection-summary" id="selection-hint">Start by choosing a <strong>class</strong>. Each next list opens after the previous choice.</p>
+        <p class="selection-summary" id="selection-hint">Use <strong>Next</strong> after each choice, or pick from a list to jump ahead. Order: class → subject → chapter → topics → pages → generate.</p>
+        <p class="wiz-progress" id="wiz-progress" aria-live="polite">Step 1 of 6 — Class</p>
 
-        <label for="sel-class">1. Select class</label>
-        <select id="sel-class" autocomplete="off">
-          <option value="">— Select class —</option>
-        </select>
-
-        <label for="sel-subject">2. Select subject</label>
-        <select id="sel-subject" disabled autocomplete="off">
-          <option value="">— Select subject —</option>
-        </select>
-
-        <label for="sel-unit">3. Select unit</label>
-        <select id="sel-unit" disabled autocomplete="off">
-          <option value="">— Select unit —</option>
-        </select>
-
-        <label for="sel-pages">4. Select pages</label>
-        <select id="sel-pages" disabled autocomplete="off">
-          <option value="">— Select pages —</option>
-        </select>
-
-        <div id="topic-block" class="topic-block is-disabled" aria-disabled="true">
-          <div class="topic-head">
-            <label>5. Select topics</label>
-            <button type="button" class="linkish" id="btn-select-all-topics" title="Select every topic for this page range">Select all topics</button>
+        <div class="wiz-track">
+          <div class="wiz-step is-active" data-wiz-step="0" id="wiz-step-0">
+            <h3 class="wiz-title">Select class</h3>
+            <label for="sel-class">Class</label>
+            <select id="sel-class" autocomplete="off">
+              <option value="">— Select class —</option>
+            </select>
           </div>
-          <div id="topic-list" class="topic-list" role="group" aria-label="Topics for selected pages"></div>
-        </div>
-      </fieldset>
 
-      <fieldset>
-        <legend>Term details (optional)</legend>
-        <div class="row">
-          <div>
-            <label for="sy-term">Academic term</label>
-            <input id="sy-term" type="text" placeholder="e.g. Term 1 — 2026" />
+          <div class="wiz-step" data-wiz-step="1" id="wiz-step-1">
+            <h3 class="wiz-title">Select subject</h3>
+            <label for="sel-subject">Subject</label>
+            <select id="sel-subject" autocomplete="off">
+              <option value="">— Select subject —</option>
+            </select>
           </div>
-          <div>
-            <label for="sy-weeks">Weeks in term</label>
-            <input id="sy-weeks" type="number" min="1" max="52" value="12" />
+
+          <div class="wiz-step" data-wiz-step="2" id="wiz-step-2">
+            <h3 class="wiz-title">Select chapter</h3>
+            <label for="sel-unit">Chapter</label>
+            <select id="sel-unit" autocomplete="off">
+              <option value="">— Select chapter —</option>
+            </select>
           </div>
-        </div>
-        <label for="sy-outcomes">Learning outcomes (optional, one per line)</label>
-        <textarea id="sy-outcomes" placeholder="Students will …"></textarea>
-        <div class="actions">
-          <button type="button" class="primary" id="sy-generate">Generate syllabus</button>
-          <button type="button" class="secondary" id="sy-copy">Copy</button>
+
+          <div class="wiz-step" data-wiz-step="3" id="wiz-step-3">
+            <h3 class="wiz-title">Select topics</h3>
+            <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.5rem">Topics from this chapter (all page ranges). Tick at least one, or use Select all.</p>
+            <div id="topic-block" class="topic-block is-disabled" aria-disabled="true">
+              <div class="topic-head">
+                <span class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Topics</span>
+                <button type="button" class="linkish" id="btn-select-all-topics" title="Select every topic">Select all topics</button>
+              </div>
+              <div id="topic-list" class="topic-list" role="group" aria-label="Topics for this chapter"></div>
+            </div>
+          </div>
+
+          <div class="wiz-step" data-wiz-step="4" id="wiz-step-4">
+            <h3 class="wiz-title">Select pages</h3>
+            <label for="sel-pages">Page range</label>
+            <select id="sel-pages" autocomplete="off">
+              <option value="">— Select pages —</option>
+            </select>
+          </div>
+
+          <div class="wiz-step" data-wiz-step="5" id="wiz-step-5">
+            <h3 class="wiz-title">Generate syllabus</h3>
+            <p style="font-size:0.8rem;color:var(--muted);margin:0 0 0.75rem">Optional term details, then generate. Preview stays on the right.</p>
+            <div class="row">
+              <div>
+                <label for="sy-term">Academic term</label>
+                <input id="sy-term" type="text" placeholder="e.g. Term 1 — 2026" />
+              </div>
+              <div>
+                <label for="sy-weeks">Weeks in term</label>
+                <input id="sy-weeks" type="number" min="1" max="52" value="12" />
+              </div>
+            </div>
+            <label for="sy-outcomes">Learning outcomes (optional, one per line)</label>
+            <textarea id="sy-outcomes" placeholder="Students will …"></textarea>
+            <div class="actions">
+              <button type="button" class="primary" id="sy-generate">Generate syllabus</button>
+              <button type="button" class="secondary" id="sy-copy">Copy</button>
+            </div>
+          </div>
+
+          <div class="wiz-nav">
+            <button type="button" class="secondary" id="wiz-back">Back</button>
+            <span class="spacer"></span>
+            <button type="button" class="primary" id="wiz-next">Next</button>
+          </div>
         </div>
       </fieldset>
     </div>
@@ -384,6 +518,26 @@
       <h2 id="preview-heading">Syllabus (preview)</h2>
       <div id="sy-output" class="preview-box is-empty" role="region" aria-live="polite">Your selection summary and generated syllabus will appear here.</div>
     </aside>
+  </div>
+
+  <section class="drive-section" aria-labelledby="drive-section-title">
+    <h2 id="drive-section-title">Keybooks on Google Drive</h2>
+    <p class="drive-lead">Paste your shared <strong>folder</strong> link (the one that opens the folder in Drive). This page embeds Google’s folder view so you can open PDFs and images next to the generator. You must be signed into a Google account that can open the folder. Pure HTML cannot read your private files without a backend and the Drive API.</p>
+    <div class="drive-toolbar">
+      <div class="grow">
+        <label for="drive-folder-url">Drive folder link</label>
+        <input id="drive-folder-url" type="url" placeholder="https://drive.google.com/drive/folders/…" autocomplete="off" />
+      </div>
+      <button type="button" class="primary" id="drive-embed-btn">Show folder here</button>
+      <button type="button" class="secondary" id="drive-open-tab">Open in new tab</button>
+      <button type="button" class="secondary" id="drive-save-link">Save on this device</button>
+    </div>
+    <p id="drive-parse-msg" class="drive-msg" hidden></p>
+    <div class="drive-embed-wrap">
+      <div id="drive-placeholder" class="drive-placeholder">Paste a folder link above, then click <strong>Show folder here</strong>. Optional: <strong>Save on this device</strong> remembers the link in this browser only.</div>
+      <iframe id="drive-folder-frame" title="Google Drive folder" hidden></iframe>
+    </div>
+  </section>
   </div>
 
   <button type="button" class="fab-admin" id="fab-admin" title="Admin: upload keybook" aria-label="Admin keybook upload">
@@ -519,6 +673,13 @@
       var outEl = document.getElementById("sy-output");
       var hintEl = document.getElementById("selection-hint");
 
+      var wizStepIndex = 0;
+      var wizProgress = document.getElementById("wiz-progress");
+      var wizNext = document.getElementById("wiz-next");
+      var wizBack = document.getElementById("wiz-back");
+      var WIZ_TOTAL = 6;
+      var WIZ_TITLES = ["Class", "Subject", "Chapter", "Topics", "Pages", "Generate"];
+
       function setOptions(select, placeholder, labels) {
         select.innerHTML = "";
         var opt0 = document.createElement("option");
@@ -536,21 +697,18 @@
       function resetFromSubject() {
         setOptions(elSubject, "— Select subject —", []);
         elSubject.value = "";
-        elSubject.disabled = true;
         resetFromUnit();
       }
 
       function resetFromUnit() {
-        setOptions(elUnit, "— Select unit —", []);
+        setOptions(elUnit, "— Select chapter —", []);
         elUnit.value = "";
-        elUnit.disabled = true;
         resetFromPages();
       }
 
       function resetFromPages() {
         setOptions(elPages, "— Select pages —", []);
         elPages.value = "";
-        elPages.disabled = true;
         resetTopics();
       }
 
@@ -581,81 +739,41 @@
         hintEl.innerHTML = text;
       }
 
-      elClass.addEventListener("change", function () {
-        resetFromSubject();
-        var c = elClass.value;
-        if (!c) {
-          updateHint("Start by choosing a <strong>class</strong>.");
-          refreshPreviewSummary();
-          return;
-        }
-        var subs = getSubjects(c);
-        setOptions(elSubject, "— Select subject —", subs);
-        elSubject.disabled = subs.length === 0;
-        updateHint("Class set. Now choose a <strong>subject</strong>.");
-        refreshPreviewSummary();
-      });
-
-      elSubject.addEventListener("change", function () {
-        resetFromUnit();
-        var c = elClass.value;
-        var s = elSubject.value;
-        if (!c || !s) {
-          refreshPreviewSummary();
-          return;
-        }
-        var units = getUnits(c, s);
-        var labels = units.map(function (u) { return u.name; });
-        setOptions(elUnit, "— Select unit —", labels);
-        elUnit.disabled = labels.length === 0;
-        updateHint("Subject set. Pick a <strong>unit</strong>, then pages and topics.");
-        refreshPreviewSummary();
-      });
-
-      elUnit.addEventListener("change", function () {
-        resetFromPages();
+      function getCurrentUnitObj() {
         var c = elClass.value;
         var s = elSubject.value;
         var uLabel = elUnit.value;
-        if (!c || !s || !uLabel) {
-          refreshPreviewSummary();
-          return;
-        }
+        if (!c || !s || !uLabel) return null;
         var units = getUnits(c, s);
-        var unit = units.filter(function (x) { return x.name === uLabel; })[0];
-        if (!unit || !unit.pages) {
-          refreshPreviewSummary();
-          return;
-        }
-        var labels = unit.pages.map(function (p) { return p.label; });
-        setOptions(elPages, "— Select pages —", labels);
-        elPages.disabled = labels.length === 0;
-        refreshPreviewSummary();
-      });
-
-      function currentPageEntry() {
-        var c = elClass.value;
-        var s = elSubject.value;
-        var uLabel = elUnit.value;
-        var pLabel = elPages.value;
-        if (!c || !s || !uLabel || !pLabel) return null;
-        var units = getUnits(c, s);
-        var unit = units.filter(function (x) { return x.name === uLabel; })[0];
-        if (!unit) return null;
-        return unit.pages.filter(function (p) { return p.label === pLabel; })[0] || null;
+        return units.filter(function (x) { return x.name === uLabel; })[0] || null;
       }
 
-      function renderTopics() {
+      function renderChapterTopics() {
         topicList.innerHTML = "";
-        var page = currentPageEntry();
-        if (!page || !page.topics || !page.topics.length) {
+        var unit = getCurrentUnitObj();
+        if (!unit || !unit.pages || !unit.pages.length) {
+          resetTopics();
+          refreshPreviewSummary();
+          return;
+        }
+        var seen = {};
+        var list = [];
+        unit.pages.forEach(function (p) {
+          (p.topics || []).forEach(function (t) {
+            if (t && !seen[t]) {
+              seen[t] = true;
+              list.push(t);
+            }
+          });
+        });
+        if (!list.length) {
           resetTopics();
           refreshPreviewSummary();
           return;
         }
         topicBlock.classList.remove("is-disabled");
         topicBlock.setAttribute("aria-disabled", "false");
-        page.topics.forEach(function (t, i) {
+        list.forEach(function (t, i) {
           var id = "tp-" + i;
           var wrap = document.createElement("label");
           wrap.className = "row-check";
@@ -665,22 +783,157 @@
           cb.id = id;
           cb.value = t;
           cb.dataset.topic = t;
-          cb.addEventListener("change", refreshPreviewSummary);
+          cb.addEventListener("change", function () {
+            refreshPreviewSummary();
+            syncWizardUI();
+          });
           wrap.appendChild(cb);
           wrap.appendChild(document.createTextNode(t));
           topicList.appendChild(wrap);
         });
-        updateHint("Topics loaded. Tick what you need, or use <strong>Select all topics</strong> in one click.");
+        updateHint("Tick topics for this chapter, then <strong>Next</strong> to pick a page range.");
         refreshPreviewSummary();
       }
 
-      elPages.addEventListener("change", function () {
-        resetTopics();
-        if (!elPages.value) {
-          refreshPreviewSummary();
+      function getCheckedTopicSet() {
+        var set = {};
+        topicList.querySelectorAll('input[type="checkbox"]:checked').forEach(function (b) {
+          set[b.value] = true;
+        });
+        return set;
+      }
+
+      function populatePagesFromTopics() {
+        var unit = getCurrentUnitObj();
+        var prev = elPages.value;
+        if (!unit || !unit.pages) {
+          setOptions(elPages, "— Select pages —", []);
+          elPages.value = "";
           return;
         }
-        renderTopics();
+        var picked = getCheckedTopicSet();
+        var pages = unit.pages.filter(function (p) {
+          return (p.topics || []).some(function (t) {
+            return picked[t];
+          });
+        });
+        if (!pages.length) pages = unit.pages.slice();
+        var labels = pages.map(function (p) {
+          return p.label;
+        });
+        setOptions(elPages, "— Select pages —", labels);
+        if (prev && labels.indexOf(prev) !== -1) elPages.value = prev;
+        else elPages.value = "";
+      }
+
+      function validateWizardStep(step) {
+        if (step === 0) return !!elClass.value;
+        if (step === 1) return !!elSubject.value;
+        if (step === 2) return !!elUnit.value;
+        if (step === 3) return getCheckedTopics().length > 0;
+        if (step === 4) return !!elPages.value;
+        return true;
+      }
+
+      function syncWizardUI() {
+        wizProgress.textContent =
+          "Step " + (wizStepIndex + 1) + " of " + WIZ_TOTAL + " — " + WIZ_TITLES[wizStepIndex];
+        for (var i = 0; i < WIZ_TOTAL; i++) {
+          var panel = document.getElementById("wiz-step-" + i);
+          if (!panel) continue;
+          var on = i === wizStepIndex;
+          panel.classList.toggle("is-active", on);
+          panel.hidden = !on;
+        }
+        wizBack.disabled = wizStepIndex === 0;
+        if (wizStepIndex >= WIZ_TOTAL - 1) {
+          wizNext.hidden = true;
+        } else {
+          wizNext.hidden = false;
+          wizNext.disabled = !validateWizardStep(wizStepIndex);
+        }
+      }
+
+      function goToStep(next) {
+        var n = Math.max(0, Math.min(WIZ_TOTAL - 1, next));
+        if (n > wizStepIndex && !validateWizardStep(wizStepIndex)) return;
+        if (n === 3 && wizStepIndex !== 3) renderChapterTopics();
+        if (n === 4 && wizStepIndex !== 4) populatePagesFromTopics();
+        wizStepIndex = n;
+        syncWizardUI();
+        var panel = document.getElementById("wiz-step-" + wizStepIndex);
+        if (panel) {
+          var focusable = panel.querySelector("select, input, textarea, button.primary");
+          if (focusable) focusable.focus();
+        }
+      }
+
+      elClass.addEventListener("change", function () {
+        resetFromSubject();
+        var c = elClass.value;
+        if (!c) {
+          updateHint("Choose a <strong>class</strong> (step 1).");
+          refreshPreviewSummary();
+          goToStep(0);
+          return;
+        }
+        var subs = getSubjects(c);
+        setOptions(elSubject, "— Select subject —", subs);
+        updateHint("Class set. Go to <strong>Next</strong> or continue in order.");
+        refreshPreviewSummary();
+        syncWizardUI();
+        if (wizStepIndex === 0 && c) goToStep(1);
+      });
+
+      elSubject.addEventListener("change", function () {
+        resetFromUnit();
+        var c = elClass.value;
+        var s = elSubject.value;
+        if (!c || !s) {
+          refreshPreviewSummary();
+          syncWizardUI();
+          return;
+        }
+        var units = getUnits(c, s);
+        var labels = units.map(function (u) {
+          return u.name;
+        });
+        setOptions(elUnit, "— Select chapter —", labels);
+        updateHint("Pick a <strong>chapter</strong>, then Next.");
+        refreshPreviewSummary();
+        syncWizardUI();
+        if (wizStepIndex === 1 && s) goToStep(2);
+      });
+
+      elUnit.addEventListener("change", function () {
+        resetFromPages();
+        var c = elClass.value;
+        var s = elSubject.value;
+        var uLabel = elUnit.value;
+        if (!c || !s || !uLabel) {
+          refreshPreviewSummary();
+          syncWizardUI();
+          return;
+        }
+        updateHint("Choose <strong>topics</strong> in the next step.");
+        refreshPreviewSummary();
+        syncWizardUI();
+        if (wizStepIndex === 2 && uLabel) goToStep(3);
+      });
+
+      elPages.addEventListener("change", function () {
+        refreshPreviewSummary();
+        syncWizardUI();
+        if (wizStepIndex === 4 && elPages.value) goToStep(5);
+      });
+
+      wizNext.addEventListener("click", function () {
+        if (!validateWizardStep(wizStepIndex)) return;
+        goToStep(wizStepIndex + 1);
+      });
+
+      wizBack.addEventListener("click", function () {
+        goToStep(wizStepIndex - 1);
       });
 
       btnSelectAll.addEventListener("click", function () {
@@ -694,6 +947,7 @@
           b.checked = anyUnchecked;
         });
         refreshPreviewSummary();
+        syncWizardUI();
       });
 
       function getCheckedTopics() {
@@ -710,12 +964,12 @@
         lines.push("-----------------");
         lines.push("Class:   " + (elClass.value || "—"));
         lines.push("Subject: " + (elSubject.value || "—"));
-        lines.push("Unit:    " + (elUnit.value || "—"));
+        lines.push("Chapter: " + (elUnit.value || "—"));
         lines.push("Pages:   " + (elPages.value || "—"));
         var tops = getCheckedTopics();
         lines.push("Topics:  " + (tops.length ? tops.join("; ") : "—"));
         lines.push("");
-        lines.push("(Click Generate syllabus below to merge this with term settings.)");
+        lines.push("(Final step: set term options if needed, then Generate syllabus.)");
         setOutput(lines.join("\n"));
       }
 
@@ -752,7 +1006,7 @@
         lines.push("================");
         lines.push("Class: " + cls);
         lines.push("Subject: " + subject);
-        lines.push("Unit: " + unit);
+        lines.push("Chapter: " + unit);
         lines.push("Pages: " + pages);
         lines.push("Term: " + term);
         lines.push("Planned weeks: " + weeks);
@@ -929,11 +1183,126 @@
         );
       });
 
+      /* —— Google Drive folder (embed + remember link) —— */
+      var DRIVE_URL_STORAGE = "sallybus_drive_folder_url";
+      var driveInput = document.getElementById("drive-folder-url");
+      var driveEmbedBtn = document.getElementById("drive-embed-btn");
+      var driveOpenTab = document.getElementById("drive-open-tab");
+      var driveSaveLink = document.getElementById("drive-save-link");
+      var driveFrame = document.getElementById("drive-folder-frame");
+      var drivePlaceholder = document.getElementById("drive-placeholder");
+      var driveParseMsg = document.getElementById("drive-parse-msg");
+
+      function extractDriveFolderId(raw) {
+        if (!raw || typeof raw !== "string") return null;
+        var s = raw.trim();
+        var m = s.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+        if (m) return m[1];
+        m = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (m && /drive\.google\.com/i.test(s)) return m[1];
+        if (/^[a-zA-Z0-9_-]{10,}$/.test(s)) return s;
+        return null;
+      }
+
+      function setDriveParseMsg(text, isErr) {
+        if (!text) {
+          driveParseMsg.hidden = true;
+          driveParseMsg.textContent = "";
+          driveParseMsg.className = "drive-msg";
+          return;
+        }
+        driveParseMsg.hidden = false;
+        driveParseMsg.textContent = text;
+        driveParseMsg.className = "drive-msg" + (isErr ? " err" : " ok");
+      }
+
+      function showDriveEmbed(folderId) {
+        var src = "https://drive.google.com/embeddedfolderview?id=" + encodeURIComponent(folderId) + "#list";
+        driveFrame.src = src;
+        driveFrame.hidden = false;
+        drivePlaceholder.hidden = true;
+      }
+
+      function hideDriveEmbed() {
+        driveFrame.removeAttribute("src");
+        driveFrame.hidden = true;
+        drivePlaceholder.hidden = false;
+      }
+
+      function applyDriveFolderFromInput() {
+        var url = driveInput.value.trim();
+        setDriveParseMsg("", false);
+        if (!url) {
+          hideDriveEmbed();
+          setDriveParseMsg("Paste a folder link first.", true);
+          return null;
+        }
+        var id = extractDriveFolderId(url);
+        if (!id) {
+          hideDriveEmbed();
+          setDriveParseMsg("Could not find a folder ID. Use a link like …/drive/folders/FOLDER_ID", true);
+          return null;
+        }
+        showDriveEmbed(id);
+        setDriveParseMsg("Folder linked. If the area stays blank, use “Open in new tab” (Google sometimes blocks embeds).", false);
+        return id;
+      }
+
+      driveEmbedBtn.addEventListener("click", function () {
+        applyDriveFolderFromInput();
+      });
+
+      driveOpenTab.addEventListener("click", function () {
+        var url = driveInput.value.trim();
+        if (!url) {
+          setDriveParseMsg("Paste a folder link first.", true);
+          return;
+        }
+        var id = extractDriveFolderId(url);
+        if (id) {
+          window.open("https://drive.google.com/drive/folders/" + id, "_blank", "noopener,noreferrer");
+        } else if (/^https?:\/\//i.test(url)) {
+          window.open(url, "_blank", "noopener,noreferrer");
+        } else {
+          setDriveParseMsg("Invalid link.", true);
+        }
+      });
+
+      driveSaveLink.addEventListener("click", function () {
+        var url = driveInput.value.trim();
+        if (!url) {
+          setDriveParseMsg("Nothing to save. Paste your folder link first.", true);
+          return;
+        }
+        if (!extractDriveFolderId(url)) {
+          setDriveParseMsg("Save skipped: folder ID not found in that text.", true);
+          return;
+        }
+        try {
+          localStorage.setItem(DRIVE_URL_STORAGE, url);
+          setDriveParseMsg("Saved in this browser. Reloading the page will keep this link.", false);
+        } catch (e) {
+          setDriveParseMsg("Could not save (private mode or storage blocked).", true);
+        }
+      });
+
+      (function initDriveFromStorage() {
+        try {
+          var saved = localStorage.getItem(DRIVE_URL_STORAGE);
+          if (saved) {
+            driveInput.value = saved;
+            applyDriveFolderFromInput();
+          }
+        } catch (e) { /* ignore */ }
+      })();
+
       fillClasses();
       elClass.value = "";
       resetFromSubject();
-      updateHint("Start by choosing a <strong>class</strong>.");
+      wizStepIndex = 0;
+      updateHint("Start with <strong>Step 1 — Class</strong>, then use Next or keep selecting to move forward.");
       refreshPreviewSummary();
+      syncWizardUI();
     })();
   </script>
 </body>
