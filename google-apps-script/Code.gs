@@ -7,8 +7,14 @@
  *   FEE_SUBTOTAL | FEE_TOTAL | FEE_AFTER_DUE | VOUCHER_VALIDITY | DUE_DATE |
  *   BANK_NAME | BANK_BRANCH | BANK_ACCOUNT | BANK_ACCOUNT_TITLE | CONTACT (optional) |
  *   FEE_HISTORY_JSON (optional) — JSON string, see buildDefaultFeeHistory() shape.
+ *
+ * Default data source (override with Script property SPREADSHEET_ID or bind script to another sheet):
+ * https://docs.google.com/spreadsheets/d/1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4/edit
  */
 var SHEET_NAME = 'Students';
+
+/** Spreadsheet ID from the URL …/spreadsheets/d/<THIS>/edit */
+var DEFAULT_SPREADSHEET_ID = '1bn8kjfynnBP0eJqRpdMMe-C2SgOt4I0oj7_u_R9w4B4';
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
@@ -17,11 +23,22 @@ function doGet() {
 }
 
 function getSpreadsheet_() {
-  var id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-  if (id) {
-    return SpreadsheetApp.openById(id);
+  var propId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (propId) {
+    return SpreadsheetApp.openById(propId);
   }
-  return SpreadsheetApp.getActiveSpreadsheet();
+  try {
+    var active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) {
+      return active;
+    }
+  } catch (ignore) {
+    // Standalone script project has no container spreadsheet.
+  }
+  if (DEFAULT_SPREADSHEET_ID) {
+    return SpreadsheetApp.openById(DEFAULT_SPREADSHEET_ID);
+  }
+  throw new Error('No spreadsheet: set SPREADSHEET_ID or bind this script to a Google Sheet.');
 }
 
 /**
