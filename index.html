@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>School System — Syllabus &amp; Paper Generator</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a222d;
+      --surface2: #232d3b;
+      --border: #2f3d4f;
+      --text: #e8eef4;
+      --muted: #8b9cb0;
+      --accent: #3d9cf5;
+      --accent-dim: #2b6cb0;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --radius: 10px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    header p {
+      margin: 0.35rem 0 0;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    nav button {
+      font: inherit;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    nav button:hover {
+      background: var(--surface);
+      border-color: var(--muted);
+    }
+    nav button[aria-current="true"] {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.25rem;
+    }
+    section.panel {
+      display: none;
+      animation: fade 0.2s ease;
+    }
+    section.panel.active { display: block; }
+    @keyframes fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    fieldset {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 0 0 1rem;
+      padding: 1rem;
+      background: var(--surface);
+    }
+    legend {
+      padding: 0 0.5rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    input, select, textarea {
+      width: 100%;
+      margin-bottom: 0.85rem;
+      padding: 0.55rem 0.65rem;
+      font: inherit;
+      color: var(--text);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    button.primary {
+      font: inherit;
+      padding: 0.6rem 1.1rem;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary:hover { filter: brightness(1.08); }
+    button.secondary {
+      font: inherit;
+      padding: 0.6rem 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .output {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      max-height: 420px;
+      overflow: auto;
+    }
+    .output:empty { display: none; }
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: -0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .paper-step {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .paper-step[hidden] { display: none !important; }
+    .drive-link-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .drive-link-row input { flex: 1; min-width: 200px; margin-bottom: 0; }
+    .card {
+      padding: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 1rem;
+    }
+    .card h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .card p { margin: 0; color: var(--muted); font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>School System</h1>
+    <p>Syllabus generator, question paper generator, and links to your books on Google Drive.</p>
+  </header>
+  <nav aria-label="Main sections">
+    <button type="button" data-panel="home" aria-current="true">Home</button>
+    <button type="button" data-panel="syllabus">Syllabus generator</button>
+    <button type="button" data-panel="paper">Paper generator</button>
+    <button type="button" data-panel="drive">Books &amp; Drive</button>
+  </nav>
+  <main>
+    <section id="panel-home" class="panel active" aria-labelledby="home-title">
+      <h2 id="home-title" class="visually-hidden" style="position:absolute;clip:rect(0 0 0 0);">Home</h2>
+      <div class="card">
+        <h3>Welcome</h3>
+        <p>Use <strong>Syllabus generator</strong> to build a term plan from class, subject, and topics. Use <strong>Paper generator</strong> — choose <em>Generate paper</em> to pick a class and build a printable paper outline. Paste your Google Drive folder link under <strong>Books &amp; Drive</strong> to open your books and keybooks quickly.</p>
+      </div>
+    </section>
+
+    <section id="panel-syllabus" class="panel" aria-labelledby="syllabus-title">
+      <h2 id="syllabus-title">Syllabus generator</h2>
+      <fieldset>
+        <legend>Course details</legend>
+        <div class="row">
+          <div>
+            <label for="sy-class">Class / grade</label>
+            <input id="sy-class" type="text" placeholder="e.g. Class 8" />
+          </div>
+          <div>
+            <label for="sy-subject">Subject</label>
+            <input id="sy-subject" type="text" placeholder="e.g. Mathematics" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="sy-term">Academic term</label>
+            <input id="sy-term" type="text" placeholder="e.g. Term 1 — 2026" />
+          </div>
+          <div>
+            <label for="sy-weeks">Weeks in term</label>
+            <input id="sy-weeks" type="number" min="1" max="52" value="12" />
+          </div>
+        </div>
+        <label for="sy-topics">Topics / units (one per line)</label>
+        <textarea id="sy-topics" placeholder="Algebra basics&#10;Geometry&#10;Data handling"></textarea>
+        <label for="sy-outcomes">Learning outcomes (optional, one per line)</label>
+        <textarea id="sy-outcomes" placeholder="Students will solve linear equations."></textarea>
+        <div class="actions">
+          <button type="button" class="primary" id="sy-generate">Generate syllabus</button>
+          <button type="button" class="secondary" id="sy-copy">Copy to clipboard</button>
+        </div>
+      </fieldset>
+      <div id="sy-output" class="output" role="region" aria-live="polite"></div>
+    </section>
+
+    <section id="panel-paper" class="panel" aria-labelledby="paper-title">
+      <h2 id="paper-title">Paper generator</h2>
+      <fieldset>
+        <legend>Start</legend>
+        <p class="hint">Select <strong>Generate paper</strong> to choose a class and fill paper settings.</p>
+        <label for="paper-mode">Action</label>
+        <select id="paper-mode">
+          <option value="">— Choose —</option>
+          <option value="generate">Generate paper</option>
+        </select>
+      </fieldset>
+
+      <div id="paper-step-class" class="paper-step" hidden>
+        <fieldset>
+          <legend>Class selection</legend>
+          <label for="paper-class">Class</label>
+          <select id="paper-class">
+            <option value="">— Select class —</option>
+            <option>Class 6</option>
+            <option>Class 7</option>
+            <option>Class 8</option>
+            <option>Class 9</option>
+            <option>Class 10</option>
+            <option>Class 11</option>
+            <option>Class 12</option>
+          </select>
+        </fieldset>
+      </div>
+
+      <div id="paper-step-details" class="paper-step" hidden>
+        <fieldset>
+          <legend>Paper settings</legend>
+          <div class="row">
+            <div>
+              <label for="paper-subject">Subject</label>
+              <input id="paper-subject" type="text" placeholder="e.g. Science" />
+            </div>
+            <div>
+              <label for="paper-marks">Total marks</label>
+              <input id="paper-marks" type="number" min="10" max="200" value="50" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="paper-duration">Duration (minutes)</label>
+              <input id="paper-duration" type="number" min="30" max="240" value="90" />
+            </div>
+            <div>
+              <label for="paper-difficulty">Difficulty mix</label>
+              <select id="paper-difficulty">
+                <option value="easy-heavy">Mostly easy</option>
+                <option value="balanced" selected>Balanced</option>
+                <option value="hard-heavy">More challenging</option>
+              </select>
+            </div>
+          </div>
+          <label for="paper-sections">Sections (optional — one per line, e.g. Section A — MCQs)</label>
+          <textarea id="paper-sections" placeholder="Section A — Objective (10 marks)&#10;Section B — Short answers (20 marks)&#10;Section C — Long answers (20 marks)"></textarea>
+          <label for="paper-topics">Topics to cover (one per line)</label>
+          <textarea id="paper-topics" placeholder="From your syllabus or textbook index"></textarea>
+          <div class="actions">
+            <button type="button" class="primary" id="paper-generate">Build paper outline</button>
+            <button type="button" class="secondary" id="paper-copy">Copy to clipboard</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <div id="paper-output" class="output" role="region" aria-live="polite"></div>
+    </section>
+
+    <section id="panel-drive" class="panel" aria-labelledby="drive-title">
+      <h2 id="drive-title">Books &amp; Google Drive</h2>
+      <div class="card">
+        <h3>Your folder link</h3>
+        <p>Paste a share link to the folder that contains your books and keybooks. The button opens it in a new tab (you must be signed into Google).</p>
+      </div>
+      <fieldset>
+        <legend>Drive folder</legend>
+        <div class="drive-link-row">
+          <input id="drive-url" type="url" placeholder="https://drive.google.com/drive/folders/..." />
+          <button type="button" class="primary" id="drive-open">Open folder</button>
+        </div>
+        <p class="hint">If the link is restricted, use “Anyone with the link” in Drive sharing, or stay logged into the correct Google account.</p>
+      </fieldset>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var navButtons = document.querySelectorAll("nav button[data-panel]");
+      var panels = document.querySelectorAll("main section.panel");
+
+      function showPanel(id) {
+        panels.forEach(function (p) {
+          p.classList.toggle("active", p.id === "panel-" + id);
+        });
+        navButtons.forEach(function (b) {
+          b.setAttribute("aria-current", b.getAttribute("data-panel") === id ? "true" : "false");
+        });
+      }
+
+      navButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          showPanel(btn.getAttribute("data-panel"));
+        });
+      });
+
+      function splitLines(text) {
+        return text
+          .split(/\r?\n/)
+          .map(function (s) { return s.trim(); })
+          .filter(Boolean);
+      }
+
+      document.getElementById("sy-generate").addEventListener("click", function () {
+        var cls = document.getElementById("sy-class").value.trim() || "(class)";
+        var subject = document.getElementById("sy-subject").value.trim() || "(subject)";
+        var term = document.getElementById("sy-term").value.trim() || "(term)";
+        var weeks = parseInt(document.getElementById("sy-weeks").value, 10) || 12;
+        var topics = splitLines(document.getElementById("sy-topics").value);
+        var outcomes = splitLines(document.getElementById("sy-outcomes").value);
+
+        if (topics.length === 0) topics.push("(add topics above)"];
+
+        var per = Math.max(1, Math.ceil(weeks / topics.length));
+        var lines = [];
+        lines.push("SYLLABUS OUTLINE");
+        lines.push("================");
+        lines.push("Class: " + cls);
+        lines.push("Subject: " + subject);
+        lines.push("Term: " + term);
+        lines.push("Planned weeks: " + weeks);
+        lines.push("");
+        lines.push("WEEKLY SEQUENCE (approx. " + per + " week(s) per topic block)");
+        lines.push("--------------------------------------------------");
+
+        var w = 1;
+        var ti = 0;
+        while (w <= weeks && ti < topics.length) {
+          var end = Math.min(w + per - 1, weeks);
+          lines.push("Weeks " + w + (end > w ? "–" + end : "") + ": " + topics[ti]);
+          w = end + 1;
+          ti++;
+        }
+        while (w <= weeks) {
+          lines.push("Week " + w + ": Review / assessment / buffer");
+          w++;
+        }
+        while (ti < topics.length) {
+          lines.push("(Extra topic — extend term or merge): " + topics[ti]);
+          ti++;
+        }
+
+        if (outcomes.length) {
+          lines.push("");
+          lines.push("LEARNING OUTCOMES");
+          lines.push("----------------");
+          outcomes.forEach(function (o, i) {
+            lines.push((i + 1) + ". " + o);
+          });
+        }
+
+        lines.push("");
+        lines.push("Notes: Adjust pacing for holidays and exams. Align with your board (CBSE, state, etc.) and textbook chapters.");
+
+        document.getElementById("sy-output").textContent = lines.join("\n");
+      });
+
+      document.getElementById("sy-copy").addEventListener("click", function () {
+        var el = document.getElementById("sy-output");
+        if (!el.textContent) return;
+        navigator.clipboard.writeText(el.textContent).catch(function () {
+          alert("Copy failed — select the text manually.");
+        });
+      });
+
+      var paperMode = document.getElementById("paper-mode");
+      var stepClass = document.getElementById("paper-step-class");
+      var stepDetails = document.getElementById("paper-step-details");
+
+      function syncPaperSteps() {
+        var gen = paperMode.value === "generate";
+        stepClass.hidden = !gen;
+        stepDetails.hidden = !gen || !document.getElementById("paper-class").value;
+      }
+
+      paperMode.addEventListener("change", function () {
+        if (paperMode.value !== "generate") {
+          stepClass.hidden = true;
+          stepDetails.hidden = true;
+          document.getElementById("paper-class").value = "";
+          document.getElementById("paper-output").textContent = "";
+        } else {
+          syncPaperSteps();
+        }
+      });
+
+      document.getElementById("paper-class").addEventListener("change", syncPaperSteps);
+
+      document.getElementById("paper-generate").addEventListener("click", function () {
+        var cls = document.getElementById("paper-class").value;
+        if (!cls) {
+          alert("Please select a class first.");
+          return;
+        }
+        var subject = document.getElementById("paper-subject").value.trim() || "(subject)";
+        var marks = parseInt(document.getElementById("paper-marks").value, 10) || 50;
+        var duration = parseInt(document.getElementById("paper-duration").value, 10) || 90;
+        var diff = document.getElementById("paper-difficulty").value;
+        var sections = splitLines(document.getElementById("paper-sections").value);
+        var topics = splitLines(document.getElementById("paper-topics").value);
+
+        if (sections.length === 0) {
+          sections = [
+            "Section A — Objective / MCQ",
+            "Section B — Short answers",
+            "Section C — Long answers / numericals"
+          ];
+        }
+
+        var diffLabel = { "easy-heavy": "mostly straightforward", balanced: "mixed difficulty", "hard-heavy": "emphasis on higher-order thinking" }[diff] || "mixed";
+
+        var lines = [];
+        lines.push("QUESTION PAPER (OUTLINE)");
+        lines.push("========================");
+        lines.push("Class: " + cls);
+        lines.push("Subject: " + subject);
+        lines.push("Time: " + duration + " minutes    Total marks: " + marks);
+        lines.push("Difficulty: " + diffLabel);
+        lines.push("");
+        lines.push("General instructions (edit as needed):");
+        lines.push("- Write roll number and class clearly.");
+        lines.push("- Read all questions before attempting.");
+        lines.push("- All questions are compulsory unless stated otherwise.");
+        lines.push("");
+
+        var share = marks / sections.length;
+        sections.forEach(function (sec, i) {
+          var secMarks = Math.round(share + (i === sections.length - 1 ? marks - Math.round(share * sections.length) : 0));
+          lines.push(sec + " — " + Math.max(1, secMarks) + " marks");
+          lines.push("- Q" + (i + 1) + ".1: (draft stem — " + (diff === "hard-heavy" ? "application / analysis" : "recall / understanding") + ")");
+          lines.push("- Q" + (i + 1) + ".2: (draft stem)");
+          lines.push("");
+        });
+
+        if (topics.length) {
+          lines.push("Suggested coverage (map questions to these):");
+          topics.forEach(function (t, i) {
+            lines.push("  • " + t);
+          });
+          lines.push("");
+        }
+
+        lines.push("— Replace draft stems with real items from your keybooks / past papers. —");
+
+        document.getElementById("paper-output").textContent = lines.join("\n");
+      });
+
+      document.getElementById("paper-copy").addEventListener("click", function () {
+        var el = document.getElementById("paper-output");
+        if (!el.textContent) return;
+        navigator.clipboard.writeText(el.textContent).catch(function () {
+          alert("Copy failed — select the text manually.");
+        });
+      });
+
+      document.getElementById("drive-open").addEventListener("click", function () {
+        var url = document.getElementById("drive-url").value.trim();
+        if (!url) {
+          alert("Paste your Google Drive folder link first.");
+          return;
+        }
+        if (!/^https?:\/\//i.test(url)) {
+          alert("URL should start with http:// or https://");
+          return;
+        }
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+    })();
+  </script>
+</body>
+</html>
