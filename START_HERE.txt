@@ -1,0 +1,54 @@
+================================================================================
+  STARTWELL SALLYBUS GENERATOR — Windows quick start
+================================================================================
+
+1) UNZIP this folder anywhere (e.g. Desktop\sallybus-app).
+
+2) INSTALL PYTHON 3.10+ from https://www.python.org/downloads/
+   During setup, tick "Add python.exe to PATH".
+
+3) OPEN Command Prompt in THIS folder:
+   - Shift + right-click empty space -> "Open in Terminal" or
+   - Win+R, type:  cmd
+   - Then:  cd /d "C:\path\to\this\folder"
+
+4) INSTALL backend packages (once):
+      pip install -r backend\requirements.txt
+
+5) START THE LOCAL SERVER:
+      python backend\app.py
+
+6) OPEN IN CHROME / EDGE (copy this into the address bar):
+      http://127.0.0.1:5010/
+
+   Do NOT double-click the HTML file for Excel mode — the address above is required.
+
+--------------------------------------------------------------------------------
+What you get
+--------------------------------------------------------------------------------
+  • Web app: syllabus wizard + optional admin keybook upload
+  • Data file created automatically:  data\syllabus.xlsx
+    - Sheet "Curriculum" — class / subject / unit / pages / topics
+    - Sheet "Keybooks" — links to PDFs you upload
+    - Sheet "SyllabusLog" — each generated syllabus is logged
+  • PDFs saved under:  data\keybooks\
+
+  Default admin passphrase in the HTML is:  changeme
+  (Open sallybus generator.html in a text editor and search for ADMIN_PASSPHRASE to change it.)
+
+--------------------------------------------------------------------------------
+If the page does not load curriculum
+--------------------------------------------------------------------------------
+  • Make sure step 5–6 are done (server running, correct URL).
+  • Or edit data\syllabus.xlsx in Excel (same column headers as above).
+
+--------------------------------------------------------------------------------
+Optional: static-only (no Excel server)
+--------------------------------------------------------------------------------
+  If you only open the HTML file without Python, the page tries to load
+  data\sallybus-bundle.json — browsers may block that unless you use a simple
+  static server (e.g. npx serve .) from this folder.
+
+================================================================================
+Questions: see tools\sallybus_folder_windows.txt in the full repository.
+================================================================================
