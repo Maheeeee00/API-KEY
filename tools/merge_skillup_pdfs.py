@@ -7,7 +7,7 @@ Run on YOUR Windows machine (where the files exist). Requires:
 
 Usage:
     python tools/merge_skillup_pdfs.py
-    python tools/merge_skillup_pdfs.py -o "C:\\Users\\laptop World\\Desktop\\merged_keybooks.pdf"
+    python tools/merge_skillup_pdfs.py -o "C:\\Users\\laptop World\\Downloads\\sallybus\\merged.pdf"
 """
 
 from __future__ import annotations
@@ -17,6 +17,9 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
+
+# Merged PDF is written here by default (create the folder if it does not exist).
+DEFAULT_OUTPUT_DIR = Path(r"C:\Users\laptop World\Downloads\sallybus")
 
 # --- Edit these paths if your files moved (same order you listed) ---
 DEFAULT_FILES = [
@@ -71,8 +74,8 @@ def main() -> None:
         "-o",
         "--output",
         type=Path,
-        default=Path(r"C:\Users\laptop World\Downloads\Skillup_keybooks_merged.pdf"),
-        help="Output merged PDF path",
+        default=DEFAULT_OUTPUT_DIR / "Skillup_keybooks_merged.pdf",
+        help="Output merged PDF path (default: Downloads\\sallybus\\Skillup_keybooks_merged.pdf)",
     )
     parser.add_argument(
         "inputs",

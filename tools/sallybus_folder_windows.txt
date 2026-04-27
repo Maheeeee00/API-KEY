@@ -1,0 +1,24 @@
+Your folder: C:\Users\laptop World\Downloads\sallybus
+==============================================
+
+1) Create the folder if it is not there:
+   C:\Users\laptop World\Downloads\sallybus
+
+2) Sallybus generator (HTML + data)
+   Copy these from the repo into that folder (same structure):
+     sallybus generator.html
+     data\syllabus-by-class.json
+   Open the HTML through a small local server so JSON loads (double-click often blocks fetch):
+     In PowerShell, cd to the folder, then for example:
+       npx --yes serve .
+     Then open the URL shown (e.g. http://localhost:3000).
+
+3) Merged keybook PDF
+   Copy tools\merge_skillup_pdfs.py into the sallybus folder (or run it from the repo).
+   pip install pypdf
+   python merge_skillup_pdfs.py
+   Default output:
+     C:\Users\laptop World\Downloads\sallybus\Skillup_keybooks_merged.pdf
+   (Input PDFs/ZIP paths are still the ones set at the top of merge_skillup_pdfs.py.)
+
+Edit merge_skillup_pdfs.py if you move DEFAULT_FILES or DEFAULT_OUTPUT_DIR.
