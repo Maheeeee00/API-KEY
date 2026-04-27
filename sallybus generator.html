@@ -601,11 +601,17 @@
   <script>
     (function () {
       /**
-       * Sample curriculum — replace with your real class / book data later.
-       * Structure: className -> subjectName -> array of units ->
-       *   { name, pages: [ { label, topics: [] } ] }
+       * Relative URL to class-wise syllabus data (JSON). Same folder as this HTML
+       * works when you open via a local server (e.g. npx serve). Plain file:// may block fetch.
+       * Edit path here if you move the file.
        */
-      var CURRICULUM = {
+      var SYLLABUS_DATA_URL = "data/syllabus-by-class.json";
+
+      /**
+       * Built-in fallback if the file is missing or cannot be loaded.
+       * Structure: className -> subjectName -> [ { name, pages: [ { label, topics: [] } ] } ]
+       */
+      var CURRICULUM_FALLBACK = {
         "Class 6": {
           Mathematics: [
             {
@@ -678,6 +684,52 @@
           ]
         }
       };
+
+      var CURRICULUM = CURRICULUM_FALLBACK;
+      var curriculumFromFile = false;
+
+      function isPlainObject(x) {
+        return x !== null && typeof x === "object" && !Array.isArray(x);
+      }
+
+      function validateCurriculumShape(data) {
+        if (!isPlainObject(data)) return false;
+        var classKeys = Object.keys(data);
+        if (!classKeys.length) return false;
+        for (var ci = 0; ci < classKeys.length; ci++) {
+          var subs = data[classKeys[ci]];
+          if (!isPlainObject(subs)) return false;
+          var sk = Object.keys(subs);
+          for (var sj = 0; sj < sk.length; sj++) {
+            var units = subs[sk[sj]];
+            if (!Array.isArray(units)) return false;
+            for (var ui = 0; ui < units.length; ui++) {
+              var u = units[ui];
+              if (!u || typeof u.name !== "string" || !Array.isArray(u.pages)) return false;
+              for (var pi = 0; pi < u.pages.length; pi++) {
+                var p = u.pages[pi];
+                if (!p || typeof p.label !== "string" || !Array.isArray(p.topics)) return false;
+              }
+            }
+          }
+        }
+        return true;
+      }
+
+      function loadCurriculumFromFile() {
+        return fetch(SYLLABUS_DATA_URL, { cache: "no-store" })
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (!validateCurriculumShape(data)) {
+              throw new Error("Invalid JSON shape");
+            }
+            CURRICULUM = data;
+            curriculumFromFile = true;
+          });
+      }
 
       var elClass = document.getElementById("sel-class");
       var elSubject = document.getElementById("sel-subject");
@@ -1205,12 +1257,36 @@
         );
       });
 
-      fillClasses();
-      elClass.value = "";
-      resetFromSubject();
-      wizStepIndex = 0;
-      updateHint("Start with <strong>Step 1 — Class</strong>, then use Next or keep selecting to move forward.");
-      syncWizardUI();
+      function bootAfterCurriculumReady() {
+        fillClasses();
+        elClass.value = "";
+        resetFromSubject();
+        wizStepIndex = 0;
+        if (curriculumFromFile) {
+          updateHint(
+            "Loaded syllabus data from <strong>" +
+              SYLLABUS_DATA_URL +
+              "</strong>. Start with <strong>Step 1 — Class</strong>."
+          );
+        } else {
+          updateHint(
+            "Using built-in sample data. Put your JSON at <strong>" +
+              SYLLABUS_DATA_URL +
+              "</strong> and open this page through a <strong>local server</strong> (not raw file://) so it can load."
+          );
+        }
+        syncWizardUI();
+      }
+
+      loadCurriculumFromFile()
+        .then(function () {
+          bootAfterCurriculumReady();
+        })
+        .catch(function () {
+          CURRICULUM = CURRICULUM_FALLBACK;
+          curriculumFromFile = false;
+          bootAfterCurriculumReady();
+        });
     })();
   </script>
 </body>
