@@ -1,5 +1,5 @@
-sallybus-bundle.json structure
-================================
+sallybus-bundle.json — add YOUR real data here (no sample rows are shipped).
+============================================================================
 
 {
   "version": 1,

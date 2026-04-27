@@ -15,7 +15,7 @@
    Keep the black window open while you use the app. Press Ctrl+C there to stop.
 
 --------------------------------------------------------------------------------
-Your data (edit yourself)
+Your data (edit yourself — starts empty, no sample classes)
 --------------------------------------------------------------------------------
   • data\sallybus-bundle.json
       - "curriculum" — class, subject, chapters, pages, topics (see DATA_README.txt)
