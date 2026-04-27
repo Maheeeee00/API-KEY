@@ -1,54 +1,36 @@
 ================================================================================
-  STARTWELL SALLYBUS GENERATOR — Windows quick start
+  STARTWELL SALLYBUS GENERATOR — ready to use (local files only, no admin)
 ================================================================================
 
-1) UNZIP this folder anywhere (e.g. Desktop\sallybus-app).
+1) UNZIP this folder anywhere.
 
-2) INSTALL PYTHON 3.10+ from https://www.python.org/downloads/
-   During setup, tick "Add python.exe to PATH".
+2) INSTALL NODE.JS (includes npx) from https://nodejs.org/  — LTS is fine.
 
-3) OPEN Command Prompt in THIS folder:
-   - Shift + right-click empty space -> "Open in Terminal" or
-   - Win+R, type:  cmd
-   - Then:  cd /d "C:\path\to\this\folder"
+3) DOUBLE-CLICK:  run_local.bat
+   (Or open Command Prompt here and run:  run_local.bat)
 
-4) INSTALL backend packages (once):
-      pip install -r backend\requirements.txt
+4) OPEN YOUR BROWSER and go to:
+      http://127.0.0.1:5500/sallybus%20generator.html
 
-5) START THE LOCAL SERVER:
-      python backend\app.py
-
-6) OPEN IN CHROME / EDGE (copy this into the address bar):
-      http://127.0.0.1:5010/
-
-   Do NOT double-click the HTML file for Excel mode — the address above is required.
+   Keep the black window open while you use the app. Press Ctrl+C there to stop.
 
 --------------------------------------------------------------------------------
-What you get
+Your data (edit yourself)
 --------------------------------------------------------------------------------
-  • Web app: syllabus wizard + optional admin keybook upload
-  • Data file created automatically:  data\syllabus.xlsx
-    - Sheet "Curriculum" — class / subject / unit / pages / topics
-    - Sheet "Keybooks" — links to PDFs you upload
-    - Sheet "SyllabusLog" — each generated syllabus is logged
-  • PDFs saved under:  data\keybooks\
+  • data\sallybus-bundle.json
+      - "curriculum" — class, subject, chapters, pages, topics (see DATA_README.txt)
+      - "keybooksByClass" — optional links per class, e.g. PDFs in data\keybooks\
+        Example file path in JSON:  "data/keybooks/mybook.pdf"
 
-  Default admin passphrase in the HTML is:  changeme
-  (Open sallybus generator.html in a text editor and search for ADMIN_PASSPHRASE to change it.)
+  Put PDF files inside:  data\keybooks\
+  Then list them under the right class in sallybus-bundle.json.
 
---------------------------------------------------------------------------------
-If the page does not load curriculum
---------------------------------------------------------------------------------
-  • Make sure step 5–6 are done (server running, correct URL).
-  • Or edit data\syllabus.xlsx in Excel (same column headers as above).
+  No server saves anything — you edit the JSON (and PDFs) yourself.
 
 --------------------------------------------------------------------------------
-Optional: static-only (no Excel server)
+If the page shows "could not load" curriculum
 --------------------------------------------------------------------------------
-  If you only open the HTML file without Python, the page tries to load
-  data\sallybus-bundle.json — browsers may block that unless you use a simple
-  static server (e.g. npx serve .) from this folder.
+  • You must use step 3–4 (run_local.bat + browser URL). Do not only double-click
+    the HTML file — the browser blocks loading the JSON that way.
 
-================================================================================
-Questions: see tools\sallybus_folder_windows.txt in the full repository.
 ================================================================================

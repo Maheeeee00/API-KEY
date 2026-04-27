@@ -299,112 +299,6 @@
       background: var(--sw-black-soft);
     }
     .selection-summary strong { color: var(--sw-gold); }
-    /* Floating admin (keybook upload) */
-    .fab-admin {
-      position: fixed;
-      bottom: 1.25rem;
-      right: 1.25rem;
-      z-index: 1000;
-      width: 3.25rem;
-      height: 3.25rem;
-      border-radius: 50%;
-      border: 1px solid rgba(245, 158, 11, 0.5);
-      background: linear-gradient(165deg, var(--sw-orange) 0%, var(--sw-orange-deep) 100%);
-      color: #1a0f00;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .fab-admin:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 28px rgba(245, 158, 11, 0.5);
-    }
-    .fab-admin:focus-visible {
-      outline: 2px solid var(--sw-orange);
-      outline-offset: 3px;
-    }
-    .fab-admin svg { display: block; }
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 1001;
-      background: rgba(0, 0, 0, 0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-backdrop.is-open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .modal-card {
-      width: 100%;
-      max-width: 420px;
-      max-height: 90vh;
-      overflow: auto;
-      background: var(--sw-black);
-      border-radius: var(--radius);
-      border: 1px solid var(--sw-border);
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.65);
-      padding: 1.25rem;
-      color: var(--sw-gold);
-    }
-    .modal-card h2 {
-      margin: 0 0 0.35rem;
-      font-size: 1.1rem;
-      color: var(--sw-gold);
-    }
-    .modal-card .modal-lead {
-      margin: 0 0 1rem;
-      font-size: 0.8rem;
-      color: var(--sw-gold-muted);
-    }
-    .modal-actions-top {
-      display: flex;
-      justify-content: flex-end;
-      margin: -0.25rem -0.25rem 0.5rem 0;
-    }
-    .btn-icon-close {
-      font: inherit;
-      width: 2rem;
-      height: 2rem;
-      border: none;
-      border-radius: 6px;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      line-height: 1;
-      font-size: 1.25rem;
-    }
-    .btn-icon-close { color: var(--sw-gold-muted); }
-    .btn-icon-close:hover { background: var(--sw-black-soft); color: var(--sw-gold); }
-    .admin-banner {
-      font-size: 0.75rem;
-      color: var(--sw-gold-muted);
-      padding: 0.5rem 0.65rem;
-      border-radius: 6px;
-      background: var(--sw-black-soft);
-      margin-bottom: 1rem;
-      border: 1px solid var(--sw-border);
-    }
-    .admin-msg {
-      font-size: 0.85rem;
-      margin-top: 0.75rem;
-      padding: 0.5rem 0.65rem;
-      border-radius: 6px;
-      display: none;
-    }
-    .admin-msg.is-visible { display: block; }
-    .admin-msg.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
-    .admin-msg.err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-    .admin-msg.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
     /* Quick selection wizard */
     .wiz-track { margin-top: 0.25rem; }
     .wiz-progress {
@@ -595,58 +489,12 @@
     </div>
   </div>
 
-  <button type="button" class="fab-admin" id="fab-admin" title="Admin: upload keybook" aria-label="Admin keybook upload">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      <path d="M12 8v8" />
-      <path d="M8 12h8" />
-    </svg>
-  </button>
-
-  <div class="modal-backdrop" id="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title" hidden>
-    <div class="modal-card" role="document">
-      <div class="modal-actions-top">
-        <button type="button" class="btn-icon-close" id="admin-modal-close" aria-label="Close">&times;</button>
-      </div>
-      <h2 id="admin-modal-title">Keybook upload (admin)</h2>
-      <p class="modal-lead">With the local server running, uploads save the PDF under <strong>data/keybooks/</strong> and append a row to <strong>data/syllabus.xlsx</strong> for the class you selected in step 1.</p>
-      <p class="admin-banner">Passphrase is still client-only — change <code>ADMIN_PASSPHRASE</code> in this file. For real security use server-side auth later.</p>
-
-      <div id="admin-step-login">
-        <label for="admin-pass">Admin passphrase</label>
-        <input id="admin-pass" type="password" autocomplete="current-password" placeholder="Enter admin passphrase" />
-        <div class="actions" style="margin-top:0.5rem">
-          <button type="button" class="primary" id="admin-unlock">Unlock</button>
-        </div>
-      </div>
-
-      <div id="admin-step-upload" hidden>
-        <p style="font-size:0.85rem;color:var(--muted);margin:0 0 0.75rem">Signed in as admin (this tab).</p>
-        <label for="kb-title">Keybook title (optional)</label>
-        <input id="kb-title" type="text" placeholder="e.g. Class 8 Maths Keybook 2026" />
-        <label for="kb-file">Keybook file</label>
-        <input id="kb-file" type="file" accept=".pdf,.doc,.docx,.epub,.txt" />
-        <div class="actions" style="margin-top:0.75rem">
-          <button type="button" class="primary" id="kb-submit">Queue upload</button>
-          <button type="button" class="secondary" id="admin-lock">Lock</button>
-        </div>
-      </div>
-
-      <div id="admin-msg" class="admin-msg" role="status"></div>
-    </div>
-  </div>
-
   <script>
     (function () {
       /**
-       * Relative URL to class-wise syllabus data (JSON). Same folder as this HTML
-       * works when you open via a local server (e.g. npx serve). Plain file:// may block fetch.
-       * Edit path here if you move the file.
+       * Local data only — edit data/sallybus-bundle.json (curriculum + optional keybooks).
+       * Open via run_local.bat or: npx --yes serve .  (browsers block fetch from file://)
        */
-      /** Same-origin local backend (run: python backend/app.py) serves /api/curriculum from Excel. */
-      var API_BASE = "";
-      /** Fallback if API is down: static JSON next to this file */
       var SYLLABUS_DATA_URL = "data/sallybus-bundle.json";
 
       /**
@@ -729,23 +577,7 @@
 
       var CURRICULUM = CURRICULUM_FALLBACK;
       var curriculumFromFile = false;
-      var curriculumSource = "fallback";
       var KEYBOOKS_BY_CLASS = {};
-
-      function postJson(url, body) {
-        return fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body || {})
-        }).then(function (res) {
-          if (!res.ok) return res.text().then(function (t) {
-            throw new Error(t || "HTTP " + res.status);
-          });
-          return res.json().catch(function () {
-            return {};
-          });
-        });
-      }
 
       function isPlainObject(x) {
         return x !== null && typeof x === "object" && !Array.isArray(x);
@@ -792,32 +624,15 @@
       }
 
       function loadCurriculumFromFile() {
-        var apiUrl = (API_BASE || "") + "/api/curriculum";
-        function tryStatic() {
-          return fetch(SYLLABUS_DATA_URL, { cache: "no-store" }).then(function (res) {
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            return res.json();
-          });
-        }
-        return fetch(apiUrl, { cache: "no-store" })
+        return fetch(SYLLABUS_DATA_URL, { cache: "no-store" })
           .then(function (res) {
-            if (!res.ok) throw new Error("API " + res.status);
+            if (!res.ok) throw new Error("HTTP " + res.status);
             return res.json();
           })
           .then(function (data) {
-            if (applyBundlePayload(data)) {
-              curriculumSource = "excel";
-              return;
+            if (!applyBundlePayload(data)) {
+              throw new Error("Invalid JSON: need curriculum or bundle with .curriculum");
             }
-            throw new Error("Invalid API payload");
-          })
-          .catch(function () {
-            return tryStatic().then(function (data) {
-              if (!applyBundlePayload(data)) {
-                throw new Error("Invalid JSON: need curriculum or bundle with .curriculum");
-              }
-              curriculumSource = "static";
-            });
           });
       }
 
@@ -1251,171 +1066,9 @@
         }
 
         lines.push("");
-        lines.push("Notes: Replace sample data in the HTML file with your textbook page ranges when ready.");
+        lines.push("Notes: Edit data/sallybus-bundle.json for your textbook structure and keybook links.");
 
-        var outline = lines.join("\n");
-        setOutput(outline);
-
-        var api = (API_BASE || "") + "/api/curriculum";
-        postJson(api, { curriculum: CURRICULUM, keybooksByClass: KEYBOOKS_BY_CLASS })
-          .then(function () {
-            return postJson((API_BASE || "") + "/api/syllabus-log", {
-              class: cls,
-              subject: subject,
-              chapter: unit,
-              pages: pages,
-              topics: picked.join("; "),
-              outline: outline
-            });
-          })
-          .catch(function () {
-            /* offline or static-only: skip save */
-          });
-      });
-
-      /* —— Admin floating button + keybook upload (client-only until backend) —— */
-      var ADMIN_SESSION_KEY = "sallybus_admin_ok";
-      /** Change this before production. Real security will come from your backend. */
-      var ADMIN_PASSPHRASE = "changeme";
-
-      var fab = document.getElementById("fab-admin");
-      var modal = document.getElementById("admin-modal");
-      var modalClose = document.getElementById("admin-modal-close");
-      var stepLogin = document.getElementById("admin-step-login");
-      var stepUpload = document.getElementById("admin-step-upload");
-      var adminPass = document.getElementById("admin-pass");
-      var adminUnlock = document.getElementById("admin-unlock");
-      var adminLock = document.getElementById("admin-lock");
-      var kbTitle = document.getElementById("kb-title");
-      var kbFile = document.getElementById("kb-file");
-      var kbSubmit = document.getElementById("kb-submit");
-      var adminMsg = document.getElementById("admin-msg");
-
-      function showAdminMsg(kind, text) {
-        adminMsg.textContent = text;
-        adminMsg.className = "admin-msg is-visible " + (kind || "info");
-      }
-
-      function clearAdminMsg() {
-        adminMsg.textContent = "";
-        adminMsg.className = "admin-msg";
-      }
-
-      function isAdminSession() {
-        return sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
-      }
-
-      function setAdminSession(on) {
-        if (on) sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
-        else sessionStorage.removeItem(ADMIN_SESSION_KEY);
-      }
-
-      function syncAdminSteps() {
-        var ok = isAdminSession();
-        stepLogin.hidden = ok;
-        stepUpload.hidden = !ok;
-        if (!ok) adminPass.value = "";
-        clearAdminMsg();
-      }
-
-      function openAdminModal() {
-        modal.hidden = false;
-        modal.classList.add("is-open");
-        syncAdminSteps();
-        if (!isAdminSession()) {
-          setTimeout(function () {
-            adminPass.focus();
-          }, 50);
-        } else {
-          kbFile.focus();
-        }
-      }
-
-      function closeAdminModal() {
-        modal.classList.remove("is-open");
-        modal.hidden = true;
-        clearAdminMsg();
-      }
-
-      fab.addEventListener("click", function () {
-        openAdminModal();
-      });
-
-      modalClose.addEventListener("click", closeAdminModal);
-
-      modal.addEventListener("click", function (e) {
-        if (e.target === modal) closeAdminModal();
-      });
-
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && modal.classList.contains("is-open")) {
-          closeAdminModal();
-        }
-      });
-
-      adminUnlock.addEventListener("click", function () {
-        clearAdminMsg();
-        if (adminPass.value === ADMIN_PASSPHRASE) {
-          setAdminSession(true);
-          syncAdminSteps();
-          showAdminMsg("ok", "Unlocked. You can add a keybook file below.");
-        } else {
-          showAdminMsg("err", "Wrong passphrase. Only an admin can upload.");
-        }
-      });
-
-      adminLock.addEventListener("click", function () {
-        setAdminSession(false);
-        syncAdminSteps();
-        kbTitle.value = "";
-        kbFile.value = "";
-        showAdminMsg("info", "Locked. Passphrase required again to upload.");
-      });
-
-      kbSubmit.addEventListener("click", function () {
-        clearAdminMsg();
-        if (!isAdminSession()) {
-          showAdminMsg("err", "Unlock with the admin passphrase first.");
-          return;
-        }
-        var f = kbFile.files && kbFile.files[0];
-        if (!f) {
-          showAdminMsg("err", "Choose a keybook file first.");
-          return;
-        }
-        var cls = elClass.value.trim();
-        if (!cls) {
-          showAdminMsg("err", "Select a class in Step 1 first (used for the Excel row).");
-          return;
-        }
-        var title = kbTitle.value.trim();
-        var fd = new FormData();
-        fd.append("class", cls);
-        fd.append("title", title || f.name);
-        fd.append("file", f, f.name);
-        fetch((API_BASE || "") + "/api/keybook", { method: "POST", body: fd })
-          .then(function (res) {
-            if (!res.ok) return res.text().then(function (t) {
-              throw new Error(t || "HTTP " + res.status);
-            });
-            return res.json();
-          })
-          .then(function (data) {
-            showAdminMsg("ok", "Saved to Excel + data/keybooks/: " + (data.file || "ok"));
-            return fetch((API_BASE || "") + "/api/curriculum", { cache: "no-store" }).then(function (r) {
-              return r.json();
-            });
-          })
-          .then(function (bundle) {
-            if (bundle && applyBundlePayload(bundle)) refreshKeybookPanel();
-          })
-          .catch(function (err) {
-            showAdminMsg(
-              "err",
-              "Server save failed. Run <strong>python backend/app.py</strong> and open this page from http://127.0.0.1:5010/ — " +
-                (err.message || String(err))
-            );
-          });
+        setOutput(lines.join("\n"));
       });
 
       function bootAfterCurriculumReady() {
@@ -1423,21 +1076,17 @@
         elClass.value = "";
         resetFromSubject();
         wizStepIndex = 0;
-        if (curriculumSource === "excel") {
-          updateHint(
-            "Loaded from <strong>local Excel</strong> (via API). Generate syllabus saves rows to the same workbook. Start with <strong>Step 1 — Class</strong>."
-          );
-        } else if (curriculumFromFile) {
+        if (curriculumFromFile) {
           updateHint(
             "Loaded <strong>" +
               SYLLABUS_DATA_URL +
-              "</strong>. For Excel read/write run <strong>python backend/app.py</strong> and open <strong>http://127.0.0.1:5010/</strong>."
+              "</strong>. Edit that file to change classes/subjects/chapters. Start with <strong>Step 1 — Class</strong>."
           );
         } else {
           updateHint(
-            "Using built-in sample data. Run the local backend or add <strong>" +
+            "Could not load <strong>" +
               SYLLABUS_DATA_URL +
-              "</strong>."
+              "</strong>. Use <strong>run_local.bat</strong> or run a static server from this folder."
           );
         }
         refreshKeybookPanel();
