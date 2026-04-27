@@ -1,0 +1,13 @@
+Sallybus — local static package (no Python backend, no admin)
+==============================================================
+
+1) Install Node.js (https://nodejs.org/)
+2) Run run_local.bat from the app folder
+3) Open http://127.0.0.1:5500/sallybus%20generator.html
+
+Edit data/sallybus-bundle.json and optional PDFs in data/keybooks/
+See data/DATA_README.txt
+
+Optional scripts (advanced):
+  tools/build_sallybus_bundle.py — build bundle from PDF paths
+  tools/merge_skillup_pdfs.py — merge PDFs

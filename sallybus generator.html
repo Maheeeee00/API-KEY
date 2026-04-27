@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>startwell, sallybus generator</title>
+  <style>
+    :root {
+      /* Startwell-inspired: black, pale gold, amber path */
+      --sw-black: #000000;
+      --sw-black-soft: #0a0a0a;
+      --sw-gold: #f0e4c4;
+      --sw-gold-muted: #c4b896;
+      --sw-gold-dim: #8a7d5c;
+      --sw-orange: #f59e0b;
+      --sw-orange-deep: #d97706;
+      --sw-border: rgba(240, 228, 196, 0.28);
+      --bg: #0a0a0a;
+      --surface: #000000;
+      --surface2: #111111;
+      --border: var(--sw-border);
+      --text: var(--sw-gold);
+      --muted: var(--sw-gold-muted);
+      --accent: var(--sw-orange);
+      --radius: 10px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1rem 1.25rem 1.15rem;
+      border-bottom: 1px solid var(--sw-border);
+      background: var(--sw-black);
+      text-align: center;
+    }
+    .header-inner {
+      max-width: 56rem;
+      margin: 0 auto;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--sw-gold);
+      letter-spacing: 0.02em;
+    }
+    header h1 .brand {
+      color: var(--sw-orange);
+      font-weight: 800;
+      text-transform: lowercase;
+    }
+    header h1 .title-rest {
+      font-weight: 600;
+      color: var(--sw-gold);
+    }
+    .header-sub {
+      margin-top: 0.85rem;
+    }
+    .header-step-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem 0.2rem;
+      margin: 0 auto;
+      padding: 0;
+      list-style: none;
+      max-width: 100%;
+    }
+    .header-step-nav li {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    .step-pill {
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: capitalize;
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--sw-border);
+      background: var(--sw-black-soft);
+      color: var(--sw-gold);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+    .step-pill:hover:not(:disabled) {
+      border-color: var(--sw-orange);
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
+    }
+    .step-pill.is-active {
+      background: linear-gradient(165deg, var(--sw-orange) 0%, var(--sw-orange-deep) 100%);
+      border-color: var(--sw-orange);
+      color: #1a0f00;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+    }
+    .step-pill:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .step-sep {
+      color: var(--sw-gold-dim);
+      font-size: 0.72rem;
+      user-select: none;
+      padding: 0 0.05rem;
+    }
+    .header-tagline {
+      margin: 0.65rem auto 0;
+      font-size: 0.78rem;
+      color: var(--sw-gold-muted);
+      max-width: 36rem;
+      text-align: center;
+      line-height: 1.45;
+    }
+    .header-tagline strong {
+      color: var(--sw-gold);
+    }
+    .page-stack {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 4.5rem);
+    }
+    .layout {
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+    .col-main {
+      padding: 1.25rem;
+    }
+    .syll-output {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--sw-border);
+      background: var(--sw-black);
+      color: var(--sw-gold);
+      white-space: pre-wrap;
+      font-size: 0.875rem;
+      overflow: auto;
+      max-height: min(55vh, 480px);
+      min-height: 120px;
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.08);
+    }
+    .syll-output.is-empty {
+      color: var(--sw-gold-dim);
+      font-style: italic;
+    }
+    fieldset {
+      border: 1px solid var(--sw-border);
+      border-radius: var(--radius);
+      margin: 0 0 1rem;
+      padding: 1rem;
+      background: var(--sw-black);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+    legend {
+      padding: 0 0.5rem;
+      color: var(--sw-gold-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 0.85rem;
+      color: var(--sw-gold-muted);
+    }
+    input, select, textarea {
+      width: 100%;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.6rem;
+      font: inherit;
+      color: var(--sw-gold);
+      background: var(--sw-black-soft);
+      border: 1px solid var(--sw-border);
+      border-radius: 6px;
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--sw-gold-dim);
+    }
+    select option {
+      background: #111;
+      color: var(--sw-gold);
+    }
+    .topic-block.is-disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .topic-block {
+      margin-bottom: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--sw-border);
+      border-radius: 6px;
+      background: var(--sw-black-soft);
+    }
+    .topic-block .topic-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .topic-block .topic-head label {
+      margin: 0;
+      font-weight: 600;
+      color: var(--sw-gold);
+    }
+    button.linkish {
+      font: inherit;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.55rem;
+      border: 1px solid var(--sw-border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--sw-orange);
+      cursor: pointer;
+    }
+    button.linkish:hover {
+      border-color: var(--sw-orange);
+      background: rgba(245, 158, 11, 0.1);
+    }
+    .topic-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .topic-list label.row-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0;
+      font-weight: normal;
+      color: var(--sw-gold);
+      cursor: pointer;
+    }
+    .topic-list input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+    }
+    @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    button.primary {
+      font: inherit;
+      padding: 0.55rem 1rem;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(165deg, var(--sw-orange) 0%, var(--sw-orange-deep) 100%);
+      color: #1a0f00;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    button.primary:hover { filter: brightness(1.08); }
+    button.secondary {
+      font: inherit;
+      padding: 0.55rem 1rem;
+      border: 1px solid var(--sw-border);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--sw-gold);
+      cursor: pointer;
+    }
+    button.secondary:hover {
+      border-color: var(--sw-gold-muted);
+      background: rgba(240, 228, 196, 0.06);
+    }
+    .selection-summary {
+      font-size: 0.8rem;
+      color: var(--sw-gold-muted);
+      margin-bottom: 0.75rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: 6px;
+      border: 1px dashed var(--sw-border);
+      background: var(--sw-black-soft);
+    }
+    .selection-summary strong { color: var(--sw-gold); }
+    /* Quick selection wizard */
+    .wiz-track { margin-top: 0.25rem; }
+    .wiz-progress {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--sw-gold-muted);
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+    .wiz-step {
+      display: none;
+      padding: 0.15rem 0 0.5rem;
+    }
+    .wiz-step.is-active { display: block; }
+    .wiz-step h3.wiz-title {
+      margin: 0 0 0.65rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--sw-gold);
+      text-align: center;
+    }
+    .wiz-form-hint {
+      font-size: 0.8rem;
+      color: var(--sw-gold-muted);
+      margin: 0 0 0.5rem;
+      text-align: center;
+      line-height: 1.45;
+    }
+    .keybook-panel {
+      margin-top: 1rem;
+      padding: 0.75rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--sw-border);
+      background: var(--sw-black-soft);
+    }
+    .keybook-panel h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--sw-gold-muted);
+    }
+    .keybook-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .keybook-links a {
+      font-size: 0.88rem;
+      color: var(--sw-orange);
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .keybook-links a:hover {
+      text-decoration: underline;
+    }
+    .keybook-empty {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--sw-gold-dim);
+    }
+    .wiz-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--sw-border);
+    }
+    .wiz-nav .spacer { flex: 1; min-width: 0.5rem; }
+    #wiz-next[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+    <h1><span class="brand">startwell</span><span class="title-rest">, sallybus generator</span></h1>
+    <div class="header-sub">
+      <ul class="header-step-nav" id="header-step-nav" aria-label="Go to step">
+        <li><button type="button" class="step-pill is-active" data-wiz-goto="0" id="nav-step-0">Class</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="1" id="nav-step-1">Subject</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="2" id="nav-step-2">Chapter</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="3" id="nav-step-3">Topics</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="4" id="nav-step-4">Pages</button><span class="step-sep" aria-hidden="true">→</span></li>
+        <li><button type="button" class="step-pill" data-wiz-goto="5" id="nav-step-5">Generate</button></li>
+      </ul>
+      <p class="header-tagline">Click a step to jump (forward only when earlier steps are complete). <strong>Next</strong> in the form still works. Your syllabus shows only after <strong>Generate syllabus</strong> on the last step.</p>
+    </div>
+    </div>
+  </header>
+
+  <div class="page-stack">
+  <div class="layout">
+    <div class="col-main">
+      <fieldset>
+        <legend>Quick selection</legend>
+        <p class="selection-summary" id="selection-hint">Use the <strong>step buttons in the header</strong> or <strong>Next</strong> below. No syllabus until the last step.</p>
+        <p class="wiz-progress" id="wiz-progress" aria-live="polite">Step 1 of 6 — Class</p>
+
+        <div class="wiz-track">
+          <div class="wiz-step is-active" data-wiz-step="0" id="wiz-step-0">
+            <h3 class="wiz-title">Select class</h3>
+            <label for="sel-class">Class</label>
+            <select id="sel-class" autocomplete="off">
+              <option value="">— Select class —</option>
+            </select>
+            <div id="keybook-panel" class="keybook-panel" hidden>
+              <h4>Keybooks for this class</h4>
+              <div id="keybook-links" class="keybook-links"></div>
+              <p id="keybook-empty" class="keybook-empty" hidden>No keybooks listed for this class in your data file.</p>
+            </div>
+          </div>
+
+          <div class="wiz-step" data-wiz-step="1" id="wiz-step-1">
+            <h3 class="wiz-title">Select subject</h3>
+            <label for="sel-subject">Subject</label>
+            <select id="sel-subject" autocomplete="off">
+              <option value="">— Select subject —</option>
+            </select>
+          </div>
+
+          <div class="wiz-step" data-wiz-step="2" id="wiz-step-2">
+            <h3 class="wiz-title">Select chapter</h3>
+            <label for="sel-unit">Chapter</label>
+            <select id="sel-unit" autocomplete="off">
+              <option value="">— Select chapter —</option>
+            </select>
+          </div>
+
+          <div class="wiz-step" data-wiz-step="3" id="wiz-step-3">
+            <h3 class="wiz-title">Select topics</h3>
+            <p class="wiz-form-hint">Topics from this chapter (all page ranges). Tick at least one, or use Select all.</p>
+            <div id="topic-block" class="topic-block is-disabled" aria-disabled="true">
+              <div class="topic-head">
+                <span class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Topics</span>
+                <button type="button" class="linkish" id="btn-select-all-topics" title="Select every topic">Select all topics</button>
+              </div>
+              <div id="topic-list" class="topic-list" role="group" aria-label="Topics for this chapter"></div>
+            </div>
+          </div>
+
+          <div class="wiz-step" data-wiz-step="4" id="wiz-step-4">
+            <h3 class="wiz-title">Select pages</h3>
+            <label for="sel-pages">Page range</label>
+            <select id="sel-pages" autocomplete="off">
+              <option value="">— Select pages —</option>
+            </select>
+          </div>
+
+          <div class="wiz-step" data-wiz-step="5" id="wiz-step-5">
+            <h3 class="wiz-title">Generate syllabus</h3>
+            <p class="wiz-form-hint" style="margin-bottom:0.75rem">Optional term details, then use the button below. The syllabus text appears here only after you generate.</p>
+            <div class="row">
+              <div>
+                <label for="sy-term">Academic term</label>
+                <input id="sy-term" type="text" placeholder="e.g. Term 1 — 2026" />
+              </div>
+              <div>
+                <label for="sy-weeks">Weeks in term</label>
+                <input id="sy-weeks" type="number" min="1" max="52" value="12" />
+              </div>
+            </div>
+            <label for="sy-outcomes">Learning outcomes (optional, one per line)</label>
+            <textarea id="sy-outcomes" placeholder="Students will …"></textarea>
+            <div class="actions" style="margin-top:0.75rem">
+              <button type="button" class="primary" id="sy-generate">Generate syllabus</button>
+            </div>
+            <p id="sy-output-label" class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Generated syllabus</p>
+            <div id="sy-output" class="syll-output is-empty" role="region" aria-labelledby="sy-output-label" aria-live="polite">Your syllabus will appear here after you click Generate syllabus.</div>
+          </div>
+
+          <div class="wiz-nav">
+            <button type="button" class="secondary" id="wiz-back">Back</button>
+            <span class="spacer"></span>
+            <button type="button" class="primary" id="wiz-next">Next</button>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      /**
+       * Local data only — edit data/sallybus-bundle.json (curriculum + optional keybooks).
+       * Open via run_local.bat or: npx --yes serve .  (browsers block fetch from file://)
+       */
+      var SYLLABUS_DATA_URL = "data/sallybus-bundle.json";
+
+      /** No sample data — fill data/sallybus-bundle.json with your real curriculum. */
+      var CURRICULUM = {};
+      var curriculumFromFile = false;
+      var KEYBOOKS_BY_CLASS = {};
+
+      function isPlainObject(x) {
+        return x !== null && typeof x === "object" && !Array.isArray(x);
+      }
+
+      function validateCurriculumShape(data) {
+        if (!isPlainObject(data)) return false;
+        var classKeys = Object.keys(data);
+        if (!classKeys.length) return true;
+        for (var ci = 0; ci < classKeys.length; ci++) {
+          var subs = data[classKeys[ci]];
+          if (!isPlainObject(subs)) return false;
+          var sk = Object.keys(subs);
+          for (var sj = 0; sj < sk.length; sj++) {
+            var units = subs[sk[sj]];
+            if (!Array.isArray(units)) return false;
+            for (var ui = 0; ui < units.length; ui++) {
+              var u = units[ui];
+              if (!u || typeof u.name !== "string" || !Array.isArray(u.pages)) return false;
+              for (var pi = 0; pi < u.pages.length; pi++) {
+                var p = u.pages[pi];
+                if (!p || typeof p.label !== "string" || !Array.isArray(p.topics)) return false;
+              }
+            }
+          }
+        }
+        return true;
+      }
+
+      function applyBundlePayload(data) {
+        if (isPlainObject(data) && data.curriculum && validateCurriculumShape(data.curriculum)) {
+          CURRICULUM = data.curriculum;
+          KEYBOOKS_BY_CLASS = isPlainObject(data.keybooksByClass) ? data.keybooksByClass : {};
+          curriculumFromFile = true;
+          return true;
+        }
+        if (validateCurriculumShape(data)) {
+          CURRICULUM = data;
+          KEYBOOKS_BY_CLASS = {};
+          curriculumFromFile = true;
+          return true;
+        }
+        return false;
+      }
+
+      function loadCurriculumFromFile() {
+        return fetch(SYLLABUS_DATA_URL, { cache: "no-store" })
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (!applyBundlePayload(data)) {
+              throw new Error("Invalid JSON: need curriculum or bundle with .curriculum");
+            }
+          });
+      }
+
+      var elClass = document.getElementById("sel-class");
+      var keybookPanel = document.getElementById("keybook-panel");
+      var keybookLinks = document.getElementById("keybook-links");
+      var keybookEmpty = document.getElementById("keybook-empty");
+      var elSubject = document.getElementById("sel-subject");
+      var elUnit = document.getElementById("sel-unit");
+      var elPages = document.getElementById("sel-pages");
+      var topicBlock = document.getElementById("topic-block");
+      var topicList = document.getElementById("topic-list");
+      var btnSelectAll = document.getElementById("btn-select-all-topics");
+      var outEl = document.getElementById("sy-output");
+      var hintEl = document.getElementById("selection-hint");
+
+      var wizStepIndex = 0;
+      var wizProgress = document.getElementById("wiz-progress");
+      var wizNext = document.getElementById("wiz-next");
+      var wizBack = document.getElementById("wiz-back");
+      var WIZ_TOTAL = 6;
+      var WIZ_TITLES = ["Class", "Subject", "Chapter", "Topics", "Pages", "Generate"];
+
+      function setOptions(select, placeholder, labels) {
+        select.innerHTML = "";
+        var opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = placeholder;
+        select.appendChild(opt0);
+        labels.forEach(function (label) {
+          var o = document.createElement("option");
+          o.value = label;
+          o.textContent = label;
+          select.appendChild(o);
+        });
+      }
+
+      function resetFromSubject() {
+        setOptions(elSubject, "— Select subject —", []);
+        elSubject.value = "";
+        resetFromUnit();
+      }
+
+      function resetFromUnit() {
+        setOptions(elUnit, "— Select chapter —", []);
+        elUnit.value = "";
+        resetFromPages();
+      }
+
+      function resetFromPages() {
+        setOptions(elPages, "— Select pages —", []);
+        elPages.value = "";
+        resetTopics();
+      }
+
+      function resetTopics() {
+        topicList.innerHTML = "";
+        topicBlock.classList.add("is-disabled");
+        topicBlock.setAttribute("aria-disabled", "true");
+      }
+
+      function fillClasses() {
+        var names = Object.keys(CURRICULUM).sort();
+        setOptions(elClass, "— Select class —", names);
+      }
+
+      function getSubjects(className) {
+        var bag = CURRICULUM[className];
+        if (!bag) return [];
+        return Object.keys(bag).sort();
+      }
+
+      function getUnits(className, subject) {
+        var bag = CURRICULUM[className];
+        if (!bag || !bag[subject]) return [];
+        return bag[subject];
+      }
+
+      function updateHint(text) {
+        hintEl.innerHTML = text;
+      }
+
+      function getCurrentUnitObj() {
+        var c = elClass.value;
+        var s = elSubject.value;
+        var uLabel = elUnit.value;
+        if (!c || !s || !uLabel) return null;
+        var units = getUnits(c, s);
+        return units.filter(function (x) { return x.name === uLabel; })[0] || null;
+      }
+
+      function renderChapterTopics() {
+        topicList.innerHTML = "";
+        var unit = getCurrentUnitObj();
+        if (!unit || !unit.pages || !unit.pages.length) {
+          resetTopics();
+          syncWizardUI();
+          return;
+        }
+        var seen = {};
+        var list = [];
+        unit.pages.forEach(function (p) {
+          (p.topics || []).forEach(function (t) {
+            if (t && !seen[t]) {
+              seen[t] = true;
+              list.push(t);
+            }
+          });
+        });
+        if (!list.length) {
+          resetTopics();
+          syncWizardUI();
+          return;
+        }
+        topicBlock.classList.remove("is-disabled");
+        topicBlock.setAttribute("aria-disabled", "false");
+        list.forEach(function (t, i) {
+          var id = "tp-" + i;
+          var wrap = document.createElement("label");
+          wrap.className = "row-check";
+          wrap.setAttribute("for", id);
+          var cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.id = id;
+          cb.value = t;
+          cb.dataset.topic = t;
+          cb.addEventListener("change", syncWizardUI);
+          wrap.appendChild(cb);
+          wrap.appendChild(document.createTextNode(t));
+          topicList.appendChild(wrap);
+        });
+        updateHint("Tick topics for this chapter, then <strong>Next</strong> to pick a page range.");
+        syncWizardUI();
+      }
+
+      function getCheckedTopicSet() {
+        var set = {};
+        topicList.querySelectorAll('input[type="checkbox"]:checked').forEach(function (b) {
+          set[b.value] = true;
+        });
+        return set;
+      }
+
+      function populatePagesFromTopics() {
+        var unit = getCurrentUnitObj();
+        var prev = elPages.value;
+        if (!unit || !unit.pages) {
+          setOptions(elPages, "— Select pages —", []);
+          elPages.value = "";
+          return;
+        }
+        var picked = getCheckedTopicSet();
+        var pages = unit.pages.filter(function (p) {
+          return (p.topics || []).some(function (t) {
+            return picked[t];
+          });
+        });
+        if (!pages.length) pages = unit.pages.slice();
+        var labels = pages.map(function (p) {
+          return p.label;
+        });
+        setOptions(elPages, "— Select pages —", labels);
+        if (prev && labels.indexOf(prev) !== -1) elPages.value = prev;
+        else elPages.value = "";
+      }
+
+      function validateWizardStep(step) {
+        if (step === 0) return !!elClass.value;
+        if (step === 1) return !!elSubject.value;
+        if (step === 2) return !!elUnit.value;
+        if (step === 3) return getCheckedTopics().length > 0;
+        if (step === 4) return !!elPages.value;
+        return true;
+      }
+
+      /** True if user may jump to step `target` (back freely; forward requires completed earlier steps). */
+      function canNavigateToStep(target) {
+        var t = Math.max(0, Math.min(WIZ_TOTAL - 1, target));
+        if (t <= wizStepIndex) return true;
+        var s;
+        for (s = wizStepIndex; s < t; s++) {
+          if (!validateWizardStep(s)) return false;
+        }
+        return true;
+      }
+
+      function syncHeaderStepPills() {
+        var nav = document.getElementById("header-step-nav");
+        if (!nav) return;
+        nav.querySelectorAll(".step-pill").forEach(function (btn) {
+          var idx = parseInt(btn.getAttribute("data-wiz-goto"), 10);
+          var active = idx === wizStepIndex;
+          btn.classList.toggle("is-active", active);
+          if (active) btn.setAttribute("aria-current", "step");
+          else btn.removeAttribute("aria-current");
+          var forwardBlocked = idx > wizStepIndex && !canNavigateToStep(idx);
+          btn.disabled = forwardBlocked;
+        });
+      }
+
+      function refreshKeybookPanel() {
+        if (!keybookPanel || !keybookLinks || !keybookEmpty) return;
+        var c = elClass.value;
+        keybookLinks.innerHTML = "";
+        if (!c) {
+          keybookPanel.hidden = true;
+          keybookEmpty.hidden = true;
+          return;
+        }
+        keybookPanel.hidden = false;
+        var list = KEYBOOKS_BY_CLASS[c];
+        if (!list || !list.length) {
+          keybookEmpty.hidden = false;
+          return;
+        }
+        keybookEmpty.hidden = true;
+        list.forEach(function (kb) {
+          if (!kb || !kb.file) return;
+          var a = document.createElement("a");
+          a.href = kb.file;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = kb.title || kb.file;
+          keybookLinks.appendChild(a);
+        });
+      }
+
+      function syncWizardUI() {
+        wizProgress.textContent =
+          "Step " + (wizStepIndex + 1) + " of " + WIZ_TOTAL + " — " + WIZ_TITLES[wizStepIndex];
+        for (var i = 0; i < WIZ_TOTAL; i++) {
+          var panel = document.getElementById("wiz-step-" + i);
+          if (!panel) continue;
+          var on = i === wizStepIndex;
+          panel.classList.toggle("is-active", on);
+          panel.hidden = !on;
+        }
+        wizBack.disabled = wizStepIndex === 0;
+        if (wizStepIndex >= WIZ_TOTAL - 1) {
+          wizNext.hidden = true;
+        } else {
+          wizNext.hidden = false;
+          wizNext.disabled = !validateWizardStep(wizStepIndex);
+        }
+        if (wizStepIndex === 0) refreshKeybookPanel();
+        syncHeaderStepPills();
+      }
+
+      function goToStep(next) {
+        var n = Math.max(0, Math.min(WIZ_TOTAL - 1, next));
+        if (n > wizStepIndex) {
+          var s;
+          for (s = wizStepIndex; s < n; s++) {
+            if (!validateWizardStep(s)) return;
+          }
+        }
+        if (n === 3 && wizStepIndex < 3) renderChapterTopics();
+        if (n === 4 && wizStepIndex !== 4) populatePagesFromTopics();
+        wizStepIndex = n;
+        syncWizardUI();
+        var panel = document.getElementById("wiz-step-" + wizStepIndex);
+        if (panel) {
+          var focusable = panel.querySelector("select, input, textarea, button.primary");
+          if (focusable) focusable.focus();
+        }
+      }
+
+      elClass.addEventListener("change", function () {
+        resetFromSubject();
+        var c = elClass.value;
+        if (!c) {
+          updateHint("Choose a <strong>class</strong> (step 1).");
+          refreshKeybookPanel();
+          goToStep(0);
+          return;
+        }
+        var subs = getSubjects(c);
+        setOptions(elSubject, "— Select subject —", subs);
+        updateHint("Class set. Go to <strong>Next</strong> or continue in order.");
+        refreshKeybookPanel();
+        syncWizardUI();
+        if (wizStepIndex === 0 && c) goToStep(1);
+      });
+
+      elSubject.addEventListener("change", function () {
+        resetFromUnit();
+        var c = elClass.value;
+        var s = elSubject.value;
+        if (!c || !s) {
+          syncWizardUI();
+          return;
+        }
+        var units = getUnits(c, s);
+        var labels = units.map(function (u) {
+          return u.name;
+        });
+        setOptions(elUnit, "— Select chapter —", labels);
+        updateHint("Pick a <strong>chapter</strong>, then Next.");
+        syncWizardUI();
+        if (wizStepIndex === 1 && s) goToStep(2);
+      });
+
+      elUnit.addEventListener("change", function () {
+        resetFromPages();
+        var c = elClass.value;
+        var s = elSubject.value;
+        var uLabel = elUnit.value;
+        if (!c || !s || !uLabel) {
+          syncWizardUI();
+          return;
+        }
+        updateHint("Choose <strong>topics</strong> in the next step.");
+        syncWizardUI();
+        if (wizStepIndex === 2 && uLabel) goToStep(3);
+      });
+
+      elPages.addEventListener("change", function () {
+        syncWizardUI();
+        if (wizStepIndex === 4 && elPages.value) goToStep(5);
+      });
+
+      wizNext.addEventListener("click", function () {
+        if (!validateWizardStep(wizStepIndex)) return;
+        goToStep(wizStepIndex + 1);
+      });
+
+      wizBack.addEventListener("click", function () {
+        goToStep(wizStepIndex - 1);
+      });
+
+      document.getElementById("header-step-nav").addEventListener("click", function (e) {
+        var btn = e.target.closest(".step-pill");
+        if (!btn || btn.disabled) return;
+        var idx = parseInt(btn.getAttribute("data-wiz-goto"), 10);
+        if (isNaN(idx)) return;
+        goToStep(idx);
+      });
+
+      btnSelectAll.addEventListener("click", function () {
+        if (topicBlock.classList.contains("is-disabled")) return;
+        var boxes = topicList.querySelectorAll('input[type="checkbox"]');
+        var anyUnchecked = false;
+        boxes.forEach(function (b) {
+          if (!b.checked) anyUnchecked = true;
+        });
+        boxes.forEach(function (b) {
+          b.checked = anyUnchecked;
+        });
+        syncWizardUI();
+      });
+
+      function getCheckedTopics() {
+        var out = [];
+        topicList.querySelectorAll('input[type="checkbox"]:checked').forEach(function (b) {
+          out.push(b.value);
+        });
+        return out;
+      }
+
+      function setOutput(text) {
+        outEl.textContent = text;
+        outEl.classList.toggle("is-empty", !text);
+      }
+
+      function splitLines(text) {
+        return text
+          .split(/\r?\n/)
+          .map(function (s) { return s.trim(); })
+          .filter(Boolean);
+      }
+
+      document.getElementById("sy-generate").addEventListener("click", function () {
+        var cls = elClass.value.trim() || "(class)";
+        var subject = elSubject.value.trim() || "(subject)";
+        var unit = elUnit.value.trim() || "(unit)";
+        var pages = elPages.value.trim() || "(pages)";
+        var picked = getCheckedTopics();
+        var topics = picked.length ? picked.slice() : [];
+        if (!picked.length) {
+          topics.push("(no topics selected — use checkboxes or Select all topics)");
+        }
+
+        var term = document.getElementById("sy-term").value.trim() || "(term)";
+        var weeks = parseInt(document.getElementById("sy-weeks").value, 10) || 12;
+        var outcomes = splitLines(document.getElementById("sy-outcomes").value);
+
+        var per = Math.max(1, Math.ceil(weeks / topics.length));
+        var lines = [];
+        lines.push("SYLLABUS OUTLINE");
+        lines.push("================");
+        lines.push("Class: " + cls);
+        lines.push("Subject: " + subject);
+        lines.push("Chapter: " + unit);
+        lines.push("Pages: " + pages);
+        lines.push("Term: " + term);
+        lines.push("Planned weeks: " + weeks);
+        lines.push("");
+        lines.push("FOCUS TOPICS (from your selection)");
+        lines.push("-----------------------------------");
+        topics.forEach(function (t, i) {
+          lines.push((i + 1) + ". " + t);
+        });
+        lines.push("");
+        lines.push("WEEKLY SEQUENCE (approx. " + per + " week(s) per topic block)");
+        lines.push("--------------------------------------------------");
+
+        var w = 1;
+        var ti = 0;
+        while (w <= weeks && ti < topics.length) {
+          var end = Math.min(w + per - 1, weeks);
+          lines.push("Weeks " + w + (end > w ? "–" + end : "") + ": " + topics[ti]);
+          w = end + 1;
+          ti++;
+        }
+        while (w <= weeks) {
+          lines.push("Week " + w + ": Review / assessment / buffer");
+          w++;
+        }
+        while (ti < topics.length) {
+          lines.push("(Extra topic — extend term or merge): " + topics[ti]);
+          ti++;
+        }
+
+        if (outcomes.length) {
+          lines.push("");
+          lines.push("LEARNING OUTCOMES");
+          lines.push("----------------");
+          outcomes.forEach(function (o, i) {
+            lines.push((i + 1) + ". " + o);
+          });
+        }
+
+        lines.push("");
+        lines.push("Notes: Edit data/sallybus-bundle.json for your textbook structure and keybook links.");
+
+        setOutput(lines.join("\n"));
+      });
+
+      function bootAfterCurriculumReady() {
+        fillClasses();
+        elClass.value = "";
+        resetFromSubject();
+        wizStepIndex = 0;
+        var n = Object.keys(CURRICULUM).length;
+        if (curriculumFromFile && n > 0) {
+          updateHint(
+            "Loaded <strong>" +
+              SYLLABUS_DATA_URL +
+              "</strong> (" +
+              n +
+              " classes). Start with <strong>Step 1 — Class</strong>."
+          );
+        } else if (curriculumFromFile && n === 0) {
+          updateHint(
+            "<strong>" +
+              SYLLABUS_DATA_URL +
+              "</strong> has an empty <code>curriculum</code>. Add your real classes and subjects there, then refresh."
+          );
+        } else {
+          updateHint(
+            "Could not load <strong>" +
+              SYLLABUS_DATA_URL +
+              "</strong>. Use <strong>run_local.bat</strong>, or fix the JSON file path."
+          );
+        }
+        refreshKeybookPanel();
+        syncWizardUI();
+      }
+
+      loadCurriculumFromFile()
+        .then(function () {
+          bootAfterCurriculumReady();
+        })
+        .catch(function () {
+          CURRICULUM = {};
+          KEYBOOKS_BY_CLASS = {};
+          curriculumFromFile = false;
+          bootAfterCurriculumReady();
+        });
+    })();
+  </script>
+</body>
+</html>

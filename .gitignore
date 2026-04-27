@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+
+# Local override for portable Node (optional)
+node_path.txt

@@ -1,0 +1,42 @@
+================================================================================
+  STARTWELL SALLYBUS GENERATOR — ready to use (local files only, no admin)
+================================================================================
+
+1) UNZIP this folder anywhere.
+
+2) NODE.JS — either:
+     A) Portable zip: run_local.bat is already set to a common path under
+        C:\Users\laptop World\Downloads\node-v24.15.0-win-x64\...
+        If your folder is different, edit NODE_DIR inside run_local.bat, OR
+        create node_path.txt in this folder (copy node_path.txt.example and rename)
+        with ONE line: the full path to the folder that contains node.exe.
+     B) Normal install: add Node to PATH — then you can clear NODE_DIR in run_local.bat.
+
+3) DOUBLE-CLICK:  run_local.bat
+   (Or open Command Prompt here and run:  run_local.bat)
+
+4) OPEN YOUR BROWSER and go to:
+      http://127.0.0.1:5500/sallybus%20generator.html
+
+   Keep the black window open while you use the app. Press Ctrl+C there to stop.
+
+--------------------------------------------------------------------------------
+Your data (edit yourself — starts empty, no sample classes)
+--------------------------------------------------------------------------------
+  • data\sallybus-bundle.json
+      - "curriculum" — class, subject, chapters, pages, topics (see DATA_README.txt)
+      - "keybooksByClass" — optional links per class, e.g. PDFs in data\keybooks\
+        Example file path in JSON:  "data/keybooks/mybook.pdf"
+
+  Put PDF files inside:  data\keybooks\
+  Then list them under the right class in sallybus-bundle.json.
+
+  No server saves anything — you edit the JSON (and PDFs) yourself.
+
+--------------------------------------------------------------------------------
+If the page shows "could not load" curriculum
+--------------------------------------------------------------------------------
+  • You must use step 3–4 (run_local.bat + browser URL). Do not only double-click
+    the HTML file — the browser blocks loading the JSON that way.
+
+================================================================================
