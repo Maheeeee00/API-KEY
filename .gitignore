@@ -1,0 +1,6 @@
+# Local Excel + uploaded keybooks (optional — remove lines if you want these in git)
+data/syllabus.xlsx
+data/keybooks/
+
+__pycache__/
+*.pyc

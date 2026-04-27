@@ -1,6 +1,27 @@
 Your folder: C:\Users\laptop World\Downloads\sallybus
 ==============================================
 
+LOCAL EXCEL BACKEND (read + save)
+---------------------------------
+From the project folder (where backend/ and sallybus generator.html live):
+
+  pip install -r backend/requirements.txt
+  python backend/app.py
+
+Open in the browser (do not double-click the HTML for this mode):
+
+  http://127.0.0.1:5010/
+
+Data files created/used next to the project:
+  data/syllabus.xlsx     — sheets: Curriculum, Keybooks, SyllabusLog
+  data/keybooks/         — PDF uploads go here
+
+- Curriculum loads from Excel on each page load.
+- "Generate syllabus" re-saves the Curriculum sheet (same structure) and appends one row to SyllabusLog.
+- Admin keybook upload saves the PDF and appends Keybooks sheet.
+
+---
+
 1) Put in that folder (same structure):
      sallybus generator.html
      data\sallybus-bundle.json          ← ONE file the HTML loads (curriculum + class keybooks)

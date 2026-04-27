@@ -610,8 +610,8 @@
         <button type="button" class="btn-icon-close" id="admin-modal-close" aria-label="Close">&times;</button>
       </div>
       <h2 id="admin-modal-title">Keybook upload (admin)</h2>
-      <p class="modal-lead">Only admins use this panel. Uploads stay in the browser until your backend is connected.</p>
-      <p class="admin-banner">Client-only gate: change the code in this HTML file before use. Replace with server login when the backend is ready.</p>
+      <p class="modal-lead">With the local server running, uploads save the PDF under <strong>data/keybooks/</strong> and append a row to <strong>data/syllabus.xlsx</strong> for the class you selected in step 1.</p>
+      <p class="admin-banner">Passphrase is still client-only — change <code>ADMIN_PASSPHRASE</code> in this file. For real security use server-side auth later.</p>
 
       <div id="admin-step-login">
         <label for="admin-pass">Admin passphrase</label>
@@ -644,7 +644,9 @@
        * works when you open via a local server (e.g. npx serve). Plain file:// may block fetch.
        * Edit path here if you move the file.
        */
-      /** One JSON file: { "version":1, "curriculum": {...}, "keybooksByClass": { "Class 2": [ { "title", "file" } ] } } */
+      /** Same-origin local backend (run: python backend/app.py) serves /api/curriculum from Excel. */
+      var API_BASE = "";
+      /** Fallback if API is down: static JSON next to this file */
       var SYLLABUS_DATA_URL = "data/sallybus-bundle.json";
 
       /**
@@ -727,7 +729,23 @@
 
       var CURRICULUM = CURRICULUM_FALLBACK;
       var curriculumFromFile = false;
+      var curriculumSource = "fallback";
       var KEYBOOKS_BY_CLASS = {};
+
+      function postJson(url, body) {
+        return fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body || {})
+        }).then(function (res) {
+          if (!res.ok) return res.text().then(function (t) {
+            throw new Error(t || "HTTP " + res.status);
+          });
+          return res.json().catch(function () {
+            return {};
+          });
+        });
+      }
 
       function isPlainObject(x) {
         return x !== null && typeof x === "object" && !Array.isArray(x);
@@ -757,26 +775,49 @@
         return true;
       }
 
+      function applyBundlePayload(data) {
+        if (isPlainObject(data) && data.curriculum && validateCurriculumShape(data.curriculum)) {
+          CURRICULUM = data.curriculum;
+          KEYBOOKS_BY_CLASS = isPlainObject(data.keybooksByClass) ? data.keybooksByClass : {};
+          curriculumFromFile = true;
+          return true;
+        }
+        if (validateCurriculumShape(data)) {
+          CURRICULUM = data;
+          KEYBOOKS_BY_CLASS = {};
+          curriculumFromFile = true;
+          return true;
+        }
+        return false;
+      }
+
       function loadCurriculumFromFile() {
-        return fetch(SYLLABUS_DATA_URL, { cache: "no-store" })
-          .then(function (res) {
+        var apiUrl = (API_BASE || "") + "/api/curriculum";
+        function tryStatic() {
+          return fetch(SYLLABUS_DATA_URL, { cache: "no-store" }).then(function (res) {
             if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+          });
+        }
+        return fetch(apiUrl, { cache: "no-store" })
+          .then(function (res) {
+            if (!res.ok) throw new Error("API " + res.status);
             return res.json();
           })
           .then(function (data) {
-            if (isPlainObject(data) && data.curriculum && validateCurriculumShape(data.curriculum)) {
-              CURRICULUM = data.curriculum;
-              KEYBOOKS_BY_CLASS = isPlainObject(data.keybooksByClass) ? data.keybooksByClass : {};
-              curriculumFromFile = true;
+            if (applyBundlePayload(data)) {
+              curriculumSource = "excel";
               return;
             }
-            if (validateCurriculumShape(data)) {
-              CURRICULUM = data;
-              KEYBOOKS_BY_CLASS = {};
-              curriculumFromFile = true;
-              return;
-            }
-            throw new Error("Invalid JSON: need curriculum or bundle with .curriculum");
+            throw new Error("Invalid API payload");
+          })
+          .catch(function () {
+            return tryStatic().then(function (data) {
+              if (!applyBundlePayload(data)) {
+                throw new Error("Invalid JSON: need curriculum or bundle with .curriculum");
+              }
+              curriculumSource = "static";
+            });
           });
       }
 
@@ -1212,7 +1253,24 @@
         lines.push("");
         lines.push("Notes: Replace sample data in the HTML file with your textbook page ranges when ready.");
 
-        setOutput(lines.join("\n"));
+        var outline = lines.join("\n");
+        setOutput(outline);
+
+        var api = (API_BASE || "") + "/api/curriculum";
+        postJson(api, { curriculum: CURRICULUM, keybooksByClass: KEYBOOKS_BY_CLASS })
+          .then(function () {
+            return postJson((API_BASE || "") + "/api/syllabus-log", {
+              class: cls,
+              subject: subject,
+              chapter: unit,
+              pages: pages,
+              topics: picked.join("; "),
+              outline: outline
+            });
+          })
+          .catch(function () {
+            /* offline or static-only: skip save */
+          });
       });
 
       /* —— Admin floating button + keybook upload (client-only until backend) —— */
@@ -1325,18 +1383,39 @@
           showAdminMsg("err", "Choose a keybook file first.");
           return;
         }
+        var cls = elClass.value.trim();
+        if (!cls) {
+          showAdminMsg("err", "Select a class in Step 1 first (used for the Excel row).");
+          return;
+        }
         var title = kbTitle.value.trim();
-        var sizeKb = (f.size / 1024).toFixed(1);
-        showAdminMsg(
-          "ok",
-          "Queued locally: \"" +
-            (title || f.name) +
-            "\" (" +
-            f.name +
-            ", " +
-            sizeKb +
-            " KB). No server yet — your backend will accept uploads here next."
-        );
+        var fd = new FormData();
+        fd.append("class", cls);
+        fd.append("title", title || f.name);
+        fd.append("file", f, f.name);
+        fetch((API_BASE || "") + "/api/keybook", { method: "POST", body: fd })
+          .then(function (res) {
+            if (!res.ok) return res.text().then(function (t) {
+              throw new Error(t || "HTTP " + res.status);
+            });
+            return res.json();
+          })
+          .then(function (data) {
+            showAdminMsg("ok", "Saved to Excel + data/keybooks/: " + (data.file || "ok"));
+            return fetch((API_BASE || "") + "/api/curriculum", { cache: "no-store" }).then(function (r) {
+              return r.json();
+            });
+          })
+          .then(function (bundle) {
+            if (bundle && applyBundlePayload(bundle)) refreshKeybookPanel();
+          })
+          .catch(function (err) {
+            showAdminMsg(
+              "err",
+              "Server save failed. Run <strong>python backend/app.py</strong> and open this page from http://127.0.0.1:5010/ — " +
+                (err.message || String(err))
+            );
+          });
       });
 
       function bootAfterCurriculumReady() {
@@ -1344,17 +1423,21 @@
         elClass.value = "";
         resetFromSubject();
         wizStepIndex = 0;
-        if (curriculumFromFile) {
+        if (curriculumSource === "excel") {
+          updateHint(
+            "Loaded from <strong>local Excel</strong> (via API). Generate syllabus saves rows to the same workbook. Start with <strong>Step 1 — Class</strong>."
+          );
+        } else if (curriculumFromFile) {
           updateHint(
             "Loaded <strong>" +
               SYLLABUS_DATA_URL +
-              "</strong> (curriculum + keybooks if present). Start with <strong>Step 1 — Class</strong>."
+              "</strong>. For Excel read/write run <strong>python backend/app.py</strong> and open <strong>http://127.0.0.1:5010/</strong>."
           );
         } else {
           updateHint(
-            "Using built-in sample data. Put <strong>" +
+            "Using built-in sample data. Run the local backend or add <strong>" +
               SYLLABUS_DATA_URL +
-              "</strong> next to this HTML (from build script) and use a <strong>local server</strong>."
+              "</strong>."
           );
         }
         refreshKeybookPanel();
