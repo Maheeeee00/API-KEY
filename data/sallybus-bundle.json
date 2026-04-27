@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "curriculum": {
+    "Class 6": {
+      "Mathematics": [
+        {
+          "name": "Unit 1: Knowing Our Numbers",
+          "pages": [
+            {
+              "label": "Pages 1–8",
+              "topics": [
+                "Comparing numbers",
+                "Large numbers in practice",
+                "Estimation"
+              ]
+            },
+            {
+              "label": "Pages 9–18",
+              "topics": [
+                "Using brackets",
+                "Roman numerals",
+                "Exercise review"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Unit 2: Whole Numbers",
+          "pages": [
+            {
+              "label": "Pages 19–28",
+              "topics": [
+                "Natural numbers",
+                "Properties of whole numbers",
+                "Number line patterns"
+              ]
+            }
+          ]
+        }
+      ],
+      "Science": [
+        {
+          "name": "Unit 1: Food — Where Does It Come From?",
+          "pages": [
+            {
+              "label": "Pages 1–6",
+              "topics": [
+                "Food sources",
+                "Plant parts we eat",
+                "Animal products"
+              ]
+            },
+            {
+              "label": "Pages 7–12",
+              "topics": [
+                "Food chain basics",
+                "Keywords summary"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "Class 8": {
+      "Mathematics": [
+        {
+          "name": "Unit 1: Rational Numbers",
+          "pages": [
+            {
+              "label": "Pages 1–10",
+              "topics": [
+                "Introduction to rationals",
+                "Representing on number line",
+                "Standard form"
+              ]
+            },
+            {
+              "label": "Pages 11–22",
+              "topics": [
+                "Operations on rationals",
+                "Word problems",
+                "Revision"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Unit 2: Linear Equations in One Variable",
+          "pages": [
+            {
+              "label": "Pages 23–38",
+              "topics": [
+                "Setting up equations",
+                "Solving by transposing",
+                "Applications"
+              ]
+            }
+          ]
+        }
+      ],
+      "Science": [
+        {
+          "name": "Unit 1: Crop Production and Management",
+          "pages": [
+            {
+              "label": "Pages 1–9",
+              "topics": [
+                "Agricultural practices",
+                "Soil preparation",
+                "Irrigation"
+              ]
+            },
+            {
+              "label": "Pages 10–18",
+              "topics": [
+                "Storage and food from animals",
+                "Revision"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "Class 10": {
+      "Mathematics": [
+        {
+          "name": "Unit 1: Real Numbers",
+          "pages": [
+            {
+              "label": "Pages 1–8",
+              "topics": [
+                "Euclid's division lemma",
+                "Fundamental theorem",
+                "Irrational numbers"
+              ]
+            },
+            {
+              "label": "Pages 9–16",
+              "topics": [
+                "Decimal expansions",
+                "Exercise set"
+              ]
+            }
+          ]
+        }
+      ],
+      "Science": [
+        {
+          "name": "Unit 1: Chemical Reactions and Equations",
+          "pages": [
+            {
+              "label": "Pages 1–10",
+              "topics": [
+                "Types of reactions",
+                "Balancing equations",
+                "Effects of oxidation"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "keybooksByClass": {}
+}

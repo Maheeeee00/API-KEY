@@ -435,6 +435,40 @@
       text-align: center;
       line-height: 1.45;
     }
+    .keybook-panel {
+      margin-top: 1rem;
+      padding: 0.75rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--sw-border);
+      background: var(--sw-black-soft);
+    }
+    .keybook-panel h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--sw-gold-muted);
+    }
+    .keybook-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .keybook-links a {
+      font-size: 0.88rem;
+      color: var(--sw-orange);
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .keybook-links a:hover {
+      text-decoration: underline;
+    }
+    .keybook-empty {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--sw-gold-dim);
+    }
     .wiz-nav {
       display: flex;
       flex-wrap: wrap;
@@ -486,6 +520,11 @@
             <select id="sel-class" autocomplete="off">
               <option value="">— Select class —</option>
             </select>
+            <div id="keybook-panel" class="keybook-panel" hidden>
+              <h4>Keybooks for this class</h4>
+              <div id="keybook-links" class="keybook-links"></div>
+              <p id="keybook-empty" class="keybook-empty" hidden>No keybooks listed for this class in your data file.</p>
+            </div>
           </div>
 
           <div class="wiz-step" data-wiz-step="1" id="wiz-step-1">
@@ -605,7 +644,8 @@
        * works when you open via a local server (e.g. npx serve). Plain file:// may block fetch.
        * Edit path here if you move the file.
        */
-      var SYLLABUS_DATA_URL = "data/syllabus-by-class.json";
+      /** One JSON file: { "version":1, "curriculum": {...}, "keybooksByClass": { "Class 2": [ { "title", "file" } ] } } */
+      var SYLLABUS_DATA_URL = "data/sallybus-bundle.json";
 
       /**
        * Built-in fallback if the file is missing or cannot be loaded.
@@ -687,6 +727,7 @@
 
       var CURRICULUM = CURRICULUM_FALLBACK;
       var curriculumFromFile = false;
+      var KEYBOOKS_BY_CLASS = {};
 
       function isPlainObject(x) {
         return x !== null && typeof x === "object" && !Array.isArray(x);
@@ -723,15 +764,26 @@
             return res.json();
           })
           .then(function (data) {
-            if (!validateCurriculumShape(data)) {
-              throw new Error("Invalid JSON shape");
+            if (isPlainObject(data) && data.curriculum && validateCurriculumShape(data.curriculum)) {
+              CURRICULUM = data.curriculum;
+              KEYBOOKS_BY_CLASS = isPlainObject(data.keybooksByClass) ? data.keybooksByClass : {};
+              curriculumFromFile = true;
+              return;
             }
-            CURRICULUM = data;
-            curriculumFromFile = true;
+            if (validateCurriculumShape(data)) {
+              CURRICULUM = data;
+              KEYBOOKS_BY_CLASS = {};
+              curriculumFromFile = true;
+              return;
+            }
+            throw new Error("Invalid JSON: need curriculum or bundle with .curriculum");
           });
       }
 
       var elClass = document.getElementById("sel-class");
+      var keybookPanel = document.getElementById("keybook-panel");
+      var keybookLinks = document.getElementById("keybook-links");
+      var keybookEmpty = document.getElementById("keybook-empty");
       var elSubject = document.getElementById("sel-subject");
       var elUnit = document.getElementById("sel-unit");
       var elPages = document.getElementById("sel-pages");
@@ -925,6 +977,33 @@
         });
       }
 
+      function refreshKeybookPanel() {
+        if (!keybookPanel || !keybookLinks || !keybookEmpty) return;
+        var c = elClass.value;
+        keybookLinks.innerHTML = "";
+        if (!c) {
+          keybookPanel.hidden = true;
+          keybookEmpty.hidden = true;
+          return;
+        }
+        keybookPanel.hidden = false;
+        var list = KEYBOOKS_BY_CLASS[c];
+        if (!list || !list.length) {
+          keybookEmpty.hidden = false;
+          return;
+        }
+        keybookEmpty.hidden = true;
+        list.forEach(function (kb) {
+          if (!kb || !kb.file) return;
+          var a = document.createElement("a");
+          a.href = kb.file;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = kb.title || kb.file;
+          keybookLinks.appendChild(a);
+        });
+      }
+
       function syncWizardUI() {
         wizProgress.textContent =
           "Step " + (wizStepIndex + 1) + " of " + WIZ_TOTAL + " — " + WIZ_TITLES[wizStepIndex];
@@ -942,6 +1021,7 @@
           wizNext.hidden = false;
           wizNext.disabled = !validateWizardStep(wizStepIndex);
         }
+        if (wizStepIndex === 0) refreshKeybookPanel();
         syncHeaderStepPills();
       }
 
@@ -969,12 +1049,14 @@
         var c = elClass.value;
         if (!c) {
           updateHint("Choose a <strong>class</strong> (step 1).");
+          refreshKeybookPanel();
           goToStep(0);
           return;
         }
         var subs = getSubjects(c);
         setOptions(elSubject, "— Select subject —", subs);
         updateHint("Class set. Go to <strong>Next</strong> or continue in order.");
+        refreshKeybookPanel();
         syncWizardUI();
         if (wizStepIndex === 0 && c) goToStep(1);
       });
@@ -1264,17 +1346,18 @@
         wizStepIndex = 0;
         if (curriculumFromFile) {
           updateHint(
-            "Loaded syllabus data from <strong>" +
+            "Loaded <strong>" +
               SYLLABUS_DATA_URL +
-              "</strong>. Start with <strong>Step 1 — Class</strong>."
+              "</strong> (curriculum + keybooks if present). Start with <strong>Step 1 — Class</strong>."
           );
         } else {
           updateHint(
-            "Using built-in sample data. Put your JSON at <strong>" +
+            "Using built-in sample data. Put <strong>" +
               SYLLABUS_DATA_URL +
-              "</strong> and open this page through a <strong>local server</strong> (not raw file://) so it can load."
+              "</strong> next to this HTML (from build script) and use a <strong>local server</strong>."
           );
         }
+        refreshKeybookPanel();
         syncWizardUI();
       }
 

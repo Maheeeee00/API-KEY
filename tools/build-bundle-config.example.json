@@ -1,0 +1,32 @@
+{
+  "outputBundle": "data/sallybus-bundle.json",
+  "keybooksDir": "data/keybooks",
+  "curriculumFile": "data/syllabus-by-class.json",
+  "downloads": [
+    {
+      "class": "Class 2",
+      "title": "Skillup English keybook 2",
+      "source": "C:\\Users\\laptop World\\Downloads\\Skillup English keybook 2.pdf"
+    },
+    {
+      "class": "Class 3",
+      "title": "Skillup English keybook 3",
+      "source": "C:\\Users\\laptop World\\Downloads\\Skillup English keybook 3.pdf"
+    },
+    {
+      "class": "Class 4",
+      "title": "Skillup English keybook 4",
+      "source": "C:\\Users\\laptop World\\Downloads\\Skillup English keybook 4.pdf"
+    },
+    {
+      "class": "Class 5",
+      "title": "Skillup English keybook 5",
+      "source": "C:\\Users\\laptop World\\Downloads\\Skillup English keybook 5.pdf"
+    },
+    {
+      "class": "Class 7",
+      "title": "Final Book 7",
+      "source": "C:\\Users\\laptop World\\Downloads\\Final Book 7.pdf"
+    }
+  ]
+}
