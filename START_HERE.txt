@@ -4,7 +4,13 @@
 
 1) UNZIP this folder anywhere.
 
-2) INSTALL NODE.JS (includes npx) from https://nodejs.org/  — LTS is fine.
+2) NODE.JS — either:
+     A) Portable zip: run_local.bat is already set to a common path under
+        C:\Users\laptop World\Downloads\node-v24.15.0-win-x64\...
+        If your folder is different, edit NODE_DIR inside run_local.bat, OR
+        create node_path.txt in this folder (copy node_path.txt.example and rename)
+        with ONE line: the full path to the folder that contains node.exe.
+     B) Normal install: add Node to PATH — then you can clear NODE_DIR in run_local.bat.
 
 3) DOUBLE-CLICK:  run_local.bat
    (Or open Command Prompt here and run:  run_local.bat)
