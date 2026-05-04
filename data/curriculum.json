@@ -1,0 +1,33 @@
+{
+  "data": {
+    "Class 7": {
+      "Mathematics": {
+        "bookTitle": "Replace with your book title",
+        "publisher": "",
+        "chapters": {
+          "1|Rational Numbers": {
+            "chapterNo": "1",
+            "chapterName": "Rational Numbers",
+            "pagesStart": "1",
+            "pagesEnd": "24",
+            "exercises": [
+              {
+                "exerciseId": "1.1",
+                "exerciseLabel": "Exercise 1.1",
+                "description": "Introduction to rational numbers",
+                "topics": "Definition, representation on number line"
+              },
+              {
+                "exerciseId": "1.2",
+                "exerciseLabel": "Exercise 1.2",
+                "description": "Operations",
+                "topics": "Addition, subtraction"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "rows": []
+}
