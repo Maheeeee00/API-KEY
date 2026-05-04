@@ -124,8 +124,6 @@
     .cursor-panel{margin-top:.75rem;padding:.75rem;border:1px dashed var(--accent);border-radius:8px;background:#fffaf7;display:none}
     .cursor-panel.show{display:block}
     #paste-json{min-height:120px;font-family:'Consolas','Courier New',monospace;font-size:.78rem}
-    .mode-local .header-tag#mode-banner{display:block;color:var(--green);font-weight:600}
-    #mode-banner{display:none}
     #pdf-preview-wrap{display:none;margin-top:.65rem}
     #pdf-preview-wrap.show{display:block}
     #pdf-preview-summary{font-size:.78rem;color:var(--muted);margin-bottom:.45rem}
@@ -150,7 +148,6 @@
     <li><button type="button" class="step-pill" data-goto="5">Generate</button></li>
   </ul>
   <p class="header-tag">Select each step in order — syllabus appears only after Generate.</p>
-  <p class="header-tag" id="mode-banner">Local mode: curriculum loads from <code>data/curriculum.json</code> (and browser storage). Run a local server so the file can load (see <code>README.md</code>).</p>
 </header>
 
 <div class="layout">
@@ -250,12 +247,9 @@
       </div>
 
       <div class="panel active" id="tab-upload">
-        <p class="local-hide" style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">
           Upload PDF → Browser reads text → <strong>Cursor</strong> (or optional OpenAI-compatible API) structures it → Apps Script saves to Sheet.
           <br><strong style="color:var(--accent)">No Drive API needed.</strong> Do not put API keys in public pages; use Cursor paste or a private backend.
-        </p>
-        <p class="local-only" hidden style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">
-          <strong>Local mode:</strong> PDF upload merges into this device only (saved in browser + export). Put your full curriculum in <code>data/curriculum.json</code> next to <code>index.html</code>, or export after merging.
         </p>
         <div class="g2">
           <div><label for="up-class">Class *</label><input id="up-class" type="text" placeholder="e.g. Class 7"/></div>
@@ -302,10 +296,7 @@
       <div class="panel" id="tab-data">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem">
           <p style="font-size:.8rem;color:var(--muted);margin:0">All entries.</p>
-          <span style="display:flex;gap:.35rem;flex-wrap:wrap">
-            <button type="button" class="btn-sm" id="btn-refresh">⟳ Refresh</button>
-            <button type="button" class="btn-sm local-only" hidden id="btn-export-json">Export curriculum.json</button>
-          </span>
+          <button type="button" class="btn-sm" id="btn-refresh">⟳ Refresh</button>
         </div>
         <div class="tbl-wrap">
           <table class="tbl">
@@ -365,25 +356,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 // ── CONFIG ───────────────────────────────────────────────────────
 var SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
-/** Local curriculum file (same folder as index.html). Requires a local HTTP server (see README). */
-var LOCAL_CURRICULUM_URL = 'data/curriculum.json';
 /** Optional: OpenAI-compatible chat API. Leave empty to use Cursor paste only. */
 var OPENAI_API_KEY = '';
 var OPENAI_BASE = 'https://api.openai.com/v1';
 var OPENAI_MODEL = 'gpt-4o-mini';
 
 var SS_KEY = 'sw_admin';
-var LS_CURR_KEY = 'sw_local_curriculum';
-
-function detectLocalMode(){
-  try{
-    if(typeof location!=='undefined'&&location.protocol==='file:')return true;
-    if(typeof location!=='undefined'&&/local=1/i.test(location.search||''))return true;
-  }catch(e){}
-  return false;
-}
-var IS_LOCAL = detectLocalMode();
-
 var pendingUpload = null;
 
 function getSession(){ try{return JSON.parse(sessionStorage.getItem(SS_KEY))||null;}catch(e){return null;} }
@@ -405,148 +383,7 @@ function apiPost(body){
   }).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
 }
 
-function applyLocalUIMode(){
-  if(!IS_LOCAL)return;
-  document.body.classList.add('mode-local');
-  document.querySelectorAll('.local-only').forEach(function(el){el.hidden=false;});
-  document.querySelectorAll('.local-hide').forEach(function(el){el.hidden=true;});
-}
-
-function rowsFromCurriculum(data){
-  var rows=[], curriculum=data||{};
-  Object.keys(curriculum).forEach(function(cls){
-    var subjMap=curriculum[cls]||{};
-    Object.keys(subjMap).forEach(function(subj){
-      var sub=subjMap[subj]||{};
-      var chapters=sub.chapters||{};
-      Object.keys(chapters).forEach(function(chKey){
-        var ch=chapters[chKey]||{};
-        var chNo=String(ch.chapterNo!=null?ch.chapterNo:'').trim();
-        var chName=String(ch.chapterName||'').trim();
-        (ch.exercises||[]).forEach(function(ex){
-          if(!ex||(!ex.exerciseId&&!ex.exerciseLabel))return;
-          rows.push({
-            rowIndex:rows.length,
-            cls:cls,subj:subj,chNo:chNo,chName:chName,
-            exId:String(ex.exerciseId||'').trim(),
-            exLbl:String(ex.exerciseLabel||'').trim(),
-            exDesc:String(ex.description||'').trim(),
-            topics:String(ex.topics||'').trim()
-          });
-        });
-      });
-    });
-  });
-  return rows;
-}
-
-function saveLocalBundle(){
-  try{localStorage.setItem(LS_CURR_KEY,JSON.stringify({data:CUR,rows:ROWS}));}catch(e){}
-}
-
-function loadLocalCurriculum(){
-  return fetch(LOCAL_CURRICULUM_URL,{cache:'no-store'})
-    .then(function(r){
-      if(!r.ok)throw new Error('Could not load '+LOCAL_CURRICULUM_URL+' ('+r.status+').');
-      return r.json();
-    })
-    .then(function(bundle){
-      var fileData=null,fileRows=null;
-      if(bundle&&bundle.data&&typeof bundle.data==='object'){
-        fileData=bundle.data;
-        fileRows=Array.isArray(bundle.rows)?bundle.rows:rowsFromCurriculum(fileData);
-      }else if(bundle&&typeof bundle==='object'){
-        fileData=bundle;
-        fileRows=rowsFromCurriculum(fileData);
-      }else throw new Error('Invalid JSON shape.');
-      try{
-        var raw=localStorage.getItem(LS_CURR_KEY);
-        if(raw){
-          var b=JSON.parse(raw);
-          if(b&&b.data&&typeof b.data==='object'&&Object.keys(b.data).length){
-            CUR=b.data;
-            ROWS=Array.isArray(b.rows)?b.rows:rowsFromCurriculum(CUR);
-            renderDataTable();fillClasses();saveLocalBundle();
-            return;
-          }
-        }
-      }catch(e){}
-      CUR=fileData;ROWS=fileRows;
-      renderDataTable();fillClasses();saveLocalBundle();
-    });
-}
-
-function mergeChaptersIntoCurriculum(chapters, cls, subject){
-  if(!CUR[cls])CUR[cls]={};
-  if(!CUR[cls][subject])CUR[cls][subject]={bookTitle:'',publisher:'',chapters:{}};
-  var book='',pub='';
-  chapters.forEach(function(ch){
-    if(!book&&ch.bookTitle)book=ch.bookTitle;
-    if(!pub&&ch.publisher)pub=ch.publisher;
-    var chNo=String(ch.chapterNo!=null?ch.chapterNo:'').trim();
-    var chName=String(ch.chapterName||'').trim();
-    if(!chName)return;
-    var chKey=chNo+'|'+chName;
-    if(!CUR[cls][subject].chapters[chKey])
-      CUR[cls][subject].chapters[chKey]={chapterNo:chNo,chapterName:chName,pagesStart:ch.pagesStart||'',pagesEnd:ch.pagesEnd||'',exercises:[]};
-    var tgt=CUR[cls][subject].chapters[chKey];
-    tgt.pagesStart=ch.pagesStart||tgt.pagesStart;
-    tgt.pagesEnd=ch.pagesEnd||tgt.pagesEnd;
-    (ch.exercises||[]).forEach(function(ex){
-      tgt.exercises.push({
-        exerciseId:ex.exerciseId||'',
-        exerciseLabel:ex.exerciseLabel||'',
-        description:ex.description||'',
-        topics:ex.topics||''
-      });
-    });
-  });
-  if(book)CUR[cls][subject].bookTitle=book;
-  if(pub)CUR[cls][subject].publisher=pub;
-  ROWS=rowsFromCurriculum(CUR);
-}
-
-function curriculumFromRows(rows){
-  var data={};
-  (rows||[]).forEach(function(row){
-    var cls=String(row.cls||'').trim(), subj=String(row.subj||'').trim();
-    if(!cls||!subj)return;
-    if(!data[cls])data[cls]={};
-    if(!data[cls][subj])data[cls][subj]={bookTitle:'',publisher:'',chapters:{}};
-    var chNo=String(row.chNo!=null?row.chNo:'').trim();
-    var chName=String(row.chName||'').trim();
-    if(!chName)return;
-    var chKey=chNo+'|'+chName;
-    if(!data[cls][subj].chapters[chKey])
-      data[cls][subj].chapters[chKey]={chapterNo:chNo,chapterName:chName,pagesStart:'',pagesEnd:'',exercises:[]};
-    data[cls][subj].chapters[chKey].exercises.push({
-      exerciseId:row.exId||'',
-      exerciseLabel:row.exLbl||'',
-      description:row.exDesc||'',
-      topics:row.topics||''
-    });
-  });
-  return data;
-}
-
-function deleteLocalRowAtIndex(idx){
-  var copy=ROWS.slice();
-  if(idx<0||idx>=copy.length)return;
-  copy.splice(idx,1);
-  CUR=curriculumFromRows(copy);
-  ROWS=rowsFromCurriculum(CUR);
-  saveLocalBundle();
-}
-
 function persistStructuredData(structured, cls, subj, fileName){
-  if(IS_LOCAL){
-    mergeChaptersIntoCurriculum(structured,cls,subj);
-    saveLocalBundle();
-    return Promise.resolve({
-      success:true,
-      message:'Saved locally ('+ROWS.length+' rows in memory). Use Export to download curriculum.json.'
-    });
-  }
   return apiPost({
     action:'saveStructured',
     className:cls,
@@ -556,44 +393,19 @@ function persistStructuredData(structured, cls, subj, fileName){
   });
 }
 
-applyLocalUIMode();
 $('loading-overlay').classList.remove('hidden');
-
-if(IS_LOCAL){
-  loadLocalCurriculum().catch(function(){
-    try{
-      var raw=localStorage.getItem(LS_CURR_KEY);
-      if(raw){
-        var b=JSON.parse(raw);
-        CUR=b.data||{};ROWS=Array.isArray(b.rows)?b.rows:rowsFromCurriculum(CUR);
-        renderDataTable();fillClasses();
-      }
-    }catch(e){}
-  }).finally(function(){
-    $('loading-overlay').classList.add('hidden');
-    if(!Object.keys(CUR).length)
-      $('hint').innerHTML='No local data yet. Add <code>data/curriculum.json</code> or use Admin → Upload / paste JSON, then <strong>Export curriculum.json</strong>.';
-  });
-}else{
-  apiGet('getData').then(function(res){
-    $('loading-overlay').classList.add('hidden');
-    if(res.success){ CUR=res.data||{}; ROWS=res.rows||[]; renderDataTable(); }
-    fillClasses();
-  }).catch(function(){
-    $('loading-overlay').classList.add('hidden');
-    $('hint').innerHTML='<strong>Connection error.</strong> Set <code>SCRIPT_URL</code> in this file to your Apps Script Web App URL, or open with <code>?local=1</code> for offline file.';
-  });
-}
+apiGet('getData').then(function(res){
+  $('loading-overlay').classList.add('hidden');
+  if(res.success){ CUR=res.data||{}; ROWS=res.rows||[]; renderDataTable(); }
+  fillClasses();
+}).catch(function(){
+  $('loading-overlay').classList.add('hidden');
+  $('hint').innerHTML='<strong>Connection error.</strong> Set <code>SCRIPT_URL</code> in this file to your Apps Script Web App URL.';
+});
 
 function fillClasses(){
   var names=Object.keys(CUR).sort();
   setOpts($('sel-class'),'— Select class —',names);
-  if(IS_LOCAL){
-    $('hint').innerHTML=names.length
-      ?'Start with <strong>Step 1 — Class</strong>. Data loads from <code>data/curriculum.json</code> (and your browser after edits).'
-      :'No local curriculum yet. Download PDFs from your Drive folders, build JSON in Cursor, save as <code>data/curriculum.json</code>, or use Admin → Upload / paste JSON, then <strong>Export curriculum.json</strong>.';
-    return;
-  }
   $('hint').innerHTML=names.length
     ?'Start with <strong>Step 1 — Class</strong>.'
     :'No data yet. Upload a PDF using the <strong>admin panel</strong> (button bottom-right).';
@@ -739,14 +551,6 @@ function clearMsg(el){el.className='msg';el.textContent='';}
 
 function openModal(){
   $('modal').hidden=false;$('modal').classList.add('open');
-  if(IS_LOCAL){
-    if(!getSession()) setSession({username:'local',displayName:'Local',role:'admin'});
-    var sess=getSession();
-    $('panel-login').hidden=true;$('panel-admin').hidden=false;
-    $('admin-welcome').textContent='Local mode — signed in as '+sess.displayName+' (admin). No Google login.';
-    applyRoleUI(sess);
-    return;
-  }
   var sess=getSession();
   if(sess){$('panel-login').hidden=true;$('panel-admin').hidden=false;$('admin-welcome').textContent='Signed in as '+sess.displayName+' ('+sess.role+').';applyRoleUI(sess);}
   else{$('panel-login').hidden=false;$('panel-admin').hidden=true;}
@@ -775,13 +579,6 @@ function applyRoleUI(sess){
 $('btn-login').addEventListener('click',doLogin);
 [$('a-user'),$('a-pass')].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});});
 function doLogin(){
-  if(IS_LOCAL){
-    setSession({username:'local',displayName:'Local',role:'admin'});
-    $('panel-login').hidden=true;$('panel-admin').hidden=false;
-    $('admin-welcome').textContent='Local mode — signed in as Local (admin).';
-    applyRoleUI(getSession());
-    return;
-  }
   clearMsg($('login-msg'));
   var u=$('a-user').value.trim(),p=$('a-pass').value.trim();
   if(!u||!p){showMsg($('login-msg'),'err','Enter username and password.');return;}
@@ -1073,7 +870,7 @@ async function saveStructuredToSheet(structured, cls, subj, fileName, opts){
     extractedText:opts.extractedText||'',bookTitle:opts.bookTitle||''
   });
   setStep(4,'active');
-  setBar(90, IS_LOCAL ? 'Saving locally…' : 'Saving to Google Sheet…');
+  setBar(90,'Saving to Google Sheet…');
   var res=await persistStructuredData(normalized, cls, subj, fileName);
   if(!res.success) throw new Error(res.error||'Save failed.');
   setStep(4,'done'); setBar(100,'Done!');
@@ -1100,9 +897,7 @@ $('btn-apply-json').addEventListener('click',function(){
     resetSteps();
     $('up-class').value=''; $('up-subj').value=''; $('up-book').value=''; $('up-file').value='';
     setTimeout(function(){
-      if(!IS_LOCAL){
-        apiGet('getData').then(function(r){ if(r.success){CUR=r.data||{};ROWS=r.rows||[];fillClasses();renderDataTable();} });
-      }else{fillClasses();renderDataTable();}
+      apiGet('getData').then(function(r){ if(r.success){CUR=r.data||{};ROWS=r.rows||[];fillClasses();renderDataTable();} });
     }, 800);
   }).catch(function(err){
     showMsg($('upload-msg'),'err','❌ '+err.message);
@@ -1159,9 +954,7 @@ async function handleUpload(){
         $('pdf-steps').classList.remove('show');
         $('up-prog').classList.remove('show');
         resetSteps();
-        if(!IS_LOCAL){
-          apiGet('getData').then(function(r){ if(r.success){CUR=r.data||{};ROWS=r.rows||[];fillClasses();renderDataTable();} });
-        }else{fillClasses();renderDataTable();}
+        apiGet('getData').then(function(r){ if(r.success){CUR=r.data||{};ROWS=r.rows||[];fillClasses();renderDataTable();} });
       }, 2000);
     } else {
       pendingUpload={cls:cls,subj:subj,fileName:file.name,bookTitle:bookOverride,extractedText:extractedText};
@@ -1199,12 +992,6 @@ $('data-tbody').addEventListener('click',function(e){
   var btn=e.target.closest('.btn-danger');if(!btn)return;
   if(!confirm('Delete this entry?'))return;
   clearMsg($('data-msg'));
-  if(IS_LOCAL){
-    deleteLocalRowAtIndex(parseInt(btn.getAttribute('data-ridx'),10));
-    renderDataTable();fillClasses();
-    showMsg($('data-msg'),'ok','✅ Removed from local data.');
-    return;
-  }
   apiPost({action:'deleteEntry',rowIndex:parseInt(btn.getAttribute('data-ridx'),10)}).then(function(res){
     if(res.success){showMsg($('data-msg'),'ok','✅ Deleted.');apiGet('getData').then(function(r){if(r.success){CUR=r.data||{};ROWS=r.rows||[];renderDataTable();fillClasses();}});}
     else showMsg($('data-msg'),'err','❌ '+(res.error||'Failed.'));
@@ -1212,35 +999,13 @@ $('data-tbody').addEventListener('click',function(e){
 });
 $('btn-refresh').addEventListener('click',function(){
   clearMsg($('data-msg'));
-  if(IS_LOCAL){
-    loadLocalCurriculum().then(function(){
-      showMsg($('data-msg'),'ok','Reloaded from '+LOCAL_CURRICULUM_URL+'.');
-    }).catch(function(err){
-      showMsg($('data-msg'),'err',err.message||'Could not reload file.');
-    });
-    return;
-  }
   apiGet('getData').then(function(res){
     if(res.success){CUR=res.data||{};ROWS=res.rows||[];renderDataTable();fillClasses();showMsg($('data-msg'),'ok','Refreshed.');}
     else showMsg($('data-msg'),'err',res.error||'Error.');
   });
 });
-if($('btn-export-json'))$('btn-export-json').addEventListener('click',function(){
-  if(!IS_LOCAL)return;
-  var blob=new Blob([JSON.stringify({data:CUR,rows:ROWS},null,2)],{type:'application/json'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='curriculum.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showMsg($('data-msg'),'ok','Download started — replace data/curriculum.json in your folder with this file if you want it on disk.');
-});
 
 function loadUsers(){
-  if(IS_LOCAL){
-    $('users-tbody').innerHTML='<tr class="no-data"><td colspan="4">User accounts are only available when using the Google Apps Script backend.</td></tr>';
-    return;
-  }
   var sess=getSession();if(!sess||sess.role!=='admin')return;
   $('users-tbody').innerHTML='<tr class="no-data"><td colspan="4">Loading…</td></tr>';
   apiPost({action:'getUsers',callerUsername:sess.username}).then(function(res){
