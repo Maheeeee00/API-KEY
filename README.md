@@ -21,6 +21,7 @@ Data is stored in **localStorage** in this browser (library + outlines). Use **E
 
 ## Extractor (Urdu + Word)
 
-- The extractor panel uses **Jameel Noori Nastaleeq** when that font is installed on your device; otherwise it falls back to **Noto Nastaliq Urdu** (loaded from Google Fonts).
-- Use **Download Word (.docx)** to save the current extraction as a Microsoft Word file. The document requests the **Jameel Noori Nastaleeq** font — install it in Windows so Word renders Urdu the same as on screen.
+- The extractor uses **Jameel Noori Nastaleeq** when that font is installed locally (several common PostScript names are checked).
+- **Noto Nastaliq Urdu** is embedded via jsDelivr WOFF2 so Nastaliq shaping works even when Google Fonts is blocked or Jameel is missing.
+- If extracted text shows **random Latin/CJK symbols or �**, the PDF’s **text mapping is wrong** — no font change fixes that; try another PDF or OCR.
 
