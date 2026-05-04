@@ -4,7 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Book syllabus designer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet" />
   <style>
+    @font-face {
+      font-family: "Jameel Noori Nastaleeq";
+      font-style: normal;
+      font-weight: 400;
+      src:
+        local("Jameel Noori Nastaleeq"),
+        local("JameelNooriNastaleeq"),
+        local("Jameel Noori Nastaliqe"),
+        local("Jameel Noori");
+    }
     :root {
       --bg: #0f1419;
       --surface: #1a2332;
@@ -144,8 +157,10 @@
       line-height: 1.4;
     }
     .extract-box {
-      font-size: 0.78rem;
-      max-height: 140px;
+      font-family: "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", "Segoe UI", serif;
+      font-size: 1rem;
+      line-height: 1.85;
+      max-height: 200px;
       overflow: auto;
       white-space: pre-wrap;
       word-break: break-word;
@@ -154,6 +169,26 @@
       border-radius: 6px;
       border: 1px solid var(--border);
       margin-top: 0.35rem;
+      unicode-bidi: plaintext;
+    }
+    .extract-box.rtl {
+      direction: rtl;
+      text-align: right;
+    }
+    .extract-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+      margin-top: 0.35rem;
+    }
+    .extract-toolbar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin: 0;
+      font-size: 0.78rem;
+      cursor: pointer;
     }
     .syllabus-tree { list-style: none; margin: 0; padding-left: 0; }
     .syllabus-tree ul { list-style: none; margin: 0.25rem 0 0 0; padding-left: 1rem; border-left: 1px solid var(--border); }
@@ -213,9 +248,17 @@
         <p id="pdfPlaceholder" style="color:var(--muted);text-align:center;margin-top:2rem;">Select a book or open a PDF.</p>
         <canvas id="pdfCanvas" class="hidden"></canvas>
       </div>
-      <div class="panel-body" style="border-top:1px solid var(--border);max-height:180px;">
+      <div class="panel-body" style="border-top:1px solid var(--border);max-height:260px;">
         <strong style="font-size:0.8rem;">Extracted text</strong>
-        <div class="extract-box" id="extractOutput">—</div>
+        <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
+          Uses <strong>Jameel Noori Nastaleeq</strong> if installed on your system; otherwise <strong>Noto Nastaliq Urdu</strong> from Google Fonts.
+          Word export sets paragraph font to Jameel Noori Nastaleeq — install that font in Windows/Word for best match.
+        </p>
+        <div class="extract-toolbar">
+          <label><input type="checkbox" id="extractRtl" checked /> Urdu (right‑to‑left)</label>
+          <button type="button" class="secondary small" id="exportWord" title="Download .docx for Microsoft Word">Download Word (.docx)</button>
+        </div>
+        <div class="extract-box rtl" id="extractOutput">—</div>
       </div>
     </section>
     <section class="panel">
@@ -232,6 +275,7 @@
   </main>
   <script type="module">
     import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
+    import { Document, Packer, Paragraph, TextRun } from "https://esm.sh/docx@8.5.0";
 
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
@@ -256,6 +300,8 @@
       nextPage: document.getElementById("nextPage"),
       extractPage: document.getElementById("extractPage"),
       extractOutput: document.getElementById("extractOutput"),
+      extractRtl: document.getElementById("extractRtl"),
+      exportWord: document.getElementById("exportWord"),
       zoomIn: document.getElementById("zoomIn"),
       zoomOut: document.getElementById("zoomOut"),
       syllabusRoot: document.getElementById("syllabusRoot"),
@@ -270,6 +316,8 @@
     let currentPage = 1;
     let scale = 1.15;
     let currentObjectUrl = null;
+    /** Latest plain text shown in the extractor (for Word export). */
+    let lastExtractedPlain = "";
 
     function loadJson(key, fallback) {
       try {
@@ -287,6 +335,19 @@
     }
     function uid() {
       return crypto.randomUUID?.() || String(Date.now()) + Math.random();
+    }
+
+    function setExtractContent(text, options = {}) {
+      const { isPlaceholder = false } = options;
+      els.extractOutput.textContent = text;
+      lastExtractedPlain = isPlaceholder ? "" : text;
+    }
+
+    function syncExtractDirection() {
+      const rtl = els.extractRtl.checked;
+      els.extractOutput.classList.toggle("rtl", rtl);
+      els.extractOutput.style.direction = rtl ? "rtl" : "ltr";
+      els.extractOutput.style.textAlign = rtl ? "right" : "left";
     }
 
     function renderBookList() {
@@ -319,7 +380,7 @@
       if (!b) return;
       if (b.url) loadPdfFromUrl(b.url);
       else {
-        els.extractOutput.textContent = "No URL for this book — use Open local PDF.";
+        setExtractContent("No URL for this book — use Open local PDF.", { isPlaceholder: true });
         clearPdfView();
       }
     }
@@ -349,9 +410,11 @@
         await renderPage();
       } catch (e) {
         console.error(e);
-        els.extractOutput.textContent =
+        setExtractContent(
           "Could not load PDF from URL (CORS, auth, or invalid link). Try downloading the file and use Open local PDF.\n\n" +
-          String(e.message || e);
+            String(e.message || e),
+          { isPlaceholder: true }
+        );
         clearPdfView();
       }
     }
@@ -368,7 +431,7 @@
         await renderPage();
       } catch (e) {
         console.error(e);
-        els.extractOutput.textContent = "Invalid PDF: " + String(e.message || e);
+        setExtractContent("Invalid PDF: " + String(e.message || e), { isPlaceholder: true });
       }
     }
 
@@ -389,7 +452,63 @@
       const page = await pdfDoc.getPage(currentPage);
       const tc = await page.getTextContent();
       const text = tc.items.map((i) => ("str" in i ? i.str : "")).join(" ");
-      els.extractOutput.textContent = text.trim() || "(no text layer on this page — scanned PDFs need OCR elsewhere)";
+      const raw = text.trim();
+      if (!raw)
+        setExtractContent("(no text layer on this page — scanned PDFs need OCR elsewhere)", {
+          isPlaceholder: true,
+        });
+      else setExtractContent(raw);
+    }
+
+    async function exportExtractToWord() {
+      const body = lastExtractedPlain.trim();
+      if (!body) {
+        alert("Nothing to export — extract text from a PDF page first.");
+        return;
+      }
+      const rtl = els.extractRtl.checked;
+      const blocks = body
+        .split(/\n\s*\n/)
+        .map((s) => s.replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+      const parts = blocks.length ? blocks : [body.trim()];
+      const docParagraphs = parts.map(
+        (t) =>
+          new Paragraph({
+            bidirectional: rtl,
+            children: [
+              new TextRun({
+                text: t,
+                font: "Jameel Noori Nastaleeq",
+                rightToLeft: rtl,
+              }),
+            ],
+          })
+      );
+      const title = getActiveBook()?.title?.trim() || "Extracted text";
+      const headerParas = [
+        new Paragraph({
+          bidirectional: rtl,
+          children: [
+            new TextRun({
+              text: title,
+              font: "Jameel Noori Nastaleeq",
+              bold: true,
+              rightToLeft: rtl,
+            }),
+          ],
+        }),
+      ];
+      const doc = new Document({
+        sections: [{ children: [...headerParas, ...docParagraphs] }],
+      });
+      const blob = await Packer.toBlob(doc);
+      const safe = title.replace(/[^\w\-]+/g, "_").slice(0, 80) || "extract";
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${safe}-page-${currentPage}.docx`;
+      a.click();
+      URL.revokeObjectURL(a.href);
     }
 
     function renderSyllabus() {
@@ -475,7 +594,7 @@
       renderSyllabus();
       if (url) loadPdfFromUrl(url);
       else {
-        els.extractOutput.textContent = "No URL — open a local PDF when ready.";
+        setExtractContent("No URL — open a local PDF when ready.", { isPlaceholder: true });
         clearPdfView();
       }
     });
@@ -514,6 +633,13 @@
       await renderPage();
     });
     els.extractPage.addEventListener("click", extractCurrentPageText);
+    els.extractRtl.addEventListener("change", syncExtractDirection);
+    els.exportWord.addEventListener("click", () => {
+      exportExtractToWord().catch((err) => {
+        console.error(err);
+        alert("Word export failed: " + String(err.message || err));
+      });
+    });
     els.zoomIn.addEventListener("click", async () => {
       scale = Math.min(scale + 0.15, 2.5);
       await renderPage();
@@ -551,6 +677,7 @@
 
     renderBookList();
     renderSyllabus();
+    syncExtractDirection();
     if (books.length) {
       const exists = activeBookId && books.some((b) => b.id === activeBookId);
       if (exists) selectBook(activeBookId);

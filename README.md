@@ -18,3 +18,9 @@ Then open `http://localhost:8080/index.html`.
 - **Scanned books**: Text extraction only works when the PDF includes a text layer; image-only pages need OCR in another tool.
 
 Data is stored in **localStorage** in this browser (library + outlines). Use **Export JSON** to back up a syllabus.
+
+## Extractor (Urdu + Word)
+
+- The extractor panel uses **Jameel Noori Nastaleeq** when that font is installed on your device; otherwise it falls back to **Noto Nastaliq Urdu** (loaded from Google Fonts).
+- Use **Download Word (.docx)** to save the current extraction as a Microsoft Word file. The document requests the **Jameel Noori Nastaleeq** font — install it in Windows so Word renders Urdu the same as on screen.
+
