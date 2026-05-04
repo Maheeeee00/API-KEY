@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book syllabus designer</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #5b9fd4;
+      --accent-dim: #3d7aad;
+      --danger: #e06c75;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    header p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      flex: 1;
+    }
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px 1fr 320px;
+      min-height: 0;
+    }
+    @media (max-width: 960px) {
+      main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    }
+    section.panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--surface);
+    }
+    section.panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+    .panel-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-body { flex: 1; overflow: auto; padding: 0.5rem; }
+    label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.25rem; }
+    input[type="text"], input[type="url"], textarea {
+      width: 100%;
+      padding: 0.45rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    textarea { min-height: 72px; resize: vertical; font-family: inherit; }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.8rem;
+      background: var(--accent);
+      color: #0a0e14;
+      font-weight: 600;
+    }
+    button.secondary { background: var(--border); color: var(--text); }
+    button.small { padding: 0.25rem 0.5rem; font-size: 0.72rem; }
+    button.danger { background: var(--danger); color: #fff; }
+    .row { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem; }
+    .book-list { list-style: none; margin: 0; padding: 0; }
+    .book-list li {
+      padding: 0.45rem 0.5rem;
+      border-radius: 6px;
+      margin-bottom: 0.25rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-size: 0.85rem;
+    }
+    .book-list li:hover { background: rgba(91, 159, 212, 0.12); }
+    .book-list li.active { border-color: var(--accent); background: rgba(91, 159, 212, 0.18); }
+    .pdf-stage {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #111;
+    }
+    .pdf-toolbar {
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+    }
+    .pdf-toolbar span { color: var(--muted); }
+    .pdf-scroll {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.75rem;
+      gap: 0.75rem;
+    }
+    canvas { max-width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.45); background: #fff; }
+    .notice {
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding: 0.5rem 0.75rem;
+      background: rgba(224, 108, 117, 0.12);
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+    .extract-box {
+      font-size: 0.78rem;
+      max-height: 140px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding: 0.5rem;
+      background: var(--bg);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-top: 0.35rem;
+    }
+    .syllabus-tree { list-style: none; margin: 0; padding-left: 0; }
+    .syllabus-tree ul { list-style: none; margin: 0.25rem 0 0 0; padding-left: 1rem; border-left: 1px solid var(--border); }
+    .syllabus-node {
+      margin-bottom: 0.35rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .syllabus-node input {
+      width: calc(100% - 100px);
+      margin: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .node-actions { float: right; display: flex; gap: 0.2rem; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Book syllabus designer</h1>
+    <p>Add PDF links or open a local file. Build your syllabus outline alongside the book.</p>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="panel-header">Library</div>
+      <div class="panel-body">
+        <div class="notice">
+          Many sites block cross-origin PDF loading. If a URL fails, use <strong>Open local PDF</strong> below.
+        </div>
+        <label for="bookTitle">Title</label>
+        <input type="text" id="bookTitle" placeholder="e.g. Linear Algebra — Strang" />
+        <label for="bookUrl">PDF URL (optional)</label>
+        <input type="url" id="bookUrl" placeholder="https://example.com/book.pdf" />
+        <div class="row">
+          <button type="button" id="addBook">Add to library</button>
+          <button type="button" class="secondary" id="pickFile">Open local PDF</button>
+          <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+        </div>
+        <ul class="book-list" id="bookList"></ul>
+      </div>
+    </section>
+    <section class="panel pdf-stage">
+      <div class="panel-header">PDF</div>
+      <div class="pdf-toolbar">
+        <button type="button" class="secondary small" id="prevPage">Prev</button>
+        <button type="button" class="secondary small" id="nextPage">Next</button>
+        <span>Page <span id="pageNum">0</span> / <span id="pageCount">0</span></span>
+        <button type="button" class="small" id="extractPage">Extract text (this page)</button>
+        <button type="button" class="secondary small" id="zoomOut">−</button>
+        <button type="button" class="secondary small" id="zoomIn">+</button>
+      </div>
+      <div class="pdf-scroll" id="pdfScroll">
+        <p id="pdfPlaceholder" style="color:var(--muted);text-align:center;margin-top:2rem;">Select a book or open a PDF.</p>
+        <canvas id="pdfCanvas" class="hidden"></canvas>
+      </div>
+      <div class="panel-body" style="border-top:1px solid var(--border);max-height:180px;">
+        <strong style="font-size:0.8rem;">Extracted text</strong>
+        <div class="extract-box" id="extractOutput">—</div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-header">Syllabus outline</div>
+      <div class="panel-body">
+        <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.5rem;">Linked to the selected book. Saved in this browser only.</p>
+        <div class="row">
+          <button type="button" id="addRootTopic">Add unit</button>
+          <button type="button" class="secondary small" id="exportSyllabus">Export JSON</button>
+        </div>
+        <ul class="syllabus-tree" id="syllabusRoot"></ul>
+      </div>
+    </section>
+  </main>
+  <script type="module">
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+    const STORAGE_BOOKS = "syllabusDesigner_books_v1";
+    const STORAGE_SYLLABI = "syllabusDesigner_syllabi_v1";
+    const STORAGE_ACTIVE = "syllabusDesigner_activeBook_v1";
+
+    const els = {
+      bookTitle: document.getElementById("bookTitle"),
+      bookUrl: document.getElementById("bookUrl"),
+      addBook: document.getElementById("addBook"),
+      pickFile: document.getElementById("pickFile"),
+      fileInput: document.getElementById("fileInput"),
+      bookList: document.getElementById("bookList"),
+      pdfCanvas: document.getElementById("pdfCanvas"),
+      pdfPlaceholder: document.getElementById("pdfPlaceholder"),
+      pdfScroll: document.getElementById("pdfScroll"),
+      pageNum: document.getElementById("pageNum"),
+      pageCount: document.getElementById("pageCount"),
+      prevPage: document.getElementById("prevPage"),
+      nextPage: document.getElementById("nextPage"),
+      extractPage: document.getElementById("extractPage"),
+      extractOutput: document.getElementById("extractOutput"),
+      zoomIn: document.getElementById("zoomIn"),
+      zoomOut: document.getElementById("zoomOut"),
+      syllabusRoot: document.getElementById("syllabusRoot"),
+      addRootTopic: document.getElementById("addRootTopic"),
+      exportSyllabus: document.getElementById("exportSyllabus"),
+    };
+
+    let books = loadJson(STORAGE_BOOKS, []);
+    let syllabi = loadJson(STORAGE_SYLLABI, {});
+    let activeBookId = loadJson(STORAGE_ACTIVE, null);
+    let pdfDoc = null;
+    let currentPage = 1;
+    let scale = 1.15;
+    let currentObjectUrl = null;
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+    function saveBooks() {
+      localStorage.setItem(STORAGE_BOOKS, JSON.stringify(books));
+    }
+    function saveSyllabi() {
+      localStorage.setItem(STORAGE_SYLLABI, JSON.stringify(syllabi));
+    }
+    function uid() {
+      return crypto.randomUUID?.() || String(Date.now()) + Math.random();
+    }
+
+    function renderBookList() {
+      els.bookList.innerHTML = "";
+      books.forEach((b) => {
+        const li = document.createElement("li");
+        li.textContent = b.title || "(untitled)";
+        li.dataset.id = b.id;
+        if (b.id === activeBookId) li.classList.add("active");
+        li.addEventListener("click", () => selectBook(b.id));
+        els.bookList.appendChild(li);
+      });
+    }
+
+    function getActiveBook() {
+      return books.find((b) => b.id === activeBookId) || null;
+    }
+
+    function ensureSyllabus(bookId) {
+      if (!syllabi[bookId]) syllabi[bookId] = [];
+    }
+
+    function selectBook(id) {
+      activeBookId = id;
+      if (id) localStorage.setItem(STORAGE_ACTIVE, JSON.stringify(id));
+      else localStorage.removeItem(STORAGE_ACTIVE);
+      renderBookList();
+      renderSyllabus();
+      const b = getActiveBook();
+      if (!b) return;
+      if (b.url) loadPdfFromUrl(b.url);
+      else {
+        els.extractOutput.textContent = "No URL for this book — use Open local PDF.";
+        clearPdfView();
+      }
+    }
+
+    function clearPdfView() {
+      pdfDoc = null;
+      currentPage = 1;
+      els.pdfCanvas.classList.add("hidden");
+      els.pdfPlaceholder.classList.remove("hidden");
+      els.pageNum.textContent = "0";
+      els.pageCount.textContent = "0";
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+      }
+    }
+
+    async function loadPdfFromUrl(url) {
+      clearPdfView();
+      try {
+        const task = pdfjsLib.getDocument({ url, withCredentials: false });
+        pdfDoc = await task.promise;
+        els.pdfPlaceholder.classList.add("hidden");
+        els.pdfCanvas.classList.remove("hidden");
+        currentPage = 1;
+        els.pageCount.textContent = String(pdfDoc.numPages);
+        await renderPage();
+      } catch (e) {
+        console.error(e);
+        els.extractOutput.textContent =
+          "Could not load PDF from URL (CORS, auth, or invalid link). Try downloading the file and use Open local PDF.\n\n" +
+          String(e.message || e);
+        clearPdfView();
+      }
+    }
+
+    async function loadPdfFromArrayBuffer(buf) {
+      clearPdfView();
+      try {
+        const task = pdfjsLib.getDocument({ data: buf });
+        pdfDoc = await task.promise;
+        els.pdfPlaceholder.classList.add("hidden");
+        els.pdfCanvas.classList.remove("hidden");
+        currentPage = 1;
+        els.pageCount.textContent = String(pdfDoc.numPages);
+        await renderPage();
+      } catch (e) {
+        console.error(e);
+        els.extractOutput.textContent = "Invalid PDF: " + String(e.message || e);
+      }
+    }
+
+    async function renderPage() {
+      if (!pdfDoc) return;
+      const page = await pdfDoc.getPage(currentPage);
+      const viewport = page.getViewport({ scale });
+      const canvas = els.pdfCanvas;
+      const ctx = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      els.pageNum.textContent = String(currentPage);
+    }
+
+    async function extractCurrentPageText() {
+      if (!pdfDoc) return;
+      const page = await pdfDoc.getPage(currentPage);
+      const tc = await page.getTextContent();
+      const text = tc.items.map((i) => ("str" in i ? i.str : "")).join(" ");
+      els.extractOutput.textContent = text.trim() || "(no text layer on this page — scanned PDFs need OCR elsewhere)";
+    }
+
+    function renderSyllabus() {
+      els.syllabusRoot.innerHTML = "";
+      if (!activeBookId) return;
+      ensureSyllabus(activeBookId);
+      const nodes = syllabi[activeBookId];
+      nodes.forEach((n, i) => renderNode(els.syllabusRoot, n, i, null));
+    }
+
+    function renderNode(ul, node, index, parentPath) {
+      const path = parentPath ? [...parentPath, index] : [index];
+      const li = document.createElement("li");
+      const wrap = document.createElement("div");
+      wrap.className = "syllabus-node";
+      const actions = document.createElement("div");
+      actions.className = "node-actions";
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.value = node.title;
+      inp.placeholder = "Unit or topic title";
+      inp.addEventListener("input", () => {
+        node.title = inp.value;
+        saveSyllabi();
+      });
+      const addChild = document.createElement("button");
+      addChild.type = "button";
+      addChild.className = "small secondary";
+      addChild.textContent = "+";
+      addChild.title = "Add subtopic";
+      addChild.addEventListener("click", () => {
+        if (!node.children) node.children = [];
+        node.children.push({ id: uid(), title: "", children: [] });
+        saveSyllabi();
+        renderSyllabus();
+      });
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "small danger";
+      del.textContent = "×";
+      del.title = "Remove";
+      del.addEventListener("click", () => {
+        removeAtPath(syllabi[activeBookId], path);
+        saveSyllabi();
+        renderSyllabus();
+      });
+      actions.appendChild(addChild);
+      actions.appendChild(del);
+      wrap.appendChild(actions);
+      wrap.appendChild(inp);
+      li.appendChild(wrap);
+      if (node.children && node.children.length) {
+        const sub = document.createElement("ul");
+        node.children.forEach((c, j) => renderNode(sub, c, j, path));
+        li.appendChild(sub);
+      }
+      ul.appendChild(li);
+    }
+
+    function removeAtPath(arr, path) {
+      if (path.length === 1) {
+        arr.splice(path[0], 1);
+        return;
+      }
+      const [head, ...rest] = path;
+      const parent = arr[head];
+      if (!parent.children) parent.children = [];
+      removeAtPath(parent.children, rest);
+    }
+
+    els.addBook.addEventListener("click", () => {
+      const title = els.bookTitle.value.trim() || "Untitled book";
+      const url = els.bookUrl.value.trim();
+      const id = uid();
+      books.push({ id, title, url: url || null });
+      saveBooks();
+      els.bookTitle.value = "";
+      els.bookUrl.value = "";
+      activeBookId = id;
+      ensureSyllabus(id);
+      saveSyllabi();
+      renderBookList();
+      renderSyllabus();
+      if (url) loadPdfFromUrl(url);
+      else {
+        els.extractOutput.textContent = "No URL — open a local PDF when ready.";
+        clearPdfView();
+      }
+    });
+
+    els.pickFile.addEventListener("click", () => els.fileInput.click());
+    els.fileInput.addEventListener("change", async (ev) => {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      const buf = await file.arrayBuffer();
+      let b = getActiveBook();
+      if (!b) {
+        const id = uid();
+        books.push({ id, title: file.name.replace(/\.pdf$/i, "") || "Local PDF", url: null });
+        activeBookId = id;
+        ensureSyllabus(id);
+        saveBooks();
+        saveSyllabi();
+        b = getActiveBook();
+        renderBookList();
+        renderSyllabus();
+      }
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+      currentObjectUrl = URL.createObjectURL(file);
+      await loadPdfFromArrayBuffer(buf);
+      ev.target.value = "";
+    });
+
+    els.prevPage.addEventListener("click", async () => {
+      if (!pdfDoc || currentPage <= 1) return;
+      currentPage--;
+      await renderPage();
+    });
+    els.nextPage.addEventListener("click", async () => {
+      if (!pdfDoc || currentPage >= pdfDoc.numPages) return;
+      currentPage++;
+      await renderPage();
+    });
+    els.extractPage.addEventListener("click", extractCurrentPageText);
+    els.zoomIn.addEventListener("click", async () => {
+      scale = Math.min(scale + 0.15, 2.5);
+      await renderPage();
+    });
+    els.zoomOut.addEventListener("click", async () => {
+      scale = Math.max(scale - 0.15, 0.5);
+      await renderPage();
+    });
+
+    els.addRootTopic.addEventListener("click", () => {
+      if (!activeBookId) {
+        alert("Add or select a book first.");
+        return;
+      }
+      ensureSyllabus(activeBookId);
+      syllabi[activeBookId].push({ id: uid(), title: "", children: [] });
+      saveSyllabi();
+      renderSyllabus();
+    });
+
+    els.exportSyllabus.addEventListener("click", () => {
+      if (!activeBookId) return;
+      ensureSyllabus(activeBookId);
+      const data = {
+        book: getActiveBook(),
+        syllabus: syllabi[activeBookId],
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `syllabus-${activeBookId.slice(0, 8)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    renderBookList();
+    renderSyllabus();
+    if (books.length) {
+      const exists = activeBookId && books.some((b) => b.id === activeBookId);
+      if (exists) selectBook(activeBookId);
+      else selectBook(books[0].id);
+    }
+  </script>
+</body>
+</html>
