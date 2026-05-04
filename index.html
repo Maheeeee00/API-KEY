@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>startwell — syllabus generator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg:#fafaf8;--surface:#fff;--surface2:#f4f3ef;
+      --border:#e2dfd8;--text:#1c1b19;--muted:#6b6860;
+      --accent:#c4420a;--blue:#0f4c81;--green:#166534;--red:#991b1b;
+      --radius:10px;--font:'DM Sans',system-ui,sans-serif;
+      --display:'Fraunces',Georgia,serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.55;min-height:100vh}
+
+    #loading-overlay{position:fixed;inset:0;z-index:2000;background:rgba(250,250,248,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;font-size:.88rem;color:var(--muted)}
+    #loading-overlay.hidden{display:none}
+    .spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:.9rem 1.25rem}
+    header h1{font-family:var(--display);font-size:1.35rem;font-weight:700}
+    header h1 .brand{color:var(--accent)}
+    .step-nav{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem;list-style:none;margin-top:.55rem}
+    .step-nav li{display:flex;align-items:center;gap:.2rem}
+    .step-pill{font:inherit;font-size:.78rem;font-weight:600;padding:.3rem .65rem;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:all .15s}
+    .step-pill:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+    .step-pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .step-pill:disabled{opacity:.35;cursor:not-allowed}
+    .step-sep{color:var(--muted);font-size:.72rem}
+    .header-tag{margin-top:.35rem;font-size:.75rem;color:var(--muted)}
+
+    .layout{max-width:660px;margin:0 auto;padding:1.25rem}
+    .card{border:1px solid var(--border);border-radius:var(--radius);padding:1rem;background:var(--surface);margin-bottom:1rem}
+    .card-legend{display:block;font-size:.78rem;font-weight:500;color:var(--muted);margin-bottom:.6rem}
+    .wiz-prog{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+    .wiz-step{display:none;padding:.05rem 0 .4rem}
+    .wiz-step.active{display:block}
+    .wiz-step h3{font-family:var(--display);font-size:1.05rem;font-weight:600;margin-bottom:.6rem}
+    .wiz-nav{display:flex;gap:.5rem;align-items:center;margin-top:.85rem;padding-top:.7rem;border-top:1px solid var(--border)}
+    .wiz-nav .sp{flex:1}
+
+    label{display:block;margin-bottom:.25rem;font-size:.82rem;color:var(--muted);font-weight:500}
+    input,select,textarea{width:100%;margin-bottom:.65rem;padding:.44rem .6rem;font:inherit;font-size:.87rem;color:var(--text);background:#fff;border:1px solid var(--border);border-radius:6px;transition:border-color .15s}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+    textarea{min-height:68px;resize:vertical}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+    @media(max-width:480px){.g2{grid-template-columns:1fr}}
+
+    .btn-primary{font:inherit;font-size:.87rem;font-weight:600;padding:.48rem 1.1rem;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;cursor:pointer;transition:filter .15s}
+    .btn-primary:hover:not(:disabled){filter:brightness(1.08)}
+    .btn-primary:disabled{opacity:.4;cursor:not-allowed}
+    .btn-sec{font:inherit;font-size:.87rem;padding:.48rem 1rem;border:1px solid var(--border);border-radius:var(--radius);background:#fff;color:var(--text);cursor:pointer}
+    .btn-sec:disabled{opacity:.4;cursor:not-allowed}
+    .btn-danger{font:inherit;font-size:.78rem;padding:.2rem .5rem;border:1px solid #fca5a5;border-radius:5px;background:#fef2f2;color:var(--red);cursor:pointer}
+    .btn-danger:hover{background:#fee2e2}
+    .btn-sm{font:inherit;font-size:.78rem;padding:.22rem .55rem;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--blue);cursor:pointer}
+
+    .topic-box{margin-bottom:.7rem;padding:.6rem .72rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2)}
+    .topic-box.disabled{opacity:.5;pointer-events:none}
+    .topic-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.45rem}
+    .topic-list{display:flex;flex-direction:column;gap:.28rem}
+    .topic-list label{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:normal;font-size:.85rem;cursor:pointer;color:var(--text)}
+    .topic-list input[type=checkbox]{width:auto;margin:0;accent-color:var(--accent)}
+
+    .syll-out{margin-top:.8rem;padding:.9rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);white-space:pre-wrap;font-size:.83rem;font-family:'Courier New',monospace;overflow:auto;max-height:min(50vh,420px);min-height:90px}
+    .syll-out.empty{color:var(--muted);font-style:italic;font-family:var(--font)}
+    .hint{font-size:.78rem;color:var(--muted);margin-bottom:.7rem;padding:.44rem .6rem;border-radius:6px;border:1px dashed var(--border);background:#fff}
+    .hint strong{color:var(--text)}
+
+    .msg{font-size:.82rem;margin-top:.65rem;padding:.45rem .6rem;border-radius:6px;display:none}
+    .msg.show{display:block}
+    .msg.ok{background:#f0fdf4;border:1px solid #86efac;color:var(--green)}
+    .msg.err{background:#fef2f2;border:1px solid #fca5a5;color:var(--red)}
+    .msg.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+
+    .up-prog{margin-top:.65rem;display:none}
+    .up-prog.show{display:block}
+    .up-bar-bg{height:6px;border-radius:999px;background:var(--surface2);overflow:hidden}
+    .up-bar{height:100%;border-radius:999px;background:var(--accent);width:0%;transition:width .4s}
+    .up-lbl{font-size:.75rem;color:var(--muted);margin-top:.28rem}
+
+    .pdf-steps{margin:.65rem 0;display:none}
+    .pdf-steps.show{display:block}
+    .pdf-step{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--muted);padding:.2rem 0}
+    .pdf-step .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0}
+    .pdf-step.done .dot{background:var(--accent);border-color:var(--accent);color:#fff}
+    .pdf-step.active .dot{border-color:var(--accent);color:var(--accent);animation:pulse 1s infinite}
+    .pdf-step.done span,.pdf-step.active span{color:var(--text);font-weight:500}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+    .fab{position:fixed;bottom:1.25rem;right:1.25rem;z-index:1000;width:3.2rem;height:3.2rem;border-radius:50%;border:none;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(196,66,10,.35);display:flex;align-items:center;justify-content:center;transition:transform .15s}
+    .fab:hover{transform:scale(1.06)}
+
+    .backdrop{position:fixed;inset:0;z-index:1001;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .18s}
+    .backdrop.open{opacity:1;pointer-events:auto}
+    .modal{width:100%;max-width:520px;max-height:92vh;overflow-y:auto;background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,.14);padding:1.35rem}
+    .modal h2{font-family:var(--display);font-size:1.15rem;font-weight:700;margin-bottom:.3rem}
+    .modal-lead{font-size:.8rem;color:var(--muted);margin-bottom:1rem}
+    .modal-top{display:flex;justify-content:flex-end;margin:-.5rem -.5rem .5rem 0}
+    .btn-close{font:inherit;width:2rem;height:2rem;border:none;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;font-size:1.3rem;line-height:1}
+    .btn-close:hover{background:var(--surface2)}
+
+    .tabs{display:flex;gap:.28rem;margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:.48rem;flex-wrap:wrap}
+    .tab{font:inherit;font-size:.79rem;font-weight:600;padding:.26rem .7rem;border-radius:6px 6px 0 0;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer}
+    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .panel{display:none}.panel.active{display:block}
+
+    .tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;margin-top:.5rem}
+    .tbl{width:100%;border-collapse:collapse;font-size:.79rem}
+    .tbl th{background:#0f0f1a;color:#f97316;font-weight:600;padding:.42rem .6rem;text-align:left;white-space:nowrap}
+    .tbl td{padding:.38rem .6rem;border-bottom:1px solid var(--border);vertical-align:middle}
+    .tbl tr:last-child td{border-bottom:none}
+    .tbl tr:nth-child(even) td{background:#fff8f4}
+    .no-data td{text-align:center;color:var(--muted);font-style:italic;padding:1.25rem}
+    .trunc{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .badge{display:inline-block;font-size:.7rem;font-weight:600;padding:.1rem .45rem;border-radius:999px}
+    .badge.admin{background:#fef2f2;color:var(--red);border:1px solid #fca5a5}
+    .badge.teacher{background:#eff6ff;color:var(--blue);border:1px solid #bfdbfe}
+
+    .cursor-panel{margin-top:.75rem;padding:.75rem;border:1px dashed var(--accent);border-radius:8px;background:#fffaf7;display:none}
+    .cursor-panel.show{display:block}
+    #paste-json{min-height:120px;font-family:'Consolas','Courier New',monospace;font-size:.78rem}
+  </style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <span id="loading-txt">Loading curriculum…</span>
+</div>
+
+<header>
+  <h1><span class="brand">startwell</span> — syllabus generator</h1>
+  <ul class="step-nav" id="step-nav">
+    <li><button type="button" class="step-pill active" data-goto="0">Class</button><span class="step-sep">→</span></li>
+    <li><button type="button" class="step-pill" data-goto="1">Subject</button><span class="step-sep">→</span></li>
+    <li><button type="button" class="step-pill" data-goto="2">Chapter</button><span class="step-sep">→</span></li>
+    <li><button type="button" class="step-pill" data-goto="3">Topics</button><span class="step-sep">→</span></li>
+    <li><button type="button" class="step-pill" data-goto="4">Pages</button><span class="step-sep">→</span></li>
+    <li><button type="button" class="step-pill" data-goto="5">Generate</button></li>
+  </ul>
+  <p class="header-tag">Select each step in order — syllabus appears only after Generate.</p>
+</header>
+
+<div class="layout">
+  <div class="card">
+    <span class="card-legend">Quick selection wizard</span>
+    <p class="hint" id="hint">Start with <strong>Step 1 — Class</strong>.</p>
+    <p class="wiz-prog" id="wiz-prog">Step 1 of 6 — Class</p>
+
+    <div class="wiz-step active" id="ws-0">
+      <h3>Select class</h3>
+      <label for="sel-class">Class</label>
+      <select id="sel-class"><option value="">— Select class —</option></select>
+    </div>
+    <div class="wiz-step" id="ws-1">
+      <h3>Select subject</h3>
+      <label for="sel-subj">Subject</label>
+      <select id="sel-subj"><option value="">— Select subject —</option></select>
+    </div>
+    <div class="wiz-step" id="ws-2">
+      <h3>Select chapter</h3>
+      <label for="sel-ch">Chapter</label>
+      <select id="sel-ch"><option value="">— Select chapter —</option></select>
+    </div>
+    <div class="wiz-step" id="ws-3">
+      <h3>Select topics</h3>
+      <p style="font-size:.8rem;color:var(--muted);margin:0 0 .5rem">Tick at least one topic, then Next.</p>
+      <div class="topic-box disabled" id="topic-box">
+        <div class="topic-head">
+          <span style="font-size:.8rem;font-weight:600">Topics</span>
+          <button type="button" class="btn-sm" id="sel-all-topics">Select all</button>
+        </div>
+        <div class="topic-list" id="topic-list"></div>
+      </div>
+    </div>
+    <div class="wiz-step" id="ws-4">
+      <h3>Select page range</h3>
+      <label for="sel-pages">Page range</label>
+      <select id="sel-pages"><option value="">— Select pages —</option></select>
+    </div>
+    <div class="wiz-step" id="ws-5">
+      <h3>Generate syllabus</h3>
+      <p style="font-size:.8rem;color:var(--muted);margin:0 0 .7rem">Fill optional details, then generate.</p>
+      <div class="g2">
+        <div><label for="sy-term">Academic term</label><input id="sy-term" type="text" placeholder="e.g. Term 1 — 2026"/></div>
+        <div><label for="sy-weeks">Weeks in term</label><input id="sy-weeks" type="number" min="1" max="52" value="12"/></div>
+      </div>
+      <label for="sy-outcomes">Learning outcomes (optional)</label>
+      <textarea id="sy-outcomes" placeholder="Students will be able to…"></textarea>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+        <button type="button" class="btn-primary" id="btn-generate">Generate syllabus</button>
+        <button type="button" class="btn-sec" id="btn-copy" style="display:none">Copy</button>
+      </div>
+      <div id="syll-out" class="syll-out empty">Your syllabus will appear here after clicking Generate.</div>
+    </div>
+
+    <div class="wiz-nav">
+      <button type="button" class="btn-sec" id="wiz-back" disabled>← Back</button>
+      <span class="sp"></span>
+      <button type="button" class="btn-primary" id="wiz-next">Next →</button>
+    </div>
+  </div>
+</div>
+
+<button type="button" class="fab" id="fab" title="Admin panel">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+  </svg>
+</button>
+
+<div class="backdrop" id="modal" hidden>
+  <div class="modal">
+    <div class="modal-top"><button type="button" class="btn-close" id="modal-close">×</button></div>
+
+    <div id="panel-login">
+      <h2>Admin login</h2>
+      <p class="modal-lead">Sign in with your account credentials.</p>
+      <label for="a-user">Username</label>
+      <input id="a-user" type="text" autocomplete="username" placeholder="e.g. admin"/>
+      <label for="a-pass">Password</label>
+      <input id="a-pass" type="password" autocomplete="current-password" placeholder="Password"/>
+      <div style="margin-top:.5rem"><button type="button" class="btn-primary" id="btn-login">Sign in</button></div>
+      <div id="login-msg" class="msg"></div>
+    </div>
+
+    <div id="panel-admin" hidden>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.65rem">
+        <h2>Admin panel</h2>
+        <button type="button" class="btn-sec" id="btn-logout" style="font-size:.78rem;padding:.26rem .6rem">Sign out</button>
+      </div>
+      <p class="modal-lead" id="admin-welcome">Signed in.</p>
+
+      <div class="tabs" id="admin-tabs">
+        <button type="button" class="tab active" data-tab="upload">📤 Upload PDF</button>
+        <button type="button" class="tab" data-tab="data">📋 Data</button>
+        <button type="button" class="tab" data-tab="users">👥 Users</button>
+        <button type="button" class="tab" data-tab="password">🔑 Password</button>
+      </div>
+
+      <div class="panel active" id="tab-upload">
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">
+          Upload PDF → Browser reads text → <strong>Cursor</strong> (or optional OpenAI-compatible API) structures it → Apps Script saves to Sheet.
+          <br><strong style="color:var(--accent)">No Drive API needed.</strong> Do not put API keys in public pages; use Cursor paste or a private backend.
+        </p>
+        <div class="g2">
+          <div><label for="up-class">Class *</label><input id="up-class" type="text" placeholder="e.g. Class 7"/></div>
+          <div><label for="up-subj">Subject *</label><input id="up-subj" type="text" placeholder="e.g. Mathematics"/></div>
+        </div>
+        <label for="up-file">PDF file (textbook / key book)</label>
+        <input id="up-file" type="file" accept=".pdf"/>
+
+        <div class="pdf-steps" id="pdf-steps">
+          <div class="pdf-step" id="ps-1"><div class="dot">1</div><span>Reading PDF in browser</span></div>
+          <div class="pdf-step" id="ps-2"><div class="dot">2</div><span>Extracting text with PDF.js</span></div>
+          <div class="pdf-step" id="ps-3"><div class="dot">3</div><span>Structuring (Cursor paste or API)</span></div>
+          <div class="pdf-step" id="ps-4"><div class="dot">4</div><span>Saving to Google Sheet</span></div>
+        </div>
+
+        <div class="cursor-panel" id="cursor-paste-section">
+          <p style="font-size:.8rem;margin-bottom:.55rem;color:var(--text)"><strong>Cursor workflow:</strong> click <em>Copy prompt for Cursor</em>, paste into Cursor, ask the model to return <strong>only</strong> the JSON array, then paste the result below and click <em>Apply JSON &amp; save</em>.</p>
+          <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:.55rem">
+            <button type="button" class="btn-sm" id="btn-copy-cursor-prompt">Copy prompt for Cursor</button>
+          </div>
+          <label for="paste-json">Paste JSON array here</label>
+          <textarea id="paste-json" placeholder='[{"bookTitle":"","chapterNo":1,"chapterName":"","pagesStart":1,"pagesEnd":10,"exercises":[...]}]'></textarea>
+          <button type="button" class="btn-primary" id="btn-apply-json" style="margin-top:.45rem">Apply JSON &amp; save to sheet</button>
+        </div>
+
+        <div class="up-prog" id="up-prog">
+          <div class="up-bar-bg"><div class="up-bar" id="up-bar"></div></div>
+          <div class="up-lbl" id="up-lbl">Starting…</div>
+        </div>
+
+        <div style="margin-top:.65rem">
+          <button type="button" class="btn-primary" id="btn-upload">Upload &amp; Extract</button>
+        </div>
+        <div id="upload-msg" class="msg"></div>
+      </div>
+
+      <div class="panel" id="tab-data">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem">
+          <p style="font-size:.8rem;color:var(--muted);margin:0">All entries.</p>
+          <button type="button" class="btn-sm" id="btn-refresh">⟳ Refresh</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Class</th><th>Subject</th><th>Chapter</th><th>Exercise</th><th>Topics</th><th></th></tr></thead>
+            <tbody id="data-tbody"><tr class="no-data"><td colspan="6">No data yet.</td></tr></tbody>
+          </table>
+        </div>
+        <div id="data-msg" class="msg"></div>
+      </div>
+
+      <div class="panel" id="tab-users">
+        <div id="users-admin-only">
+          <div style="border:1px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:.85rem;background:var(--surface2)">
+            <p style="font-size:.8rem;font-weight:600;margin-bottom:.5rem">Add new user</p>
+            <div class="g2">
+              <div><label for="nu-user">Username *</label><input id="nu-user" type="text" placeholder="username"/></div>
+              <div><label for="nu-disp">Display name</label><input id="nu-disp" type="text" placeholder="Full name"/></div>
+            </div>
+            <div class="g2">
+              <div><label for="nu-pass">Password * (min 6)</label><input id="nu-pass" type="password" placeholder="Password"/></div>
+              <div><label for="nu-role">Role</label><select id="nu-role"><option value="teacher">Teacher</option><option value="admin">Admin</option></select></div>
+            </div>
+            <button type="button" class="btn-primary" id="btn-add-user" style="margin-top:.25rem">Add user</button>
+            <div id="add-user-msg" class="msg"></div>
+          </div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Username</th><th>Name</th><th>Role</th><th></th></tr></thead>
+              <tbody id="users-tbody"><tr class="no-data"><td colspan="4">Loading…</td></tr></tbody>
+            </table>
+          </div>
+          <div id="users-msg" class="msg"></div>
+        </div>
+        <div id="users-noadmin" hidden><p style="font-size:.85rem;color:var(--muted);padding:1rem 0">Admin only.</p></div>
+      </div>
+
+      <div class="panel" id="tab-password">
+        <label for="pw-old">Current password</label><input id="pw-old" type="password" placeholder="Current password"/>
+        <label for="pw-new">New password (min 6)</label><input id="pw-new" type="password" placeholder="New password"/>
+        <label for="pw-conf">Confirm new password</label><input id="pw-conf" type="password" placeholder="Repeat new password"/>
+        <div style="margin-top:.4rem"><button type="button" class="btn-primary" id="btn-pw">Update password</button></div>
+        <div id="pw-msg" class="msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+
+<script>
+(function(){
+'use strict';
+
+// ── CONFIG: set SCRIPT_URL to your deployed Web App URL. Do not ship secret keys in public HTML. ──
+var SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+/** Optional: OpenAI-compatible chat API (browser CORS may block some providers). Leave empty to use Cursor paste only. */
+var OPENAI_API_KEY = '';
+var OPENAI_BASE = 'https://api.openai.com/v1';
+var OPENAI_MODEL = 'gpt-4o-mini';
+
+var SS_KEY = 'sw_admin';
+var pendingUpload = null;
+
+function getSession(){ try{return JSON.parse(sessionStorage.getItem(SS_KEY))||null;}catch(e){return null;} }
+function setSession(o){ if(o) sessionStorage.setItem(SS_KEY,JSON.stringify(o)); else sessionStorage.removeItem(SS_KEY); }
+
+var CUR={}, ROWS=[], wizStep=0, WIZ_N=6;
+var TITLES=['Class','Subject','Chapter','Topics','Pages','Generate'];
+var $=function(id){return document.getElementById(id);};
+
+function apiGet(action){
+  return fetch(SCRIPT_URL+'?action='+encodeURIComponent(action),{method:'GET',mode:'cors'})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+}
+function apiPost(body){
+  return fetch(SCRIPT_URL,{
+    method:'POST', mode:'cors',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(body)
+  }).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+}
+
+$('loading-overlay').classList.remove('hidden');
+apiGet('getData').then(function(res){
+  $('loading-overlay').classList.add('hidden');
+  if(res.success){ CUR=res.data||{}; ROWS=res.rows||[]; renderDataTable(); }
+  fillClasses();
+}).catch(function(){
+  $('loading-overlay').classList.add('hidden');
+  $('hint').innerHTML='<strong>Connection error.</strong> Set <code>SCRIPT_URL</code> in this file to your Apps Script Web App URL.';
+});
+
+function fillClasses(){
+  var names=Object.keys(CUR).sort();
+  setOpts($('sel-class'),'— Select class —',names);
+  $('hint').innerHTML=names.length
+    ?'Start with <strong>Step 1 — Class</strong>.'
+    :'No data yet. Upload a PDF using the <strong>admin panel</strong> (button bottom-right).';
+}
+function setOpts(sel,ph,arr){
+  sel.innerHTML='';
+  var o=document.createElement('option');o.value='';o.textContent=ph;sel.appendChild(o);
+  arr.forEach(function(v){var x=document.createElement('option');x.value=v;x.textContent=v;sel.appendChild(x);});
+}
+function resetSubj(){setOpts($('sel-subj'),'— Select subject —',[]);$('sel-subj').value='';resetCh();}
+function resetCh(){setOpts($('sel-ch'),'— Select chapter —',[]);$('sel-ch').value='';resetPages();}
+function resetPages(){setOpts($('sel-pages'),'— Select pages —',[]);$('sel-pages').value='';resetTopics();}
+function resetTopics(){$('topic-list').innerHTML='';$('topic-box').classList.add('disabled');}
+function getChs(c,s){return CUR[c]&&CUR[c][s]?Object.values(CUR[c][s].chapters||{}):[]; }
+function getCurCh(){
+  var c=$('sel-class').value,s=$('sel-subj').value,l=$('sel-ch').value;
+  if(!c||!s||!l) return null;
+  return getChs(c,s).find(function(ch){return ch.chapterName===l||(ch.chapterNo+' — '+ch.chapterName)===l;})||null;
+}
+
+function renderTopics(){
+  $('topic-list').innerHTML='';
+  var ch=getCurCh();
+  if(!ch||!ch.exercises||!ch.exercises.length){resetTopics();syncWiz();return;}
+  var seen={},list=[];
+  ch.exercises.forEach(function(ex){
+    (ex.topics||'').split(',').forEach(function(t){t=t.trim();if(t&&!seen[t]){seen[t]=true;list.push(t);}});
+    var l=(ex.exerciseLabel||ex.exerciseId||'').trim();
+    if(l&&!seen[l]){seen[l]=true;list.push(l);}
+  });
+  if(!list.length){resetTopics();syncWiz();return;}
+  $('topic-box').classList.remove('disabled');
+  list.forEach(function(t,i){
+    var id='tp'+i, lbl=document.createElement('label'); lbl.htmlFor=id;
+    var cb=document.createElement('input');cb.type='checkbox';cb.id=id;cb.value=t;
+    cb.addEventListener('change',syncWiz);
+    lbl.appendChild(cb);lbl.appendChild(document.createTextNode(' '+t));
+    $('topic-list').appendChild(lbl);
+  });
+  syncWiz();
+}
+function getChecked(){return Array.from($('topic-list').querySelectorAll('input:checked')).map(function(b){return b.value;});}
+$('sel-all-topics').addEventListener('click',function(){
+  if($('topic-box').classList.contains('disabled'))return;
+  var boxes=$('topic-list').querySelectorAll('input[type=checkbox]');
+  var any=Array.from(boxes).some(function(b){return !b.checked;});
+  boxes.forEach(function(b){b.checked=any;});syncWiz();
+});
+
+function populatePages(){
+  var ch=getCurCh();if(!ch){setOpts($('sel-pages'),'— Select pages —',[]);return;}
+  var labels=[];
+  if(ch.pagesStart&&ch.pagesEnd) labels.push('Pages '+ch.pagesStart+'–'+ch.pagesEnd+' (full chapter)');
+  (ch.exercises||[]).forEach(function(ex){
+    var l=(ex.exerciseLabel||ex.exerciseId||'')+(ex.description?' — '+ex.description.substring(0,38):'');
+    if(l.trim()) labels.push(l.trim());
+  });
+  setOpts($('sel-pages'),'— Select pages —',labels);$('sel-pages').value='';
+}
+
+function valid(s){
+  if(s===0)return !!$('sel-class').value;if(s===1)return !!$('sel-subj').value;
+  if(s===2)return !!$('sel-ch').value;if(s===3)return getChecked().length>0;
+  if(s===4)return !!$('sel-pages').value;return true;
+}
+function canGo(t){if(t<=wizStep)return true;for(var s=wizStep;s<t;s++)if(!valid(s))return false;return true;}
+function syncPills(){
+  $('step-nav').querySelectorAll('.step-pill').forEach(function(btn){
+    var idx=parseInt(btn.getAttribute('data-goto'),10);
+    btn.classList.toggle('active',idx===wizStep);
+    btn.disabled=idx>wizStep&&!canGo(idx);
+  });
+}
+function syncWiz(){
+  $('wiz-prog').textContent='Step '+(wizStep+1)+' of '+WIZ_N+' — '+TITLES[wizStep];
+  for(var i=0;i<WIZ_N;i++){
+    var p=document.getElementById('ws-'+i);if(!p)continue;
+    p.classList.toggle('active',i===wizStep);p.hidden=i!==wizStep;
+  }
+  $('wiz-back').disabled=wizStep===0;
+  $('wiz-next').hidden=wizStep>=WIZ_N-1;$('wiz-next').disabled=!valid(wizStep);
+  syncPills();
+}
+function goTo(n){
+  n=Math.max(0,Math.min(WIZ_N-1,n));
+  if(n>wizStep)for(var s=wizStep;s<n;s++)if(!valid(s))return;
+  if(n===3&&wizStep<3)renderTopics();
+  if(n===4)populatePages();
+  wizStep=n;syncWiz();
+  var p=document.getElementById('ws-'+wizStep);
+  if(p){var f=p.querySelector('select,input,button.btn-primary');if(f)f.focus();}
+}
+$('sel-class').addEventListener('change',function(){resetSubj();if(!this.value)return;setOpts($('sel-subj'),'— Select subject —',Object.keys(CUR[this.value]||{}).sort());if(wizStep===0)goTo(1);else syncWiz();});
+$('sel-subj').addEventListener('change',function(){resetCh();var c=$('sel-class').value,s=this.value;if(!c||!s)return;var labels=getChs(c,s).map(function(ch){return ch.chapterNo?ch.chapterNo+' — '+ch.chapterName:ch.chapterName;});setOpts($('sel-ch'),'— Select chapter —',labels);if(wizStep===1)goTo(2);else syncWiz();});
+$('sel-ch').addEventListener('change',function(){resetPages();if(!this.value)return;if(wizStep===2)goTo(3);else syncWiz();});
+$('sel-pages').addEventListener('change',function(){syncWiz();if(wizStep===4&&this.value)goTo(5);});
+$('wiz-next').addEventListener('click',function(){goTo(wizStep+1);});
+$('wiz-back').addEventListener('click',function(){goTo(wizStep-1);});
+$('step-nav').addEventListener('click',function(e){var btn=e.target.closest('.step-pill');if(!btn||btn.disabled)return;goTo(parseInt(btn.getAttribute('data-goto'),10));});
+
+$('btn-generate').addEventListener('click',function(){
+  var cls=$('sel-class').value||'(class)',subj=$('sel-subj').value||'(subject)';
+  var unit=$('sel-ch').value||'(chapter)',pages=$('sel-pages').value||'(pages)';
+  var picked=getChecked();if(!picked.length)picked=['(no topics selected)'];
+  var term=$('sy-term').value.trim()||'(term)';
+  var weeks=parseInt($('sy-weeks').value,10)||12;
+  var outcomes=$('sy-outcomes').value.split(/\r?\n/).map(function(s){return s.trim();}).filter(Boolean);
+  var per=Math.max(1,Math.ceil(weeks/picked.length));
+  var lines=['SYLLABUS OUTLINE','================','Class:   '+cls,'Subject: '+subj,
+    'Chapter: '+unit,'Pages:   '+pages,'Term:    '+term,'Weeks:   '+weeks,
+    '','FOCUS TOPICS','------------'];
+  picked.forEach(function(t,i){lines.push((i+1)+'. '+t);});
+  lines.push('','WEEKLY PLAN (≈'+per+' week(s)/topic)','------------------------------------------');
+  var w=1,ti=0;
+  while(w<=weeks&&ti<picked.length){var end=Math.min(w+per-1,weeks);lines.push('Week '+w+(end>w?'–'+end:'')+': '+picked[ti]);w=end+1;ti++;}
+  while(w<=weeks){lines.push('Week '+w+': Review / revision');w++;}
+  while(ti<picked.length){lines.push('(Extra): '+picked[ti]);ti++;}
+  if(outcomes.length){lines.push('','LEARNING OUTCOMES','-----------------');outcomes.forEach(function(o,i){lines.push((i+1)+'. '+o);});}
+  lines.push('','─ Generated by startwell ─');
+  $('syll-out').textContent=lines.join('\n');$('syll-out').classList.remove('empty');
+  $('btn-copy').style.display='inline-block';
+});
+$('btn-copy').addEventListener('click',function(){
+  navigator.clipboard.writeText($('syll-out').textContent)
+    .then(function(){$('btn-copy').textContent='Copied!';setTimeout(function(){$('btn-copy').textContent='Copy';},1800);});
+});
+
+function showMsg(el,kind,txt){el.textContent=txt;el.className='msg show '+kind;}
+function clearMsg(el){el.className='msg';el.textContent='';}
+
+function openModal(){
+  $('modal').hidden=false;$('modal').classList.add('open');
+  var sess=getSession();
+  if(sess){$('panel-login').hidden=true;$('panel-admin').hidden=false;$('admin-welcome').textContent='Signed in as '+sess.displayName+' ('+sess.role+').';applyRoleUI(sess);}
+  else{$('panel-login').hidden=false;$('panel-admin').hidden=true;}
+}
+function closeModal(){$('modal').classList.remove('open');$('modal').hidden=true;}
+$('fab').addEventListener('click',openModal);
+$('modal-close').addEventListener('click',closeModal);
+$('modal').addEventListener('click',function(e){if(e.target===$('modal'))closeModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+
+$('admin-tabs').querySelectorAll('.tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    $('admin-tabs').querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+    tab.classList.add('active');
+    document.getElementById('tab-'+tab.getAttribute('data-tab')).classList.add('active');
+    if(tab.getAttribute('data-tab')==='users')loadUsers();
+  });
+});
+
+function applyRoleUI(sess){
+  var isAdm=sess.role==='admin';
+  $('users-admin-only').hidden=!isAdm;$('users-noadmin').hidden=isAdm;
+}
+
+$('btn-login').addEventListener('click',doLogin);
+[$('a-user'),$('a-pass')].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});});
+function doLogin(){
+  clearMsg($('login-msg'));
+  var u=$('a-user').value.trim(),p=$('a-pass').value.trim();
+  if(!u||!p){showMsg($('login-msg'),'err','Enter username and password.');return;}
+  $('btn-login').disabled=true;$('btn-login').textContent='Checking…';
+  apiPost({action:'checkPassword',username:u,password:p}).then(function(res){
+    $('btn-login').disabled=false;$('btn-login').textContent='Sign in';
+    if(res.success){setSession(res);$('panel-login').hidden=true;$('panel-admin').hidden=false;$('admin-welcome').textContent='Signed in as '+res.displayName+' ('+res.role+').';applyRoleUI(res);$('a-pass').value='';$('a-user').value='';}
+    else showMsg($('login-msg'),'err',res.error||'Login failed.');
+  }).catch(function(err){$('btn-login').disabled=false;$('btn-login').textContent='Sign in';showMsg($('login-msg'),'err','Error: '+err.message);});
+}
+$('btn-logout').addEventListener('click',function(){setSession(null);$('panel-login').hidden=false;$('panel-admin').hidden=true;});
+
+// ── JSON schema prompt (shared: Cursor copy + optional OpenAI) ─────────────────
+function buildStructurePrompt(text, className, subject, fileName){
+  return 'You are an expert at reading Pakistani school textbooks and key books.\n\n'+
+    'Below is text extracted from a textbook PDF.\n'+
+    'Class: '+className+', Subject: '+subject+', File: '+(fileName||'upload.pdf')+'\n\n'+
+    'Extract the COMPLETE curriculum structure:\n'+
+    '- All chapter/unit numbers and names\n'+
+    '- Page ranges per chapter\n'+
+    '- All exercises (Exercise 1.1, Exercise 1.2, Review Exercise, MCQs, Short Questions, Long Questions)\n'+
+    '- Brief description of each exercise\n'+
+    '- Comma-separated topics for each exercise\n\n'+
+    'Return ONLY a valid JSON array, nothing else:\n'+
+    '[{"bookTitle":"","publisher":"","chapterNo":1,"chapterName":"","pagesStart":1,"pagesEnd":10,'+
+    '"exercises":[{"exerciseId":"1.1","exerciseLabel":"Exercise 1.1","description":"covers...","topics":"t1,t2"}]}]\n\n'+
+    'EXTRACTED TEXT:\n---\n'+
+    text.substring(0, 30000)+
+    '\n---\nJSON array only:';
+}
+
+function isOpenAIConfigured(){
+  return !!(OPENAI_API_KEY && String(OPENAI_API_KEY).trim() && OPENAI_API_KEY.indexOf('YOUR_')!==0);
+}
+
+function parseChaptersJson(raw){
+  if(!raw||!String(raw).trim()) throw new Error('Empty JSON.');
+  var s=String(raw).trim();
+  s=s.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/i,'').trim();
+  var start=s.indexOf('['), end=s.lastIndexOf(']');
+  if(start===-1||end===-1||end<start) throw new Error('No JSON array found. Paste only the [...] array.');
+  var parsed=JSON.parse(s.substring(start,end+1));
+  if(!Array.isArray(parsed)||!parsed.length) throw new Error('JSON must be a non-empty array of chapters.');
+  return parsed;
+}
+
+async function callOpenAICompatibleBrowser(text, className, subject, fileName){
+  var prompt=buildStructurePrompt(text,className,subject,fileName);
+  var url=(OPENAI_BASE||'https://api.openai.com/v1').replace(/\/$/,'')+'/chat/completions';
+  var resp=await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_API_KEY},
+    body:JSON.stringify({
+      model:OPENAI_MODEL||'gpt-4o-mini',
+      messages:[{role:'user',content:prompt}],
+      temperature:0.1,
+      max_tokens:8192
+    })
+  });
+  if(!resp.ok){
+    var errText='';
+    try{var j=await resp.json();errText=j.error&&j.error.message?j.error.message:JSON.stringify(j);}catch(e){errText=await resp.text();}
+    throw new Error('API '+resp.status+': '+errText+' (If this is a CORS error, use Cursor paste instead.)');
+  }
+  var data=await resp.json();
+  var raw=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
+  return parseChaptersJson(raw);
+}
+
+async function extractTextWithPDFjs(arrayBuffer){
+  var pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  var numPages=pdf.numPages;
+  var fullText='';
+  for(var i=1;i<=numPages;i++){
+    var page=await pdf.getPage(i);
+    var content=await page.getTextContent();
+    var pageText=content.items.map(function(item){return item.str;}).join(' ');
+    fullText+='\n--- Page '+i+' ---\n'+pageText;
+    setBar(25+Math.floor((i/numPages)*20),'Extracting page '+i+' of '+numPages+'…');
+  }
+  return fullText;
+}
+
+function basicParser(text, className, subject){
+  var lines=text.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  var chapters=[], cur=null, chNo=0;
+  var chPats=[/^(?:unit|chapter)\s*(\d+)[:\s\-–—]+(.+)/i, /^(\d+)\s*[:\-–—]\s*(.{5,60})$/];
+  var exPats=[/^exercise\s+([\d.]+)/i,/^ex\.\s*([\d.]+)/i,/^review\s+exercise/i,/^mcq/i,/^short\s+question/i,/^long\s+question/i];
+  lines.forEach(function(line){
+    var cm=null;
+    for(var i=0;i<chPats.length;i++){cm=line.match(chPats[i]);if(cm)break;}
+    if(cm){
+      chNo++;
+      cur={bookTitle:subject+' Class '+className,publisher:'',chapterNo:parseInt(cm[1],10)||chNo,
+        chapterName:(cm[2]||'Chapter '+chNo).trim(),pagesStart:'',pagesEnd:'',exercises:[]};
+      chapters.push(cur);return;
+    }
+    if(!cur)return;
+    for(var j=0;j<exPats.length;j++){
+      if(line.match(exPats[j])){
+        cur.exercises.push({exerciseId:cur.chapterNo+'.'+(cur.exercises.length+1),
+          exerciseLabel:line.substring(0,60),description:'',topics:line.substring(0,60)});
+        break;
+      }
+    }
+  });
+  if(!chapters.length)
+    chapters.push({bookTitle:subject+' Class '+className,publisher:'',chapterNo:1,chapterName:'Full Book',
+      pagesStart:'',pagesEnd:'',exercises:[{exerciseId:'1.1',exerciseLabel:'Content',description:'',topics:'All topics'}]});
+  return chapters;
+}
+
+function setBar(pct,lbl){ $('up-bar').style.width=pct+'%'; $('up-lbl').textContent=lbl; }
+function setStep(n,state){
+  var el=$('ps-'+n);
+  el.className='pdf-step '+state;
+  if(state==='done') el.querySelector('.dot').textContent='✓';
+}
+function resetSteps(){
+  [1,2,3,4].forEach(function(n){
+    var el=$('ps-'+n);el.className='pdf-step';el.querySelector('.dot').textContent=n;
+  });
+}
+
+function hideCursorPanel(){
+  $('cursor-paste-section').classList.remove('show');
+  $('paste-json').value='';
+  pendingUpload=null;
+}
+
+$('btn-copy-cursor-prompt').addEventListener('click',function(){
+  if(!pendingUpload||!pendingUpload.extractedText){
+    showMsg($('upload-msg'),'err','Run Upload & Extract first so text is loaded.');
+    return;
+  }
+  var body=buildStructurePrompt(pendingUpload.extractedText,pendingUpload.cls,pendingUpload.subj,pendingUpload.fileName);
+  navigator.clipboard.writeText(body).then(function(){
+    showMsg($('upload-msg'),'ok','Prompt copied. Paste into Cursor, then paste the JSON array back here.');
+  }).catch(function(){showMsg($('upload-msg'),'err','Clipboard failed — select and copy manually.');});
+});
+
+async function saveStructuredToSheet(structured, cls, subj, fileName){
+  setStep(4,'active'); setBar(90,'Saving to Google Sheet…');
+  var res=await apiPost({
+    action:'saveStructured',
+    className:cls,
+    subject:subj,
+    fileName:fileName||'upload.pdf',
+    chapters:structured
+  });
+  if(!res.success) throw new Error(res.error||'Save failed.');
+  setStep(4,'done'); setBar(100,'Done!');
+  return res;
+}
+
+$('btn-apply-json').addEventListener('click',function(){
+  clearMsg($('upload-msg'));
+  if(!pendingUpload){ showMsg($('upload-msg'),'err','Extract a PDF first (Upload & Extract).'); return; }
+  var cls=pendingUpload.cls, subj=pendingUpload.subj, fileName=pendingUpload.fileName;
+  var structured;
+  try{ structured=parseChaptersJson($('paste-json').value); }
+  catch(e){ showMsg($('upload-msg'),'err',e.message); return; }
+
+  $('btn-apply-json').disabled=true;
+  saveStructuredToSheet(structured, cls, subj, fileName).then(function(res){
+    showMsg($('upload-msg'),'ok','✅ '+res.message);
+    hideCursorPanel();
+    $('pdf-steps').classList.remove('show');
+    $('up-prog').classList.remove('show');
+    resetSteps();
+    $('up-class').value=''; $('up-subj').value=''; $('up-file').value='';
+    setTimeout(function(){
+      apiGet('getData').then(function(r){ if(r.success){CUR=r.data||{};ROWS=r.rows||[];fillClasses();renderDataTable();} });
+    }, 800);
+  }).catch(function(err){
+    showMsg($('upload-msg'),'err','❌ '+err.message);
+  }).finally(function(){ $('btn-apply-json').disabled=false; });
+});
+
+$('btn-upload').addEventListener('click', handleUpload);
+
+async function handleUpload(){
+  clearMsg($('upload-msg'));
+  hideCursorPanel();
+  var cls=$('up-class').value.trim();
+  var subj=$('up-subj').value.trim();
+  var file=$('up-file').files && $('up-file').files[0];
+
+  if(!cls){ showMsg($('upload-msg'),'err','Enter class name.'); return; }
+  if(!subj){ showMsg($('upload-msg'),'err','Enter subject name.'); return; }
+  if(!file){ showMsg($('upload-msg'),'err','Choose a PDF file.'); return; }
+  if(!file.name.toLowerCase().endsWith('.pdf')){ showMsg($('upload-msg'),'err','Only PDF files supported.'); return; }
+  if(file.size>50*1024*1024){ showMsg($('upload-msg'),'err','File too large. Max 50MB.'); return; }
+
+  $('btn-upload').disabled=true;
+  $('pdf-steps').classList.add('show');
+  $('up-prog').classList.add('show');
+
+  try{
+    setStep(1,'active'); setBar(10,'Reading PDF file…');
+    var arrayBuffer=await file.arrayBuffer();
+    setStep(1,'done');
+
+    setStep(2,'active'); setBar(25,'Extracting text from pages…');
+    var extractedText=await extractTextWithPDFjs(arrayBuffer);
+    if(!extractedText||extractedText.length<50){
+      throw new Error('Could not extract text from PDF. The PDF may be image-only (scanned without OCR). Try a text-based PDF.');
+    }
+    setStep(2,'done'); setBar(45,'Text extracted: '+extractedText.length+' characters');
+
+    var structured;
+    if(isOpenAIConfigured()){
+      setStep(3,'active'); setBar(60,'Calling API to structure content…');
+      try{
+        structured=await callOpenAICompatibleBrowser(extractedText,cls,subj,file.name);
+      }catch(apiErr){
+        structured=basicParser(extractedText,cls,subj);
+        showMsg($('upload-msg'),'info','API failed — used basic text parser. '+apiErr.message);
+      }
+      setStep(3,'done'); setBar(80,'Structured '+structured.length+' chapters');
+      var res=await saveStructuredToSheet(structured,cls,subj,file.name);
+      showMsg($('upload-msg'),'ok','✅ '+res.message);
+      $('up-class').value=''; $('up-subj').value=''; $('up-file').value='';
+      setTimeout(function(){
+        $('pdf-steps').classList.remove('show');
+        $('up-prog').classList.remove('show');
+        resetSteps();
+        apiGet('getData').then(function(r){ if(r.success){CUR=r.data||{};ROWS=r.rows||[];fillClasses();renderDataTable();} });
+      }, 2000);
+    } else {
+      pendingUpload={cls:cls,subj:subj,fileName:file.name,extractedText:extractedText};
+      setStep(3,'active');
+      setBar(55,'Copy prompt → Cursor → paste JSON below → Apply JSON & save.');
+      $('cursor-paste-section').classList.add('show');
+      showMsg($('upload-msg'),'info','Optional: set OPENAI_API_KEY in this file to skip paste. Otherwise use Cursor + Apply JSON.');
+    }
+  }catch(err){
+    setBar(0,'');
+    $('pdf-steps').classList.remove('show');
+    $('up-prog').classList.remove('show');
+    resetSteps();
+    hideCursorPanel();
+    showMsg($('upload-msg'),'err','❌ '+err.message);
+  }
+  $('btn-upload').disabled=false;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderDataTable(){
+  var tbody=$('data-tbody');tbody.innerHTML='';
+  if(!ROWS.length){tbody.innerHTML='<tr class="no-data"><td colspan="6">No entries yet.</td></tr>';return;}
+  ROWS.forEach(function(row){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td class="trunc">'+esc(row.cls)+'</td><td class="trunc">'+esc(row.subj)+'</td>'+
+      '<td class="trunc">'+(row.chNo?esc(row.chNo)+' — ':'')+esc(row.chName)+'</td>'+
+      '<td class="trunc">'+esc(row.exLbl||row.exId||'—')+'</td>'+
+      '<td class="trunc">'+esc(row.topics||'—')+'</td>'+
+      '<td><button class="btn-danger" data-ridx="'+row.rowIndex+'">×</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+$('data-tbody').addEventListener('click',function(e){
+  var btn=e.target.closest('.btn-danger');if(!btn)return;
+  if(!confirm('Delete this entry?'))return;
+  clearMsg($('data-msg'));
+  apiPost({action:'deleteEntry',rowIndex:parseInt(btn.getAttribute('data-ridx'),10)}).then(function(res){
+    if(res.success){showMsg($('data-msg'),'ok','✅ Deleted.');apiGet('getData').then(function(r){if(r.success){CUR=r.data||{};ROWS=r.rows||[];renderDataTable();fillClasses();}});}
+    else showMsg($('data-msg'),'err','❌ '+(res.error||'Failed.'));
+  });
+});
+$('btn-refresh').addEventListener('click',function(){
+  clearMsg($('data-msg'));
+  apiGet('getData').then(function(res){
+    if(res.success){CUR=res.data||{};ROWS=res.rows||[];renderDataTable();fillClasses();showMsg($('data-msg'),'ok','Refreshed.');}
+    else showMsg($('data-msg'),'err',res.error||'Error.');
+  });
+});
+
+function loadUsers(){
+  var sess=getSession();if(!sess||sess.role!=='admin')return;
+  $('users-tbody').innerHTML='<tr class="no-data"><td colspan="4">Loading…</td></tr>';
+  apiPost({action:'getUsers',callerUsername:sess.username}).then(function(res){
+    $('users-tbody').innerHTML='';
+    if(!res.success){$('users-tbody').innerHTML='<tr class="no-data"><td colspan="4">'+esc(res.error)+'</td></tr>';return;}
+    if(!res.users.length){$('users-tbody').innerHTML='<tr class="no-data"><td colspan="4">No users.</td></tr>';return;}
+    res.users.forEach(function(u){
+      var tr=document.createElement('tr');
+      var isSelf=u.username.toLowerCase()===(sess.username||'').toLowerCase();
+      tr.innerHTML='<td><strong>'+esc(u.username)+'</strong></td><td>'+esc(u.displayName)+'</td>'+
+        '<td><span class="badge '+esc(u.role)+'">'+esc(u.role)+'</span></td>'+
+        '<td>'+(isSelf?'(you)':'<button class="btn-danger" data-uname="'+esc(u.username)+'">×</button>')+'</td>';
+      $('users-tbody').appendChild(tr);
+    });
+  });
+}
+$('users-tbody').addEventListener('click',function(e){
+  var btn=e.target.closest('.btn-danger');if(!btn)return;
+  var target=btn.getAttribute('data-uname');
+  if(!confirm('Delete user "'+target+'"?'))return;
+  var sess=getSession();if(!sess)return;
+  clearMsg($('users-msg'));
+  apiPost({action:'deleteUser',callerUsername:sess.username,targetUsername:target}).then(function(res){
+    if(res.success){showMsg($('users-msg'),'ok','✅ '+res.message);loadUsers();}
+    else showMsg($('users-msg'),'err','❌ '+(res.error||'Failed.'));
+  });
+});
+$('btn-add-user').addEventListener('click',function(){
+  clearMsg($('add-user-msg'));
+  var sess=getSession();if(!sess)return;
+  var u=$('nu-user').value.trim(),d=$('nu-disp').value.trim(),p=$('nu-pass').value.trim(),r=$('nu-role').value;
+  if(!u||!p){showMsg($('add-user-msg'),'err','Username and password required.');return;}
+  if(p.length<6){showMsg($('add-user-msg'),'err','Min 6 chars.');return;}
+  $('btn-add-user').disabled=true;
+  apiPost({action:'addUser',callerUsername:sess.username,username:u,displayName:d,password:p,role:r}).then(function(res){
+    $('btn-add-user').disabled=false;
+    if(res.success){showMsg($('add-user-msg'),'ok','✅ '+res.message);$('nu-user').value='';$('nu-disp').value='';$('nu-pass').value='';loadUsers();}
+    else showMsg($('add-user-msg'),'err','❌ '+(res.error||'Failed.'));
+  });
+});
+
+$('btn-pw').addEventListener('click',function(){
+  clearMsg($('pw-msg'));
+  var sess=getSession();if(!sess){showMsg($('pw-msg'),'err','Not signed in.');return;}
+  var op=$('pw-old').value.trim(),np=$('pw-new').value.trim(),cp=$('pw-conf').value.trim();
+  if(!op||!np||!cp){showMsg($('pw-msg'),'err','Fill all fields.');return;}
+  if(np!==cp){showMsg($('pw-msg'),'err','Passwords do not match.');return;}
+  if(np.length<6){showMsg($('pw-msg'),'err','Min 6 chars.');return;}
+  $('btn-pw').disabled=true;
+  apiPost({action:'changePassword',username:sess.username,oldPassword:op,newPassword:np}).then(function(res){
+    $('btn-pw').disabled=false;
+    if(res.success){showMsg($('pw-msg'),'ok','✅ '+res.message);$('pw-old').value='';$('pw-new').value='';$('pw-conf').value='';}
+    else showMsg($('pw-msg'),'err','❌ '+res.error);
+  });
+});
+
+syncWiz();
+})();
+</script>
+</body>
+</html>
