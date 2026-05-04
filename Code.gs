@@ -142,6 +142,25 @@ function _saveChapters(chapters, cls, subject, fileName) {
     });
   });
 
+  if (!book) {
+    var titles = [];
+    chapters.forEach(function(ch) {
+      if (ch.bookTitle) titles.push(String(ch.bookTitle).trim());
+    });
+    if (titles.length) {
+      var uniq = {}, order = [];
+      titles.forEach(function(t) {
+        if (t && !uniq[t]) { uniq[t] = true; order.push(t); }
+      });
+      book = order.join(" | ");
+    }
+  }
+
+  if (rows.length) {
+    var bFinal = book || fileName;
+    for (var r = 0; r < rows.length; r++) rows[r][2] = bFinal;
+  }
+
   if (rows.length) {
     var last = sheet.getLastRow();
     sheet.getRange(last+1, 1, rows.length, 14).setValues(rows);

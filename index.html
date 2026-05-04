@@ -126,6 +126,10 @@
     #paste-json{min-height:120px;font-family:'Consolas','Courier New',monospace;font-size:.78rem}
     .mode-local .header-tag#mode-banner{display:block;color:var(--green);font-weight:600}
     #mode-banner{display:none}
+    #pdf-preview-wrap{display:none;margin-top:.65rem}
+    #pdf-preview-wrap.show{display:block}
+    #pdf-preview-summary{font-size:.78rem;color:var(--muted);margin-bottom:.45rem}
+    #pdf-page-samples{font-size:.75rem;font-family:'Consolas','Courier New',monospace;max-height:min(38vh,280px);overflow:auto;padding:.55rem;border:1px solid var(--border);border-radius:6px;background:#fff;white-space:pre-wrap;color:var(--text)}
   </style>
 </head>
 <body>
@@ -257,8 +261,15 @@
           <div><label for="up-class">Class *</label><input id="up-class" type="text" placeholder="e.g. Class 7"/></div>
           <div><label for="up-subj">Subject *</label><input id="up-subj" type="text" placeholder="e.g. Mathematics"/></div>
         </div>
+        <label for="up-book">Book title (optional — use real title from the cover; else first PDF line / filename)</label>
+        <input id="up-book" type="text" placeholder="e.g. Mathematics 7 (PTB)"/>
         <label for="up-file">PDF file (textbook / key book)</label>
         <input id="up-file" type="file" accept=".pdf"/>
+
+        <div id="pdf-preview-wrap">
+          <p id="pdf-preview-summary"></p>
+          <div id="pdf-page-samples"></div>
+        </div>
 
         <div class="pdf-steps" id="pdf-steps">
           <div class="pdf-step" id="ps-1"><div class="dot">1</div><span>Reading PDF in browser</span></div>
@@ -611,7 +622,11 @@ function renderTopics(){
   ch.exercises.forEach(function(ex){
     (ex.topics||'').split(',').forEach(function(t){t=t.trim();if(t&&!seen[t]){seen[t]=true;list.push(t);}});
     var l=(ex.exerciseLabel||ex.exerciseId||'').trim();
-    if(l&&!seen[l]){seen[l]=true;list.push(l);}
+    if(l&&!seen[l]){
+      seen[l]=true;
+      var desc=(ex.description||'').trim();
+      list.push(desc?l+' — '+desc.substring(0,72)+(desc.length>72?'…':''):l);
+    }
   });
   if(!list.length){resetTopics();syncWiz();return;}
   $('topic-box').classList.remove('disabled');
@@ -635,12 +650,21 @@ $('sel-all-topics').addEventListener('click',function(){
 function populatePages(){
   var ch=getCurCh();if(!ch){setOpts($('sel-pages'),'— Select pages —',[]);return;}
   var labels=[];
-  if(ch.pagesStart&&ch.pagesEnd) labels.push('Pages '+ch.pagesStart+'–'+ch.pagesEnd+' (full chapter)');
+  if(ch.pagesStart||ch.pagesEnd){
+    var ps=String(ch.pagesStart||'?').trim(), pe=String(ch.pagesEnd||'?').trim();
+    labels.push('Pages '+ps+'–'+pe+' (full chapter)');
+  }
   (ch.exercises||[]).forEach(function(ex){
-    var l=(ex.exerciseLabel||ex.exerciseId||'')+(ex.description?' — '+ex.description.substring(0,38):'');
-    if(l.trim()) labels.push(l.trim());
+    var id=(ex.exerciseId||'').trim();
+    var lbl=(ex.exerciseLabel||'').trim();
+    var head=id&&(lbl.indexOf(id)!==0)?id+' '+lbl:(lbl||id);
+    var pg=(ex.pageStart!=null&&ex.pageEnd!=null)?' [p.'+ex.pageStart+'–'+ex.pageEnd+']':'';
+    var desc=(ex.description||'').trim();
+    var tail=desc?' — '+desc.substring(0,40)+(desc.length>40?'…':'')+(ex.topics?', topics: '+String(ex.topics).substring(0,36):''):'';
+    var line=(head+pg+tail).trim();
+    if(line)labels.push(line);
   });
-  setOpts($('sel-pages'),'— Select pages —',labels);$('sel-pages').value='';
+  setOpts($('sel-pages'),'— Select pages / section —',labels);$('sel-pages').value='';
 }
 
 function valid(s){
@@ -771,21 +795,24 @@ function doLogin(){
 $('btn-logout').addEventListener('click',function(){setSession(null);$('panel-login').hidden=false;$('panel-admin').hidden=true;});
 
 // ── JSON schema prompt (shared: Cursor copy + optional OpenAI) ─────────────────
-function buildStructurePrompt(text, className, subject, fileName){
+function buildStructurePrompt(text, className, subject, fileName, bookTitle){
+  var bt=String(bookTitle||'').trim();
+  var btLine=bt?('Preferred book title (use exactly if it matches the cover): '+bt+'\n'):'';
   return 'You are an expert at reading Pakistani school textbooks and key books.\n\n'+
-    'Below is text extracted from a textbook PDF.\n'+
-    'Class: '+className+', Subject: '+subject+', File: '+(fileName||'upload.pdf')+'\n\n'+
+    'Below is text extracted from a textbook PDF (page markers like "--- Page N ---" are PDF page numbers).\n'+
+    'Class: '+className+', Subject: '+subject+', File: '+(fileName||'upload.pdf')+'\n'+btLine+'\n'+
     'Extract the COMPLETE curriculum structure:\n'+
+    '- bookTitle: real title from the cover or first title page (not the filename only)\n'+
     '- All chapter/unit numbers and names\n'+
-    '- Page ranges per chapter\n'+
-    '- All exercises (Exercise 1.1, Exercise 1.2, Review Exercise, MCQs, Short Questions, Long Questions)\n'+
-    '- Brief description of each exercise\n'+
-    '- Comma-separated topics for each exercise\n\n'+
+    '- pagesStart and pagesEnd: PDF page numbers for each chapter when visible in the text\n'+
+    '- All exercises (Exercise 1.1, Review Exercise, MCQs, etc.)\n'+
+    '- description: one short line per exercise\n'+
+    '- topics: comma-separated topic tags (distinct from description; real topic names)\n\n'+
     'Return ONLY a valid JSON array, nothing else:\n'+
     '[{"bookTitle":"","publisher":"","chapterNo":1,"chapterName":"","pagesStart":1,"pagesEnd":10,'+
-    '"exercises":[{"exerciseId":"1.1","exerciseLabel":"Exercise 1.1","description":"covers...","topics":"t1,t2"}]}]\n\n'+
+    '"exercises":[{"exerciseId":"1.1","exerciseLabel":"Exercise 1.1","description":"covers...","topics":"t1, t2"}]}]\n\n'+
     'EXTRACTED TEXT:\n---\n'+
-    text.substring(0, 30000)+
+    text.substring(0, 35000)+
     '\n---\nJSON array only:';
 }
 
@@ -804,8 +831,136 @@ function parseChaptersJson(raw){
   return parsed;
 }
 
-async function callOpenAICompatibleBrowser(text, className, subject, fileName){
-  var prompt=buildStructurePrompt(text,className,subject,fileName);
+function inferBookTitleFromPdfText(text, fileName, className, subject){
+  if(!text)return '';
+  var lines=text.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+  for(var i=0;i<Math.min(40,lines.length);i++){
+    var L=lines[i];
+    if(L.length<4||L.length>120)continue;
+    if(/^---\s*Page\s+\d+/i.test(L))continue;
+    if(/^(class|subject|chapter|unit|contents|table\s+of)/i.test(L))continue;
+    if(/^\d+$/.test(L))continue;
+    return L;
+  }
+  var base=(fileName||'').replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
+  if(base)return base;
+  return (subject+' '+className).trim();
+}
+
+function inferChapterPageRangeFromPdf(text, chapterName, chapterNo){
+  if(!text)return null;
+  var name=String(chapterName||'').trim();
+  var no=String(chapterNo!=null?chapterNo:'').trim();
+  var patterns=[];
+  if(name.length>=3)patterns.push(name);
+  if(no)patterns.push('Chapter '+no,'Unit '+no,'CHAPTER '+no);
+  var pages=[];
+  var re=/\n---\s*Page\s+(\d+)\s*---\n([\s\S]*?)(?=\n---\s*Page\s+\d+\s*---|$)/gi;
+  var m;
+  while((m=re.exec(text))!==null){
+    var pg=parseInt(m[1],10);
+    var body=m[2]||'';
+    for(var p=0;p<patterns.length;p++){
+      if(body.indexOf(patterns[p])!==-1||body.toLowerCase().indexOf(patterns[p].toLowerCase())!==-1){
+        pages.push(pg);
+        break;
+      }
+    }
+  }
+  if(!pages.length)return null;
+  pages.sort(function(a,b){return a-b;});
+  return{start:pages[0],end:pages[pages.length-1]};
+}
+
+function enrichChaptersWithPdfPageMarkers(chapters, fullText){
+  if(!fullText||!chapters||!chapters.length)return chapters;
+  var pageMarkers=[];
+  var rx=/\n---\s*Page\s+(\d+)\s*---/gi,match;
+  while((match=rx.exec(fullText))!==null)
+    pageMarkers.push({page:parseInt(match[1],10),index:match.index});
+  pageMarkers.sort(function(a,b){return a.index-b.index;});
+  function pageAtChar(idx){
+    var i;
+    for(i=pageMarkers.length-1;i>=0;i--)
+      if(pageMarkers[i].index<=idx)return pageMarkers[i].page;
+    return pageMarkers.length?pageMarkers[0].page:1;
+  }
+  chapters.forEach(function(ch){
+    (ch.exercises||[]).forEach(function(ex){
+      var lab=String(ex.exerciseLabel||ex.exerciseId||'').trim();
+      if(!lab)return;
+      var ix=fullText.toLowerCase().indexOf(lab.toLowerCase());
+      if(ix<0)return;
+      ex.pageStart=pageAtChar(ix);
+      var ix2=fullText.indexOf('\n--- Page',ix+lab.length);
+      if(ix2<0)ix2=Math.min(ix+1200,fullText.length);
+      ex.pageEnd=pageAtChar(Math.max(ix,ix2-1));
+      if(ex.pageEnd<ex.pageStart)ex.pageEnd=ex.pageStart;
+    });
+  });
+  return chapters;
+}
+
+function normalizeChapters(chapters, opts){
+  opts=opts||{};
+  var cls=String(opts.className||'').trim();
+  var subj=String(opts.subject||'').trim();
+  var fileName=String(opts.fileName||'upload.pdf').trim();
+  var pdfText=opts.extractedText||'';
+  var overrideBook=String(opts.bookTitle||'').trim();
+  var firstBook='';
+  chapters.forEach(function(ch){
+    if(!firstBook&&ch.bookTitle)firstBook=String(ch.bookTitle).trim();
+  });
+  var defaultBook=overrideBook||firstBook||inferBookTitleFromPdfText(pdfText,fileName,cls,subj)||(subj+' — '+cls);
+  chapters.forEach(function(ch){
+    ch.bookTitle=String(ch.bookTitle||'').trim()||defaultBook;
+    if(!ch.publisher)ch.publisher='';
+    var pr=inferChapterPageRangeFromPdf(pdfText,ch.chapterName,ch.chapterNo);
+    if(pr&&(!ch.pagesStart&&ch.pagesStart!==0||!ch.pagesEnd&&ch.pagesEnd!==0)){
+      ch.pagesStart=ch.pagesStart||pr.start;
+      ch.pagesEnd=ch.pagesEnd||pr.end;
+    }
+    (ch.exercises||[]).forEach(function(ex){
+      if(!ex)return;
+      var topics=String(ex.topics||'').trim();
+      var desc=String(ex.description||'').trim();
+      if(!topics&&desc)topics=desc.length>120?desc.substring(0,120)+'…':desc;
+      if(!topics&&ex.exerciseLabel)topics=String(ex.exerciseLabel).trim();
+      ex.topics=topics;
+    });
+  });
+  if(pdfText)enrichChaptersWithPdfPageMarkers(chapters,pdfText);
+  return chapters;
+}
+
+function showPdfPreview(fullText,fileName){
+  var wrap=$('pdf-preview-wrap');
+  if(!wrap)return;
+  var samples=[],re=/---\s*Page\s+(\d+)\s*---([\s\S]*?)(?=---\s*Page\s+\d+\s*---|$)/gi,match,n=0;
+  while((match=re.exec(fullText))!==null&&n<4){
+    var pn=match[1];
+    var body=(match[2]||'').replace(/\s+/g,' ').trim().substring(0,420);
+    samples.push('--- Page '+pn+' ---\n'+body+(body.length>=420?'…':''));
+    n++;
+  }
+  if(!samples.length){
+    var plain=(fullText||'').replace(/\s+/g,' ').trim().substring(0,600);
+    samples.push(plain+(plain.length>=600?'…':''));
+  }
+  $('pdf-preview-summary').textContent='Extract read '+fullText.length+' characters from '+fileName+' (first pages below). If this is empty or garbled, the PDF may be scanned images — use OCR or a text-based PDF.';
+  $('pdf-page-samples').textContent=samples.join('\n\n');
+  wrap.classList.add('show');
+}
+
+function hidePdfPreview(){
+  var w=$('pdf-preview-wrap');if(w)w.classList.remove('show');
+  if($('pdf-preview-summary'))$('pdf-preview-summary').textContent='';
+  if($('pdf-page-samples'))$('pdf-page-samples').textContent='';
+}
+
+async function callOpenAICompatibleBrowser(text, className, subject, fileName, bookTitle){
+  var prompt=buildStructurePrompt(text,className,subject,fileName,bookTitle);
   var url=(OPENAI_BASE||'https://api.openai.com/v1').replace(/\/$/,'')+'/chat/completions';
   var resp=await fetch(url,{
     method:'POST',
@@ -846,23 +1001,34 @@ function basicParser(text, className, subject){
   var chapters=[], cur=null, chNo=0;
   var chPats=[/^(?:unit|chapter)\s*(\d+)[:\s\-–—]+(.+)/i, /^(\d+)\s*[:\-–—]\s*(.{5,60})$/];
   var exPats=[/^exercise\s+([\d.]+)/i,/^ex\.\s*([\d.]+)/i,/^review\s+exercise/i,/^mcq/i,/^short\s+question/i,/^long\s+question/i];
+  var pageRe=/^---\s*Page\s+(\d+)\s*---$/i;
   lines.forEach(function(line){
+    var pg=line.match(pageRe);
+    if(pg&&cur)cur._lastPdfPage=parseInt(pg[1],10);
     var cm=null;
     for(var i=0;i<chPats.length;i++){cm=line.match(chPats[i]);if(cm)break;}
     if(cm){
       chNo++;
       cur={bookTitle:subject+' Class '+className,publisher:'',chapterNo:parseInt(cm[1],10)||chNo,
-        chapterName:(cm[2]||'Chapter '+chNo).trim(),pagesStart:'',pagesEnd:'',exercises:[]};
+        chapterName:(cm[2]||'Chapter '+chNo).trim(),pagesStart:'',pagesEnd:'',_lastPdfPage:null,exercises:[]};
       chapters.push(cur);return;
     }
     if(!cur)return;
     for(var j=0;j<exPats.length;j++){
       if(line.match(exPats[j])){
-        cur.exercises.push({exerciseId:cur.chapterNo+'.'+(cur.exercises.length+1),
-          exerciseLabel:line.substring(0,60),description:'',topics:line.substring(0,60)});
+        var snippet=line.substring(0,200);
+        cur.exercises.push({exerciseId:String(cur.chapterNo)+'.'+(cur.exercises.length+1),
+          exerciseLabel:line.substring(0,80),description:'',topics:snippet,_pageHint:cur._lastPdfPage});
         break;
       }
     }
+  });
+  chapters.forEach(function(ch){
+    var pgs=[];
+    ch.exercises.forEach(function(ex){if(ex._pageHint)pgs.push(ex._pageHint);});
+    if(pgs.length){pgs.sort(function(a,b){return a-b;});ch.pagesStart=pgs[0];ch.pagesEnd=pgs[pgs.length-1];}
+    ch.exercises.forEach(function(ex){delete ex._pageHint;});
+    delete ch._lastPdfPage;
   });
   if(!chapters.length)
     chapters.push({bookTitle:subject+' Class '+className,publisher:'',chapterNo:1,chapterName:'Full Book',
@@ -886,6 +1052,7 @@ function hideCursorPanel(){
   $('cursor-paste-section').classList.remove('show');
   $('paste-json').value='';
   pendingUpload=null;
+  hidePdfPreview();
 }
 
 $('btn-copy-cursor-prompt').addEventListener('click',function(){
@@ -893,16 +1060,21 @@ $('btn-copy-cursor-prompt').addEventListener('click',function(){
     showMsg($('upload-msg'),'err','Run Upload & Extract first so text is loaded.');
     return;
   }
-  var body=buildStructurePrompt(pendingUpload.extractedText,pendingUpload.cls,pendingUpload.subj,pendingUpload.fileName);
+  var body=buildStructurePrompt(pendingUpload.extractedText,pendingUpload.cls,pendingUpload.subj,pendingUpload.fileName,pendingUpload.bookTitle);
   navigator.clipboard.writeText(body).then(function(){
     showMsg($('upload-msg'),'ok','Prompt copied. Paste into Cursor, then paste the JSON array back here.');
   }).catch(function(){showMsg($('upload-msg'),'err','Clipboard failed — select and copy manually.');});
 });
 
-async function saveStructuredToSheet(structured, cls, subj, fileName){
+async function saveStructuredToSheet(structured, cls, subj, fileName, opts){
+  opts=opts||{};
+  var normalized=normalizeChapters(JSON.parse(JSON.stringify(structured)),{
+    className:cls,subject:subj,fileName:fileName||'upload.pdf',
+    extractedText:opts.extractedText||'',bookTitle:opts.bookTitle||''
+  });
   setStep(4,'active');
   setBar(90, IS_LOCAL ? 'Saving locally…' : 'Saving to Google Sheet…');
-  var res=await persistStructuredData(structured, cls, subj, fileName);
+  var res=await persistStructuredData(normalized, cls, subj, fileName);
   if(!res.success) throw new Error(res.error||'Save failed.');
   setStep(4,'done'); setBar(100,'Done!');
   return res;
@@ -917,13 +1089,16 @@ $('btn-apply-json').addEventListener('click',function(){
   catch(e){ showMsg($('upload-msg'),'err',e.message); return; }
 
   $('btn-apply-json').disabled=true;
-  saveStructuredToSheet(structured, cls, subj, fileName).then(function(res){
+  saveStructuredToSheet(structured, cls, subj, fileName,{
+    extractedText:pendingUpload.extractedText||'',
+    bookTitle:pendingUpload.bookTitle||''
+  }).then(function(res){
     showMsg($('upload-msg'),'ok','✅ '+res.message);
     hideCursorPanel();
     $('pdf-steps').classList.remove('show');
     $('up-prog').classList.remove('show');
     resetSteps();
-    $('up-class').value=''; $('up-subj').value=''; $('up-file').value='';
+    $('up-class').value=''; $('up-subj').value=''; $('up-book').value=''; $('up-file').value='';
     setTimeout(function(){
       if(!IS_LOCAL){
         apiGet('getData').then(function(r){ if(r.success){CUR=r.data||{};ROWS=r.rows||[];fillClasses();renderDataTable();} });
@@ -941,6 +1116,7 @@ async function handleUpload(){
   hideCursorPanel();
   var cls=$('up-class').value.trim();
   var subj=$('up-subj').value.trim();
+  var bookOverride=$('up-book').value.trim();
   var file=$('up-file').files && $('up-file').files[0];
 
   if(!cls){ showMsg($('upload-msg'),'err','Enter class name.'); return; }
@@ -964,20 +1140,21 @@ async function handleUpload(){
       throw new Error('Could not extract text from PDF. The PDF may be image-only (scanned without OCR). Try a text-based PDF.');
     }
     setStep(2,'done'); setBar(45,'Text extracted: '+extractedText.length+' characters');
+    showPdfPreview(extractedText,file.name);
 
     var structured;
     if(isOpenAIConfigured()){
       setStep(3,'active'); setBar(60,'Calling API to structure content…');
       try{
-        structured=await callOpenAICompatibleBrowser(extractedText,cls,subj,file.name);
+        structured=await callOpenAICompatibleBrowser(extractedText,cls,subj,file.name,bookOverride);
       }catch(apiErr){
         structured=basicParser(extractedText,cls,subj);
         showMsg($('upload-msg'),'info','API failed — used basic text parser. '+apiErr.message);
       }
       setStep(3,'done'); setBar(80,'Structured '+structured.length+' chapters');
-      var res=await saveStructuredToSheet(structured,cls,subj,file.name);
+      var res=await saveStructuredToSheet(structured,cls,subj,file.name,{extractedText:extractedText,bookTitle:bookOverride});
       showMsg($('upload-msg'),'ok','✅ '+res.message);
-      $('up-class').value=''; $('up-subj').value=''; $('up-file').value='';
+      $('up-class').value=''; $('up-subj').value=''; $('up-book').value=''; $('up-file').value='';
       setTimeout(function(){
         $('pdf-steps').classList.remove('show');
         $('up-prog').classList.remove('show');
@@ -987,7 +1164,7 @@ async function handleUpload(){
         }else{fillClasses();renderDataTable();}
       }, 2000);
     } else {
-      pendingUpload={cls:cls,subj:subj,fileName:file.name,extractedText:extractedText};
+      pendingUpload={cls:cls,subj:subj,fileName:file.name,bookTitle:bookOverride,extractedText:extractedText};
       setStep(3,'active');
       setBar(55,'Copy prompt → Cursor → paste JSON below → Apply JSON & save.');
       $('cursor-paste-section').classList.add('show');
