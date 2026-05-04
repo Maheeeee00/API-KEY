@@ -143,9 +143,8 @@
     <li><button type="button" class="step-pill active" data-goto="0">Class</button><span class="step-sep">→</span></li>
     <li><button type="button" class="step-pill" data-goto="1">Subject</button><span class="step-sep">→</span></li>
     <li><button type="button" class="step-pill" data-goto="2">Chapter</button><span class="step-sep">→</span></li>
-    <li><button type="button" class="step-pill" data-goto="3">Topics</button><span class="step-sep">→</span></li>
-    <li><button type="button" class="step-pill" data-goto="4">Pages</button><span class="step-sep">→</span></li>
-    <li><button type="button" class="step-pill" data-goto="5">Generate</button></li>
+    <li><button type="button" class="step-pill" data-goto="3">Topics &amp; pages</button><span class="step-sep">→</span></li>
+    <li><button type="button" class="step-pill" data-goto="4">Generate</button></li>
   </ul>
   <p class="header-tag">Select each step in order — syllabus appears only after Generate.</p>
 </header>
@@ -154,7 +153,7 @@
   <div class="card">
     <span class="card-legend">Quick selection wizard</span>
     <p class="hint" id="hint">Start with <strong>Step 1 — Class</strong>.</p>
-    <p class="wiz-prog" id="wiz-prog">Step 1 of 6 — Class</p>
+    <p class="wiz-prog" id="wiz-prog">Step 1 of 5 — Class</p>
 
     <div class="wiz-step active" id="ws-0">
       <h3>Select class</h3>
@@ -172,22 +171,17 @@
       <select id="sel-ch"><option value="">— Select chapter —</option></select>
     </div>
     <div class="wiz-step" id="ws-3">
-      <h3>Select topics</h3>
-      <p style="font-size:.8rem;color:var(--muted);margin:0 0 .5rem">Tick at least one topic, then Next.</p>
+      <h3>Topics &amp; pages (syllabus)</h3>
+      <p style="font-size:.8rem;color:var(--muted);margin:0 0 .5rem">After choosing a chapter, tick the <strong>sections / exercises</strong> you want (each line shows page range when known). Then Next.</p>
       <div class="topic-box disabled" id="topic-box">
         <div class="topic-head">
-          <span style="font-size:.8rem;font-weight:600">Topics</span>
+          <span style="font-size:.8rem;font-weight:600">Topics &amp; page ranges</span>
           <button type="button" class="btn-sm" id="sel-all-topics">Select all</button>
         </div>
         <div class="topic-list" id="topic-list"></div>
       </div>
     </div>
     <div class="wiz-step" id="ws-4">
-      <h3>Select page range</h3>
-      <label for="sel-pages">Page range</label>
-      <select id="sel-pages"><option value="">— Select pages —</option></select>
-    </div>
-    <div class="wiz-step" id="ws-5">
       <h3>Generate syllabus</h3>
       <p style="font-size:.8rem;color:var(--muted);margin:0 0 .7rem">Fill optional details, then generate.</p>
       <div class="g2">
@@ -307,8 +301,8 @@
         </div>
         <div class="tbl-wrap">
           <table class="tbl">
-            <thead><tr><th>Class</th><th>Subject</th><th>Chapter</th><th>Exercise</th><th>Topics</th><th></th></tr></thead>
-            <tbody id="data-tbody"><tr class="no-data"><td colspan="6">No data yet.</td></tr></tbody>
+            <thead><tr><th>Class</th><th>Subject</th><th>Chapter</th><th>Exercise</th><th>Pages</th><th>Topics</th><th></th></tr></thead>
+            <tbody id="data-tbody"><tr class="no-data"><td colspan="7">No data yet.</td></tr></tbody>
           </table>
         </div>
         <div id="data-msg" class="msg"></div>
@@ -374,8 +368,8 @@ var pendingUpload = null;
 function getSession(){ try{return JSON.parse(sessionStorage.getItem(SS_KEY))||null;}catch(e){return null;} }
 function setSession(o){ if(o) sessionStorage.setItem(SS_KEY,JSON.stringify(o)); else sessionStorage.removeItem(SS_KEY); }
 
-var CUR={}, ROWS=[], wizStep=0, WIZ_N=6;
-var TITLES=['Class','Subject','Chapter','Topics','Pages','Generate'];
+var CUR={}, ROWS=[], wizStep=0, WIZ_N=5;
+var TITLES=['Class','Subject','Chapter','Topics & pages','Generate'];
 var $=function(id){return document.getElementById(id);};
 
 function apiGet(action){
@@ -423,8 +417,7 @@ function setOpts(sel,ph,arr){
   arr.forEach(function(v){var x=document.createElement('option');x.value=v;x.textContent=v;sel.appendChild(x);});
 }
 function resetSubj(){setOpts($('sel-subj'),'— Select subject —',[]);$('sel-subj').value='';resetCh();}
-function resetCh(){setOpts($('sel-ch'),'— Select chapter —',[]);$('sel-ch').value='';resetPages();}
-function resetPages(){setOpts($('sel-pages'),'— Select pages —',[]);$('sel-pages').value='';resetTopics();}
+function resetCh(){setOpts($('sel-ch'),'— Select chapter —',[]);$('sel-ch').value='';resetTopics();}
 function resetTopics(){$('topic-list').innerHTML='';$('topic-box').classList.add('disabled');}
 function getChs(c,s){return CUR[c]&&CUR[c][s]?Object.values(CUR[c][s].chapters||{}):[]; }
 function getCurCh(){
@@ -436,24 +429,39 @@ function getCurCh(){
 function renderTopics(){
   $('topic-list').innerHTML='';
   var ch=getCurCh();
-  if(!ch||!ch.exercises||!ch.exercises.length){resetTopics();syncWiz();return;}
-  var seen={},list=[];
-  ch.exercises.forEach(function(ex){
-    (ex.topics||'').split(',').forEach(function(t){t=t.trim();if(t&&!seen[t]){seen[t]=true;list.push(t);}});
-    var l=(ex.exerciseLabel||ex.exerciseId||'').trim();
-    if(l&&!seen[l]){
-      seen[l]=true;
-      var desc=(ex.description||'').trim();
-      list.push(desc?l+' — '+desc.substring(0,72)+(desc.length>72?'…':''):l);
-    }
+  if(!ch){resetTopics();syncWiz();return;}
+  var items=[];
+  var chPg='';
+  if(ch.pagesStart||ch.pagesEnd)
+    chPg='p.'+String(ch.pagesStart||'?').trim()+'–'+String(ch.pagesEnd||'?').trim();
+  if((!ch.exercises||!ch.exercises.length)&&chPg){
+    items.push({val:'__CH__',text:'Full chapter ('+chPg+')'});
+  }
+  (ch.exercises||[]).forEach(function(ex,idx){
+    var id=(ex.exerciseId||'').trim();
+    var lbl=(ex.exerciseLabel||'').trim();
+    var head=(lbl||id||'Section '+(idx+1)).trim();
+    var pg='';
+    if(ex.pageStart!=null&&ex.pageStart!==''&&ex.pageEnd!=null&&ex.pageEnd!=='')
+      pg=' ['+'p.'+ex.pageStart+'–'+ex.pageEnd+']';
+    else if(chPg)pg=' ['+chPg+' (chapter)]';
+    var top=(ex.topics||'').trim();
+    var desc=(ex.description||'').trim();
+    var tail='';
+    if(top)tail+=(tail?' · ':'')+'Topics: '+top;
+    if(desc)tail+=(tail?' · ':'')+desc.substring(0,100)+(desc.length>100?'…':'');
+    var line=head+pg+(tail?' — '+tail:'');
+    items.push({val:'__EX__'+idx,text:line});
   });
-  if(!list.length){resetTopics();syncWiz();return;}
+  if(!items.length){resetTopics();syncWiz();return;}
   $('topic-box').classList.remove('disabled');
-  list.forEach(function(t,i){
+  items.forEach(function(it,i){
     var id='tp'+i, lbl=document.createElement('label'); lbl.htmlFor=id;
-    var cb=document.createElement('input');cb.type='checkbox';cb.id=id;cb.value=t;
+    var cb=document.createElement('input');cb.type='checkbox';cb.id=id;cb.value=it.val;
+    var span=document.createElement('span');
+    span.textContent=' '+it.text;
     cb.addEventListener('change',syncWiz);
-    lbl.appendChild(cb);lbl.appendChild(document.createTextNode(' '+t));
+    lbl.appendChild(cb);lbl.appendChild(span);
     $('topic-list').appendChild(lbl);
   });
   syncWiz();
@@ -466,30 +474,10 @@ $('sel-all-topics').addEventListener('click',function(){
   boxes.forEach(function(b){b.checked=any;});syncWiz();
 });
 
-function populatePages(){
-  var ch=getCurCh();if(!ch){setOpts($('sel-pages'),'— Select pages —',[]);return;}
-  var labels=[];
-  if(ch.pagesStart||ch.pagesEnd){
-    var ps=String(ch.pagesStart||'?').trim(), pe=String(ch.pagesEnd||'?').trim();
-    labels.push('Pages '+ps+'–'+pe+' (full chapter)');
-  }
-  (ch.exercises||[]).forEach(function(ex){
-    var id=(ex.exerciseId||'').trim();
-    var lbl=(ex.exerciseLabel||'').trim();
-    var head=id&&(lbl.indexOf(id)!==0)?id+' '+lbl:(lbl||id);
-    var pg=(ex.pageStart!=null&&ex.pageEnd!=null)?' [p.'+ex.pageStart+'–'+ex.pageEnd+']':'';
-    var desc=(ex.description||'').trim();
-    var tail=desc?' — '+desc.substring(0,40)+(desc.length>40?'…':'')+(ex.topics?', topics: '+String(ex.topics).substring(0,36):''):'';
-    var line=(head+pg+tail).trim();
-    if(line)labels.push(line);
-  });
-  setOpts($('sel-pages'),'— Select pages / section —',labels);$('sel-pages').value='';
-}
-
 function valid(s){
   if(s===0)return !!$('sel-class').value;if(s===1)return !!$('sel-subj').value;
   if(s===2)return !!$('sel-ch').value;if(s===3)return getChecked().length>0;
-  if(s===4)return !!$('sel-pages').value;return true;
+  return true;
 }
 function canGo(t){if(t<=wizStep)return true;for(var s=wizStep;s<t;s++)if(!valid(s))return false;return true;}
 function syncPills(){
@@ -513,36 +501,52 @@ function goTo(n){
   n=Math.max(0,Math.min(WIZ_N-1,n));
   if(n>wizStep)for(var s=wizStep;s<n;s++)if(!valid(s))return;
   if(n===3&&wizStep<3)renderTopics();
-  if(n===4)populatePages();
   wizStep=n;syncWiz();
   var p=document.getElementById('ws-'+wizStep);
   if(p){var f=p.querySelector('select,input,button.btn-primary');if(f)f.focus();}
 }
 $('sel-class').addEventListener('change',function(){resetSubj();if(!this.value)return;setOpts($('sel-subj'),'— Select subject —',Object.keys(CUR[this.value]||{}).sort());if(wizStep===0)goTo(1);else syncWiz();});
 $('sel-subj').addEventListener('change',function(){resetCh();var c=$('sel-class').value,s=this.value;if(!c||!s)return;var labels=getChs(c,s).map(function(ch){return ch.chapterNo?ch.chapterNo+' — '+ch.chapterName:ch.chapterName;});setOpts($('sel-ch'),'— Select chapter —',labels);if(wizStep===1)goTo(2);else syncWiz();});
-$('sel-ch').addEventListener('change',function(){resetPages();if(!this.value)return;if(wizStep===2)goTo(3);else syncWiz();});
-$('sel-pages').addEventListener('change',function(){syncWiz();if(wizStep===4&&this.value)goTo(5);});
+$('sel-ch').addEventListener('change',function(){resetTopics();if(!this.value)return;if(wizStep===2)goTo(3);else syncWiz();});
 $('wiz-next').addEventListener('click',function(){goTo(wizStep+1);});
 $('wiz-back').addEventListener('click',function(){goTo(wizStep-1);});
 $('step-nav').addEventListener('click',function(e){var btn=e.target.closest('.step-pill');if(!btn||btn.disabled)return;goTo(parseInt(btn.getAttribute('data-goto'),10));});
 
 $('btn-generate').addEventListener('click',function(){
   var cls=$('sel-class').value||'(class)',subj=$('sel-subj').value||'(subject)';
-  var unit=$('sel-ch').value||'(chapter)',pages=$('sel-pages').value||'(pages)';
-  var picked=getChecked();if(!picked.length)picked=['(no topics selected)'];
+  var unit=$('sel-ch').value||'(chapter)';
+  var picked=getChecked();
+  var ch=getCurCh();
+  var pagesSummary='';
+  if(ch&&(ch.pagesStart||ch.pagesEnd))
+    pagesSummary='Chapter pages: '+String(ch.pagesStart||'?').trim()+'–'+String(ch.pagesEnd||'?').trim()+' (book)';
+  var pickedLines=picked.map(function(v){
+    if(v==='__CH__')return pagesSummary||'(full chapter)';
+    var m=/^__EX__(\d+)$/.exec(v);
+    if(m&&ch&&ch.exercises){
+      var ex=ch.exercises[parseInt(m[1],10)];
+      if(!ex)return v;
+      var bits=[];
+      if(ex.pageStart!=null&&ex.pageEnd!=null)bits.push('Exercise pages: '+ex.pageStart+'–'+ex.pageEnd);
+      if(ch.pagesStart||ch.pagesEnd)bits.push('Chapter in book: '+ch.pagesStart+'–'+ch.pagesEnd);
+      return (ex.exerciseLabel||ex.exerciseId||'Section')+(bits.length?' ('+bits.join('; ')+')':'');
+    }
+    return v;
+  });
+  if(!pickedLines.length)pickedLines=['(nothing selected)'];
   var term=$('sy-term').value.trim()||'(term)';
   var weeks=parseInt($('sy-weeks').value,10)||12;
   var outcomes=$('sy-outcomes').value.split(/\r?\n/).map(function(s){return s.trim();}).filter(Boolean);
-  var per=Math.max(1,Math.ceil(weeks/picked.length));
+  var per=Math.max(1,Math.ceil(weeks/pickedLines.length));
   var lines=['SYLLABUS OUTLINE','================','Class:   '+cls,'Subject: '+subj,
-    'Chapter: '+unit,'Pages:   '+pages,'Term:    '+term,'Weeks:   '+weeks,
-    '','FOCUS TOPICS','------------'];
-  picked.forEach(function(t,i){lines.push((i+1)+'. '+t);});
-  lines.push('','WEEKLY PLAN (≈'+per+' week(s)/topic)','------------------------------------------');
+    'Chapter: '+unit,'Term:    '+term,'Weeks:   '+weeks,
+    '','SELECTED SECTIONS (topics & pages)','--------------------------------'];
+  pickedLines.forEach(function(t,i){lines.push((i+1)+'. '+t);});
+  lines.push('','WEEKLY PLAN (≈'+per+' week(s)/selection)','------------------------------------------');
   var w=1,ti=0;
-  while(w<=weeks&&ti<picked.length){var end=Math.min(w+per-1,weeks);lines.push('Week '+w+(end>w?'–'+end:'')+': '+picked[ti]);w=end+1;ti++;}
+  while(w<=weeks&&ti<pickedLines.length){var end=Math.min(w+per-1,weeks);lines.push('Week '+w+(end>w?'–'+end:'')+': '+pickedLines[ti]);w=end+1;ti++;}
   while(w<=weeks){lines.push('Week '+w+': Review / revision');w++;}
-  while(ti<picked.length){lines.push('(Extra): '+picked[ti]);ti++;}
+  while(ti<pickedLines.length){lines.push('(Extra): '+pickedLines[ti]);ti++;}
   if(outcomes.length){lines.push('','LEARNING OUTCOMES','-----------------');outcomes.forEach(function(o,i){lines.push((i+1)+'. '+o);});}
   lines.push('','─ Generated by startwell ─');
   $('syll-out').textContent=lines.join('\n');$('syll-out').classList.remove('empty');
@@ -611,10 +615,11 @@ function buildStructurePrompt(text, className, subject, fileName, bookTitle){
     '- pagesStart and pagesEnd: PDF page numbers for each chapter when visible in the text\n'+
     '- All exercises (Exercise 1.1, Review Exercise, MCQs, etc.)\n'+
     '- description: one short line per exercise\n'+
-    '- topics: comma-separated topic tags (distinct from description; real topic names)\n\n'+
+    '- topics: comma-separated topic tags (distinct from description; real topic names)\n'+
+    '- contentFromPdf: optional short excerpt (plain text, max ~400 chars) from the PDF near that exercise, for the sheet\n\n'+
     'Return ONLY a valid JSON array, nothing else:\n'+
     '[{"bookTitle":"","publisher":"","chapterNo":1,"chapterName":"","pagesStart":1,"pagesEnd":10,'+
-    '"exercises":[{"exerciseId":"1.1","exerciseLabel":"Exercise 1.1","description":"covers...","topics":"t1, t2"}]}]\n\n'+
+    '"exercises":[{"exerciseId":"1.1","exerciseLabel":"Exercise 1.1","description":"covers...","topics":"t1, t2","contentFromPdf":"..."}]}]\n\n'+
     'EXTRACTED TEXT:\n---\n'+
     text.substring(0, 35000)+
     '\n---\nJSON array only:';
@@ -628,7 +633,7 @@ function buildStructurePromptTsv(text, className, subject, fileName, bookTitle){
     'Class: '+className+', Subject: '+subject+', File: '+(fileName||'upload.pdf')+'\n'+btLine+'\n'+
     'Output a **TSV table** (tab-separated), NOT JSON.\n'+
     'Line 1 must be the header row with exactly these column names (use these exact spellings):\n'+
-    'Book Title\tPublisher\tChapter No\tChapter Name\tPages Start\tPages End\tExercise ID\tExercise Label\tExercise Description\tTopics\n\n'+
+    'Book Title\tPublisher\tChapter No\tChapter Name\tPages Start\tPages End\tExercise ID\tExercise Label\tExercise Description\tTopics\tExercise Pages Start\tExercise Pages End\tContent from PDF\n\n'+
     'Rules:\n'+
     '- One data row per exercise (repeat chapter/book columns on each row as needed).\n'+
     '- Chapter No and Chapter Name are required on every row.\n'+
@@ -710,6 +715,9 @@ function parseChaptersFromTsvOrCsv(raw){
   var iExLbl=findColumnIndex(headers,['Exercise Label','Exercise','Label','Ex Name']);
   var iDesc=findColumnIndex(headers,['Exercise Description','Description','Desc']);
   var iTopics=findColumnIndex(headers,['Topics','Topic']);
+  var iExPS=findColumnIndex(headers,['Exercise Pages Start','Ex Pages Start','Exercise Page Start']);
+  var iExPE=findColumnIndex(headers,['Exercise Pages End','Ex Pages End','Exercise Page End']);
+  var iPdf=findColumnIndex(headers,['Content from PDF','PDF Snippet','PDF Text','Snippet']);
   if(iChName<0&&iChNo<0)throw new Error('Missing Chapter Name or Chapter No column. Check the header row.');
   var chMap={},order=[];
   for(var r=1;r<lines.length;r++){
@@ -739,8 +747,14 @@ function parseChaptersFromTsvOrCsv(raw){
     var exLbl=normCell(iExLbl>=0?cells[iExLbl]:'');
     var desc=normCell(iDesc>=0?cells[iDesc]:'');
     var topics=normCell(iTopics>=0?cells[iTopics]:'');
+    var exPs=normCell(iExPS>=0?cells[iExPS]:'');
+    var exPe=normCell(iExPE>=0?cells[iExPE]:'');
+    var pdfSnip=normCell(iPdf>=0?cells[iPdf]:'');
     if(!exId&&!exLbl&&!topics&&!desc)continue;
-    ch.exercises.push({exerciseId:exId,exerciseLabel:exLbl||exId||'Exercise',description:desc,topics:topics});
+    ch.exercises.push({
+      exerciseId:exId,exerciseLabel:exLbl||exId||'Exercise',description:desc,topics:topics,
+      pageStart:exPs,pageEnd:exPe,contentFromPdf:pdfSnip
+    });
   }
   var out=[];
   for(var k=0;k<order.length;k++){
@@ -826,6 +840,28 @@ function enrichChaptersWithPdfPageMarkers(chapters, fullText){
   return chapters;
 }
 
+function stripPdfPageMarkers(s){
+  return String(s||'').replace(/\n---\s*Page\s+\d+\s*---/gi,' ');
+}
+
+function enrichExercisePdfSnippets(chapters, fullText){
+  if(!fullText||!chapters||!chapters.length)return chapters;
+  var clean=stripPdfPageMarkers(fullText).replace(/\s+/g,' ').trim();
+  chapters.forEach(function(ch){
+    (ch.exercises||[]).forEach(function(ex){
+      var lab=String(ex.exerciseLabel||ex.exerciseId||'').trim();
+      if(!lab){ex.contentFromPdf='';return;}
+      var ix=clean.toLowerCase().indexOf(lab.toLowerCase());
+      if(ix<0){ex.contentFromPdf='';return;}
+      var take=480;
+      var slice=clean.substring(ix,ix+take).trim();
+      if(slice.length===take)slice+='…';
+      ex.contentFromPdf=slice;
+    });
+  });
+  return chapters;
+}
+
 function normalizeChapters(chapters, opts){
   opts=opts||{};
   var cls=String(opts.className||'').trim();
@@ -855,7 +891,10 @@ function normalizeChapters(chapters, opts){
       ex.topics=topics;
     });
   });
-  if(pdfText)enrichChaptersWithPdfPageMarkers(chapters,pdfText);
+  if(pdfText){
+    enrichChaptersWithPdfPageMarkers(chapters,pdfText);
+    enrichExercisePdfSnippets(chapters,pdfText);
+  }
   return chapters;
 }
 
@@ -1110,12 +1149,16 @@ async function handleUpload(){
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function renderDataTable(){
   var tbody=$('data-tbody');tbody.innerHTML='';
-  if(!ROWS.length){tbody.innerHTML='<tr class="no-data"><td colspan="6">No entries yet.</td></tr>';return;}
+  if(!ROWS.length){tbody.innerHTML='<tr class="no-data"><td colspan="7">No entries yet.</td></tr>';return;}
   ROWS.forEach(function(row){
     var tr=document.createElement('tr');
+    var pgCell='';
+    if(row.exPgS||row.exPgE)pgCell=esc(row.exPgS)+'–'+esc(row.exPgE);
+    else if(row.pgS||row.pgE)pgCell=esc(row.pgS)+'–'+esc(row.pgE)+' (ch.)';
     tr.innerHTML='<td class="trunc">'+esc(row.cls)+'</td><td class="trunc">'+esc(row.subj)+'</td>'+
       '<td class="trunc">'+(row.chNo?esc(row.chNo)+' — ':'')+esc(row.chName)+'</td>'+
       '<td class="trunc">'+esc(row.exLbl||row.exId||'—')+'</td>'+
+      '<td class="trunc">'+(pgCell||'—')+'</td>'+
       '<td class="trunc">'+esc(row.topics||'—')+'</td>'+
       '<td><button class="btn-danger" data-ridx="'+row.rowIndex+'">×</button></td>';
     tbody.appendChild(tr);

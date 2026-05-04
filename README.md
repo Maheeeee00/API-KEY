@@ -8,8 +8,8 @@ Single-page app (`index.html`) plus Google Apps Script (`Code.gs`).
 2. **Structure** with Cursor (paste prompt → paste **JSON** or **TSV/CSV table**) or an optional OpenAI-compatible API key on a **private** copy only.
 3. **Save** to Google Sheet via deployed Web App (`saveStructured`).
 
-## Setup
+## Sheet columns (SyllabusData)
 
-1. Copy `Code.gs` into Apps Script, set `SHEET_ID`, run `setupSheet`, deploy **Web App** (Execute as: Me, Anyone with the link).
-2. In `index.html`, set `SCRIPT_URL` to your deployment URL.
-3. Do **not** commit real API keys in public HTML.
+After the first `setupSheet`, the data sheet has **17 columns**, including **Exercise Pages Start**, **Exercise Pages End**, and **Content from PDF** (auto-filled from extracted text when possible).
+
+If you already had an **older 14-column** sheet, run **Startwell → Add detail columns (if sheet is old)** once in the spreadsheet (or redeploy and let the app save again — `getData` migrates automatically).

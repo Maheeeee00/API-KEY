@@ -18,6 +18,9 @@ var PASSWORD_SHEET = "AdminPasswords";
 // ═══════════════════════════════════════════════════════════════
 // SETUP
 // ═══════════════════════════════════════════════════════════════
+/** Column count for SyllabusData (after Topics: exercise-level pages + PDF snippet). */
+var DATA_NUM_COLS = 17;
+
 function setupSheet() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
 
@@ -26,7 +29,8 @@ function setupSheet() {
   var h = ["Class","Subject","Book Title","Publisher",
            "Chapter No","Chapter Name","Pages Start","Pages End",
            "Exercise ID","Exercise Label","Exercise Description",
-           "Topics","Added On","Source File"];
+           "Topics","Exercise Pages Start","Exercise Pages End","Content from PDF",
+           "Added On","Source File"];
   data.getRange(1,1,1,h.length).setValues([h]);
   _styleHeader(data, h.length);
   data.setFrozenRows(1);
@@ -95,6 +99,26 @@ function _out(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/** Upgrade old 14-column sheet: insert exercise page + PDF snippet columns before Added On. Silent when already migrated. */
+function ensureDataSheetLayout() {
+  var sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DATA_SHEET);
+  if (!sheet || sheet.getLastRow() < 1) return;
+  var lastCol = sheet.getLastColumn();
+  if (lastCol >= DATA_NUM_COLS) return;
+  if (lastCol === 14) {
+    sheet.insertColumnsBefore(13, 3);
+    sheet.getRange(1, 13, 1, 15).setValues([[
+      "Exercise Pages Start", "Exercise Pages End", "Content from PDF"
+    ]]);
+    _styleHeader(sheet, DATA_NUM_COLS);
+  }
+}
+
+function migrateDataSheetColumns() {
+  ensureDataSheetLayout();
+  SpreadsheetApp.getUi().alert("SyllabusData columns checked. If your sheet had 14 columns, three new columns were added before Added On.");
+}
+
 // ═══════════════════════════════════════════════════════════════
 // SAVE STRUCTURED DATA (sent from browser after PDF.js + structuring)
 // No Drive API, no OCR — just save what the browser sends
@@ -110,6 +134,7 @@ function saveStructured(params) {
 
   _log("SAVE","Saving structured data", cls+" | "+subject+" | "+chapters.length+" chapters");
 
+  ensureDataSheetLayout();
   var saved = _saveChapters(chapters, cls, subject, fileName);
   _log("DONE","Saved "+saved+" rows", fileName);
 
@@ -131,12 +156,17 @@ function _saveChapters(chapters, cls, subject, fileName) {
     if (!book && ch.bookTitle) book = ch.bookTitle;
     if (!pub  && ch.publisher) pub  = ch.publisher;
     (ch.exercises || []).forEach(function(ex) {
+      var exPs = ex.pageStart != null && ex.pageStart !== "" ? String(ex.pageStart) : "";
+      var exPe = ex.pageEnd != null && ex.pageEnd !== "" ? String(ex.pageEnd) : "";
+      var snip = String(ex.contentFromPdf || ex.snippet || "").trim();
+      if (snip.length > 4500) snip = snip.substring(0, 4500) + "…";
       rows.push([
         cls, subject, book||fileName, pub||"",
         ch.chapterNo||"", ch.chapterName||"",
         ch.pagesStart||"", ch.pagesEnd||"",
         ex.exerciseId||"", ex.exerciseLabel||"",
         ex.description||"", ex.topics||"",
+        exPs, exPe, snip,
         ts, fileName
       ]);
     });
@@ -163,9 +193,9 @@ function _saveChapters(chapters, cls, subject, fileName) {
 
   if (rows.length) {
     var last = sheet.getLastRow();
-    sheet.getRange(last+1, 1, rows.length, 14).setValues(rows);
+    sheet.getRange(last+1, 1, rows.length, DATA_NUM_COLS).setValues(rows);
     for (var i = 0; i < rows.length; i++)
-      sheet.getRange(last+1+i, 1, 1, 14)
+      sheet.getRange(last+1+i, 1, 1, DATA_NUM_COLS)
         .setBackground(i % 2 === 0 ? "#fff8f4" : "#ffffff");
   }
   return rows.length;
@@ -177,10 +207,12 @@ function _saveChapters(chapters, cls, subject, fileName) {
 function getAllData() {
   var sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DATA_SHEET);
   if (!sheet) return {success:false, error:"Run setupSheet first."};
+  ensureDataSheetLayout();
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return {success:true, data:{}, rows:[]};
 
-  var raw = sheet.getRange(2,1,lastRow-1,14).getValues();
+  var lastCol = Math.max(sheet.getLastColumn(), DATA_NUM_COLS);
+  var raw = sheet.getRange(2,1,lastRow-1,lastCol).getValues();
   var rows = [], curriculum = {};
 
   raw.forEach(function(row, idx) {
@@ -190,17 +222,30 @@ function getAllData() {
         pgS=String(row[6]).trim(), pgE=String(row[7]).trim(),
         exId=String(row[8]).trim(), exLbl=String(row[9]).trim(),
         exDesc=String(row[10]).trim(), topics=String(row[11]).trim(),
-        addedOn=String(row[12]).trim(), src=String(row[13]).trim();
+        exPgS="", exPgE="", pdfSnip="", addedOn="", src="";
+    if (row.length >= 17) {
+      exPgS=String(row[12]||"").trim();
+      exPgE=String(row[13]||"").trim();
+      pdfSnip=String(row[14]||"").trim();
+      addedOn=String(row[15]||"").trim();
+      src=String(row[16]||"").trim();
+    } else {
+      addedOn=String(row[12]||"").trim();
+      src=String(row[13]||"").trim();
+    }
     if (!cls||!chName) return;
 
-    rows.push({rowIndex:idx,cls,subj,book,pub,chNo,chName,pgS,pgE,exId,exLbl,exDesc,topics,addedOn,src});
+    rows.push({rowIndex:idx,cls,subj,book,pub,chNo,chName,pgS,pgE,exId,exLbl,exDesc,topics,exPgS,exPgE,pdfSnip,addedOn,src});
     if (!curriculum[cls]) curriculum[cls]={};
     if (!curriculum[cls][subj]) curriculum[cls][subj]={bookTitle:book,publisher:pub,chapters:{}};
     var chKey=chNo+"|"+chName;
     if (!curriculum[cls][subj].chapters[chKey])
       curriculum[cls][subj].chapters[chKey]={chapterNo:chNo,chapterName:chName,pagesStart:pgS,pagesEnd:pgE,exercises:[]};
     if (exId||exLbl)
-      curriculum[cls][subj].chapters[chKey].exercises.push({exerciseId:exId,exerciseLabel:exLbl,description:exDesc,topics});
+      curriculum[cls][subj].chapters[chKey].exercises.push({
+        exerciseId:exId,exerciseLabel:exLbl,description:exDesc,topics,
+        pageStart:exPgS,pageEnd:exPgE,contentFromPdf:pdfSnip
+      });
   });
   return {success:true, data:curriculum, rows};
 }
@@ -321,6 +366,7 @@ function _log(status, action, details) {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu("📚 Startwell")
     .addItem("Setup Sheets","setupSheet")
+    .addItem("Add detail columns (if sheet is old)","migrateDataSheetColumns")
     .addSeparator()
     .addItem("View Data Count","showDataCount")
     .addItem("Clear All Data","clearAllData")
