@@ -5,7 +5,7 @@ Single-page app (`index.html`) plus Google Apps Script (`Code.gs`).
 ## Flow
 
 1. **PDF → text** in the browser (PDF.js).
-2. **Structure** with Cursor (paste prompt → paste JSON) or an optional OpenAI-compatible API key on a **private** copy only.
+2. **Structure** with Cursor (paste prompt → paste **JSON** or **TSV/CSV table**) or an optional OpenAI-compatible API key on a **private** copy only.
 3. **Save** to Google Sheet via deployed Web App (`saveStructured`).
 
 ## Setup

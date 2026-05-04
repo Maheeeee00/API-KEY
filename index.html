@@ -273,13 +273,20 @@
         </div>
 
         <div class="cursor-panel" id="cursor-paste-section">
-          <p style="font-size:.8rem;margin-bottom:.55rem;color:var(--text)"><strong>Cursor workflow:</strong> click <em>Copy prompt for Cursor</em>, paste into Cursor, ask the model to return <strong>only</strong> the JSON array, then paste the result below and click <em>Apply JSON &amp; save</em>.</p>
-          <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:.55rem">
-            <button type="button" class="btn-sm" id="btn-copy-cursor-prompt">Copy prompt for Cursor</button>
+          <p style="font-size:.8rem;margin-bottom:.55rem;color:var(--text)"><strong>Cursor workflow:</strong> choose format → <em>Copy prompt for Cursor</em> → paste the reply below → <em>Apply &amp; save to sheet</em>.</p>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.55rem">
+            <div style="flex:1;min-width:140px">
+              <label for="paste-format" style="margin-bottom:.2rem">Paste format</label>
+              <select id="paste-format">
+                <option value="json">JSON (array of chapters)</option>
+                <option value="tsv">TSV or CSV (table — one row per exercise)</option>
+              </select>
+            </div>
+            <button type="button" class="btn-sm" id="btn-copy-cursor-prompt" style="margin-bottom:.02rem">Copy prompt for Cursor</button>
           </div>
-          <label for="paste-json">Paste JSON array here</label>
-          <textarea id="paste-json" placeholder='[{"bookTitle":"","chapterNo":1,"chapterName":"","pagesStart":1,"pagesEnd":10,"exercises":[...]}]'></textarea>
-          <button type="button" class="btn-primary" id="btn-apply-json" style="margin-top:.45rem">Apply JSON &amp; save to sheet</button>
+          <label for="paste-json">Paste result here</label>
+          <textarea id="paste-json" style="min-height:140px" placeholder="JSON: [{&quot;bookTitle&quot;:&quot;&quot;,&quot;chapterNo&quot;:1,...}]&#10;&#10;TSV: first row = headers (tabs or commas). Example columns: Book Title, Chapter No, Chapter Name, Pages Start, Pages End, Exercise ID, Exercise Label, Exercise Description, Topics"></textarea>
+          <button type="button" class="btn-primary" id="btn-apply-paste" style="margin-top:.45rem">Apply &amp; save to sheet</button>
         </div>
 
         <div class="up-prog" id="up-prog">
@@ -613,6 +620,26 @@ function buildStructurePrompt(text, className, subject, fileName, bookTitle){
     '\n---\nJSON array only:';
 }
 
+function buildStructurePromptTsv(text, className, subject, fileName, bookTitle){
+  var bt=String(bookTitle||'').trim();
+  var btLine=bt?('If a Book title column is empty in any row, use this default book title: '+bt+'\n'):'';
+  return 'You are an expert at reading Pakistani school textbooks and key books.\n\n'+
+    'Below is text extracted from a textbook PDF (page markers like "--- Page N ---" are PDF page numbers).\n'+
+    'Class: '+className+', Subject: '+subject+', File: '+(fileName||'upload.pdf')+'\n'+btLine+'\n'+
+    'Output a **TSV table** (tab-separated), NOT JSON.\n'+
+    'Line 1 must be the header row with exactly these column names (use these exact spellings):\n'+
+    'Book Title\tPublisher\tChapter No\tChapter Name\tPages Start\tPages End\tExercise ID\tExercise Label\tExercise Description\tTopics\n\n'+
+    'Rules:\n'+
+    '- One data row per exercise (repeat chapter/book columns on each row as needed).\n'+
+    '- Chapter No and Chapter Name are required on every row.\n'+
+    '- Topics: comma-separated inside the cell.\n'+
+    '- Use tabs between columns. If a cell contains a tab, replace it with a space.\n'+
+    '- Do not wrap the table in markdown fences unless you also strip them when pasting.\n\n'+
+    'EXTRACTED TEXT:\n---\n'+
+    text.substring(0, 35000)+
+    '\n---\nOutput the TSV only (header + rows):';
+}
+
 function isOpenAIConfigured(){
   return !!(OPENAI_API_KEY && String(OPENAI_API_KEY).trim() && OPENAI_API_KEY.indexOf('YOUR_')!==0);
 }
@@ -626,6 +653,107 @@ function parseChaptersJson(raw){
   var parsed=JSON.parse(s.substring(start,end+1));
   if(!Array.isArray(parsed)||!parsed.length) throw new Error('JSON must be a non-empty array of chapters.');
   return parsed;
+}
+
+function normCell(s){return String(s==null?'':s).replace(/^\uFEFF/,'').trim();}
+function normHeaderKey(s){
+  return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[_-]+/g,' ');
+}
+function findColumnIndex(headers, names){
+  var H=headers.map(normHeaderKey);
+  for(var n=0;n<names.length;n++){
+    var want=normHeaderKey(names[n]);
+    for(var i=0;i<H.length;i++){if(H[i]===want)return i;}
+  }
+  for(var n2=0;n2<names.length;n2++){
+    var w2=normHeaderKey(names[n2]).replace(/ /g,'');
+    for(var j=0;j<H.length;j++){
+      if(H[j].replace(/ /g,'')===w2)return j;
+    }
+  }
+  return -1;
+}
+function splitDataLine(line,delim){
+  if(delim==='tab')return line.split('\t').map(normCell);
+  var out=[],cur='',inQ=false;
+  for(var i=0;i<line.length;i++){
+    var c=line[i];
+    if(c==='"'){inQ=!inQ;continue;}
+    if(!inQ&&c===','){out.push(normCell(cur));cur='';continue;}
+    cur+=c;
+  }
+  out.push(normCell(cur));
+  return out;
+}
+function detectTableDelimiter(firstLine){
+  var tabs=(firstLine.match(/\t/g)||[]).length;
+  var commas=(firstLine.match(/,/g)||[]).length;
+  if(tabs>=2||(tabs>0&&tabs>=commas))return'tab';
+  return'comma';
+}
+function parseChaptersFromTsvOrCsv(raw){
+  var text=String(raw||'').trim();
+  if(!text)throw new Error('Empty table.');
+  text=text.replace(/^```[a-z]*\s*/i,'').replace(/\s*```$/i,'').trim();
+  var lines=text.split(/\r?\n/).map(function(l){return l.trimEnd();}).filter(function(l){return l.trim().length;});
+  if(lines.length<2)throw new Error('Need a header row and at least one data row.');
+  var delim=detectTableDelimiter(lines[0]);
+  var headers=splitDataLine(lines[0],delim);
+  if(headers.length<3)throw new Error('Header row has too few columns. Use tabs or commas.');
+  var iBook=findColumnIndex(headers,['Book Title','book title','Book','Title']);
+  var iPub=findColumnIndex(headers,['Publisher','publisher']);
+  var iChNo=findColumnIndex(headers,['Chapter No','Chapter Number','Ch No','Ch. No','Unit No']);
+  var iChName=findColumnIndex(headers,['Chapter Name','Chapter','Unit','Unit Name']);
+  var iPgS=findColumnIndex(headers,['Pages Start','Page Start','Pg Start','Start Page']);
+  var iPgE=findColumnIndex(headers,['Pages End','Page End','Pg End','End Page']);
+  var iExId=findColumnIndex(headers,['Exercise ID','Ex ID','Ex. ID']);
+  var iExLbl=findColumnIndex(headers,['Exercise Label','Exercise','Label','Ex Name']);
+  var iDesc=findColumnIndex(headers,['Exercise Description','Description','Desc']);
+  var iTopics=findColumnIndex(headers,['Topics','Topic']);
+  if(iChName<0&&iChNo<0)throw new Error('Missing Chapter Name or Chapter No column. Check the header row.');
+  var chMap={},order=[];
+  for(var r=1;r<lines.length;r++){
+    var cells=splitDataLine(lines[r],delim);
+    while(cells.length<headers.length)cells.push('');
+    var chNo=normCell(iChNo>=0?cells[iChNo]:'');
+    var chName=normCell(iChName>=0?cells[iChName]:'');
+    if(!chName&&!chNo)continue;
+    if(!chName)chName='Chapter '+chNo;
+    if(!chNo)chNo='';
+    var key=chNo+'|'+chName;
+    if(!chMap[key]){
+      var chNum=chNo&&!isNaN(parseInt(chNo,10))?parseInt(chNo,10):chNo;
+      chMap[key]={bookTitle:'',publisher:'',chapterNo:chNum,chapterName:chName,pagesStart:'',pagesEnd:'',exercises:[]};
+      order.push(key);
+    }
+    var ch=chMap[key];
+    var book=normCell(iBook>=0?cells[iBook]:'');
+    var pub=normCell(iPub>=0?cells[iPub]:'');
+    if(book)ch.bookTitle=book;
+    if(pub)ch.publisher=pub;
+    var pgS=normCell(iPgS>=0?cells[iPgS]:'');
+    var pgE=normCell(iPgE>=0?cells[iPgE]:'');
+    if(pgS)ch.pagesStart=pgS;
+    if(pgE)ch.pagesEnd=pgE;
+    var exId=normCell(iExId>=0?cells[iExId]:'');
+    var exLbl=normCell(iExLbl>=0?cells[iExLbl]:'');
+    var desc=normCell(iDesc>=0?cells[iDesc]:'');
+    var topics=normCell(iTopics>=0?cells[iTopics]:'');
+    if(!exId&&!exLbl&&!topics&&!desc)continue;
+    ch.exercises.push({exerciseId:exId,exerciseLabel:exLbl||exId||'Exercise',description:desc,topics:topics});
+  }
+  var out=[];
+  for(var k=0;k<order.length;k++){
+    var ch2=chMap[order[k]];
+    if(ch2.exercises.length)out.push(ch2);
+  }
+  if(!out.length)throw new Error('No exercise rows found. Check column names (Book Title, Chapter No, Chapter Name, …).');
+  return out;
+}
+function parsePastedStructure(raw, format){
+  var f=String(format||'json').toLowerCase();
+  if(f==='tsv'||f==='csv'||f==='table')return parseChaptersFromTsvOrCsv(raw);
+  return parseChaptersJson(raw);
 }
 
 function inferBookTitleFromPdfText(text, fileName, className, subject){
@@ -848,6 +976,7 @@ function resetSteps(){
 function hideCursorPanel(){
   $('cursor-paste-section').classList.remove('show');
   $('paste-json').value='';
+  if($('paste-format'))$('paste-format').value='json';
   pendingUpload=null;
   hidePdfPreview();
 }
@@ -857,9 +986,12 @@ $('btn-copy-cursor-prompt').addEventListener('click',function(){
     showMsg($('upload-msg'),'err','Run Upload & Extract first so text is loaded.');
     return;
   }
-  var body=buildStructurePrompt(pendingUpload.extractedText,pendingUpload.cls,pendingUpload.subj,pendingUpload.fileName,pendingUpload.bookTitle);
+  var fmt=($('paste-format')&&$('paste-format').value)||'json';
+  var body=fmt==='tsv'
+    ?buildStructurePromptTsv(pendingUpload.extractedText,pendingUpload.cls,pendingUpload.subj,pendingUpload.fileName,pendingUpload.bookTitle)
+    :buildStructurePrompt(pendingUpload.extractedText,pendingUpload.cls,pendingUpload.subj,pendingUpload.fileName,pendingUpload.bookTitle);
   navigator.clipboard.writeText(body).then(function(){
-    showMsg($('upload-msg'),'ok','Prompt copied. Paste into Cursor, then paste the JSON array back here.');
+    showMsg($('upload-msg'),'ok','Prompt copied. Paste into Cursor, then paste the '+((fmt==='tsv')?'TSV table':'JSON array')+' back below.');
   }).catch(function(){showMsg($('upload-msg'),'err','Clipboard failed — select and copy manually.');});
 });
 
@@ -877,15 +1009,16 @@ async function saveStructuredToSheet(structured, cls, subj, fileName, opts){
   return res;
 }
 
-$('btn-apply-json').addEventListener('click',function(){
+$('btn-apply-paste').addEventListener('click',function(){
   clearMsg($('upload-msg'));
   if(!pendingUpload){ showMsg($('upload-msg'),'err','Extract a PDF first (Upload & Extract).'); return; }
   var cls=pendingUpload.cls, subj=pendingUpload.subj, fileName=pendingUpload.fileName;
+  var fmt=($('paste-format')&&$('paste-format').value)||'json';
   var structured;
-  try{ structured=parseChaptersJson($('paste-json').value); }
+  try{ structured=parsePastedStructure($('paste-json').value,fmt); }
   catch(e){ showMsg($('upload-msg'),'err',e.message); return; }
 
-  $('btn-apply-json').disabled=true;
+  $('btn-apply-paste').disabled=true;
   saveStructuredToSheet(structured, cls, subj, fileName,{
     extractedText:pendingUpload.extractedText||'',
     bookTitle:pendingUpload.bookTitle||''
@@ -901,7 +1034,7 @@ $('btn-apply-json').addEventListener('click',function(){
     }, 800);
   }).catch(function(err){
     showMsg($('upload-msg'),'err','❌ '+err.message);
-  }).finally(function(){ $('btn-apply-json').disabled=false; });
+  }).finally(function(){ $('btn-apply-paste').disabled=false; });
 });
 
 $('btn-upload').addEventListener('click', handleUpload);
