@@ -21,6 +21,12 @@ Then open `http://localhost:8080/index.html`.
 
 Data is stored in **localStorage** in this browser (library + outlines). Use **Export JSON** to back up a syllabus.
 
+## ConvertAPI (optional PDF→TXT)
+
+- Paste your **[ConvertAPI token](https://www.convertapi.com/a/authentication)** (Bearer auth — **never** commit tokens in HTML files). The app stores it only in **localStorage** on your machine.
+- **ConvertAPI PDF→TXT** uploads the **whole open PDF** via `POST https://v2.convertapi.com/convert/pdf/to/txt` with **OcrMode** auto / never / force.
+- If the browser shows **Failed to fetch**, ConvertAPI may block **cross-origin** browser calls for your account — use their docs or a tiny **server proxy** instead.
+
 ## Scan (OCR)
 
 - **Scan page** / **Scan all pages** run **Tesseract.js** in the browser (toolbar **OCR langs**: Urdu+English, Arabic+Urdu+English, or English only). Language files load from GitHub (`naptha/tessdata` `4.0.0`, gzipped); first run downloads them.

@@ -279,20 +279,7 @@
       align-items: center;
       margin-top: 0.35rem;
     }
-    .extract-toolbar a.external-tool-link {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.25rem 0.5rem;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      background: var(--border);
-      color: var(--text);
-      text-decoration: none;
-    }
-    .extract-toolbar a.external-tool-link:hover {
-      filter: brightness(1.08);
-    }
+    .extract-toolbar label {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
@@ -430,22 +417,33 @@
         <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
           <strong>Visual:</strong> Use <strong>All pages (visual)</strong> to see every page exactly as printed (best when Extract shows garbage). Extract/Scan still work from the current page number in single-page view.
           In-browser OCR is weaker than <strong>desktop OCR</strong> (Adobe Acrobat, ABBYY, or upload PDF to Google Drive → open with Google Docs).
-          <strong>External:</strong>
-          <a href="https://iconictoolshub.com/pdf-to-text" target="_blank" rel="noopener noreferrer">Iconic Tools Hub PDF→text</a>
-          (new tab) — upload the PDF there, copy the result, paste into the box below. We cannot embed their tool; privacy is between you and that site.
+          <strong>ConvertAPI:</strong> optional PDF→TXT via your own token (below). Uses their servers; token stays in this browser only — do not put secrets in shared HTML files.
         </p>
+        <div class="row" style="margin-bottom:0.35rem;">
+          <label for="convertApiToken" style="flex:1;min-width:140px;margin:0;">ConvertAPI token</label>
+        </div>
+        <input
+          type="password"
+          id="convertApiToken"
+          autocomplete="off"
+          placeholder="Paste API token from convertapi.com dashboard"
+          style="margin-bottom:0.35rem;"
+        />
+        <div class="row" style="margin-bottom:0.35rem;">
+          <label for="convertApiOcrMode" style="margin:0;font-size:0.72rem;color:var(--muted);">OCR mode</label>
+          <select id="convertApiOcrMode" style="flex:1;max-width:12rem;font-size:0.78rem;padding:0.25rem;">
+            <option value="auto" selected>Auto</option>
+            <option value="never">Never (text layer only)</option>
+            <option value="force">Force (all pages)</option>
+          </select>
+          <button type="button" class="secondary small" id="convertApiClearToken" title="Remove saved token from this browser">Clear token</button>
+        </div>
         <div class="extract-toolbar">
           <label><input type="checkbox" id="extractRtl" /> Force RTL (Urdu)</label>
           <button type="button" class="secondary small" id="exportWord" title="Download .docx for Microsoft Word">Download Word (.docx)</button>
-          <a
-            id="externalPdfToText"
-            class="external-tool-link"
-            href="https://iconictoolshub.com/pdf-to-text"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Opens in a new tab — upload your PDF there, then copy text back here"
-            >External PDF → text</a
-          >
+          <button type="button" class="small" id="convertApiPdfToTxt" title="POST full PDF to ConvertAPI (Bearer token) — full-document text">
+            ConvertAPI PDF→TXT
+          </button>
         </div>
         <div class="scan-progress" id="scanProgress" aria-live="polite">
           <span id="scanProgressText"></span>
@@ -481,6 +479,7 @@
     const STORAGE_BOOKS = "syllabusDesigner_books_v1";
     const STORAGE_SYLLABI = "syllabusDesigner_syllabi_v1";
     const STORAGE_ACTIVE = "syllabusDesigner_activeBook_v1";
+    const STORAGE_CONVERTAPI_TOKEN = "syllabusDesigner_convertApiToken_v1";
 
     const els = {
       bookTitle: document.getElementById("bookTitle"),
@@ -517,6 +516,10 @@
       syllabusRoot: document.getElementById("syllabusRoot"),
       addRootTopic: document.getElementById("addRootTopic"),
       exportSyllabus: document.getElementById("exportSyllabus"),
+      convertApiToken: document.getElementById("convertApiToken"),
+      convertApiOcrMode: document.getElementById("convertApiOcrMode"),
+      convertApiPdfToTxt: document.getElementById("convertApiPdfToTxt"),
+      convertApiClearToken: document.getElementById("convertApiClearToken"),
     };
 
     let books = loadJson(STORAGE_BOOKS, []);
@@ -852,6 +855,7 @@
         els.prevPage,
         els.nextPage,
         els.toggleVisualPages,
+        els.convertApiPdfToTxt,
       ].forEach((el) => {
         if (el) el.disabled = busy;
       });
@@ -1051,6 +1055,82 @@
       } catch (e) {
         console.error(e);
         setExtractContent("Extract failed: " + String(e.message || e), { isPlaceholder: true });
+      }
+    }
+
+    function decodeConvertApiBase64Utf8(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    function persistConvertApiToken() {
+      const t = els.convertApiToken?.value?.trim();
+      if (t) localStorage.setItem(STORAGE_CONVERTAPI_TOKEN, t);
+      else localStorage.removeItem(STORAGE_CONVERTAPI_TOKEN);
+    }
+
+    async function convertFullPdfViaConvertApi() {
+      if (!pdfDoc) {
+        setExtractContent("Open a PDF first.", { isPlaceholder: true });
+        return;
+      }
+      const token = els.convertApiToken?.value?.trim();
+      if (!token) {
+        alert("Paste your ConvertAPI token from https://www.convertapi.com/a/authentication — it is saved only in this browser.");
+        return;
+      }
+      persistConvertApiToken();
+      const ocrMode = els.convertApiOcrMode?.value || "auto";
+      setToolbarBusy(true);
+      setScanUiVisible(true, false);
+      setScanProgressLabel("Sending PDF to ConvertAPI…", 0.2);
+      try {
+        const pdfBytes = await pdfDoc.getData();
+        const title = getActiveBook()?.title?.trim() || "document";
+        const safeName = title.replace(/[^\w.\-]+/g, "_").slice(0, 80) || "document";
+        const fd = new FormData();
+        fd.append("File", new Blob([pdfBytes], { type: "application/pdf" }), `${safeName}.pdf`);
+        fd.append("OcrMode", ocrMode);
+        fd.append("OcrLanguage", "auto");
+        const res = await fetch("https://v2.convertapi.com/convert/pdf/to/txt", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+        setScanProgressLabel("Reading response…", 0.75);
+        let text = "";
+        if (ct.includes("application/json")) {
+          const j = await res.json();
+          if (!res.ok)
+            throw new Error(j?.Message || j?.message || JSON.stringify(j) || res.statusText);
+          const file = j.Files?.[0];
+          if (!file?.FileData) throw new Error("Unexpected ConvertAPI response (no Files[0].FileData)");
+          text = decodeConvertApiBase64Utf8(file.FileData);
+        } else {
+          const raw = await res.text();
+          if (!res.ok) throw new Error(raw || res.statusText);
+          text = raw;
+        }
+        const out = text.trim();
+        if (!out)
+          setExtractContent("(ConvertAPI returned empty text — try OCR mode Force if this is a scan.)", {
+            isPlaceholder: true,
+          });
+        else setExtractContent(out);
+      } catch (e) {
+        console.error(e);
+        const msg = String(e.message || e);
+        const corsHint =
+          msg.includes("Failed to fetch") || msg.includes("NetworkError")
+            ? " Blocked by browser CORS or network — ConvertAPI may only allow server-side calls from your plan; use a small backend proxy."
+            : "";
+        setExtractContent("ConvertAPI failed: " + msg + corsHint, { isPlaceholder: true });
+      } finally {
+        setScanUiVisible(false);
+        setToolbarBusy(false);
       }
     }
 
@@ -1310,6 +1390,24 @@
 
     renderBookList();
     renderSyllabus();
+    if (els.convertApiToken) {
+      const savedTok = localStorage.getItem(STORAGE_CONVERTAPI_TOKEN);
+      if (savedTok) els.convertApiToken.value = savedTok;
+    }
+    els.convertApiToken?.addEventListener("change", persistConvertApiToken);
+    els.convertApiToken?.addEventListener("blur", persistConvertApiToken);
+    els.convertApiClearToken?.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_CONVERTAPI_TOKEN);
+      if (els.convertApiToken) els.convertApiToken.value = "";
+    });
+    els.convertApiPdfToTxt?.addEventListener("click", () => {
+      convertFullPdfViaConvertApi().catch((err) => {
+        console.error(err);
+        setExtractContent("ConvertAPI error: " + String(err.message || err), { isPlaceholder: true });
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      });
+    });
     syncExtractDirection();
     updateExtractFontProbe();
     if (books.length) {
