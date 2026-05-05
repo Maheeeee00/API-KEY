@@ -519,22 +519,29 @@
       let arabic = 0;
       let latin = 0;
       let cjk = 0;
+      let cyrillic = 0;
       let replacement = 0;
       const arabicRe = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
       const cjkRe = /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/;
+      const cyrillicRe = /[\u0400-\u04FF]/;
       for (const ch of s) {
         if (ch === "\uFFFD") replacement++;
         if (arabicRe.test(ch)) arabic++;
         else if (/[A-Za-z]/.test(ch)) latin++;
         else if (cjkRe.test(ch)) cjk++;
+        else if (cyrillicRe.test(ch)) cyrillic++;
       }
-      return { arabic, latin, cjk, replacement, len: s.length };
+      return { arabic, latin, cjk, cyrillic, replacement, len: s.length };
     }
 
     function looksLikeBrokenPdfEncoding(text) {
-      if (!text || text.length < 24) return false;
+      if (!text || text.length < 12) return false;
       const st = scriptStats(text);
       if (st.replacement >= 2 || st.replacement / st.len > 0.015) return true;
+      /* Mojibake Urdu PDFs often decode as random Han/Hangul/Japanese — should not appear in real Urdu text layer */
+      if (st.cjk >= 2) return true;
+      if (st.len >= 24 && st.cjk >= 1 && st.arabic >= 2) return true;
+      if (st.cyrillic >= 4) return true;
       if (st.len > 40 && st.arabic < 6 && st.latin + st.cjk > 20 && st.latin + st.cjk > st.arabic * 5)
         return true;
       return false;
@@ -563,7 +570,7 @@
       if (looksLikeBrokenPdfEncoding(text)) {
         el.classList.add("visible");
         el.textContent =
-          "These characters look like a broken PDF text layer (wrong Unicode mapping), not a missing font. Try another PDF file or use OCR for scanned books.";
+          "This is not a font problem — the PDF’s hidden text is corrupted (wrong encoding). Extract cannot fix it. Use Scan page (OCR) or try another PDF / Google Drive → Open with Google Docs.";
       } else {
         el.classList.remove("visible");
         el.textContent = "";
