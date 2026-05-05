@@ -27,7 +27,7 @@ Data is stored in **localStorage** in this browser (library + outlines). Use **E
 ## Extractor (Urdu + Word)
 
 - After each extract, direction is chosen automatically: **Arabic/Urdu script → RTL**, mostly **Latin → LTR**. Use **Force RTL** to override; toggling it stops auto-updates until the next placeholder message clears.
-- **RTL** display: if **`DimaMitra.ttf`** sits next to `index.html`, the app uses **Dima Mitra** first; otherwise **Jameel Noori** (if installed) and embedded **Noto Nastaliq Urdu**. **LTR** uses a clean system sans stack.
-- **Download Word (.docx)**: when RTL, requests **Dima Mitra** (install that font in Word if you use it); otherwise falls back to whatever Word substitutes. When LTR, **Calibri**.
+- **RTL** display: if **`DimaMitra.ttf`** sits next to `index.html`, the app prefers **`Dima Mitra `** (trailing space, same as many Swift `custom` names) and **`Dima Mitra`**, then Jameel/Noto. **LTR** uses a clean system sans stack.
+- **Download Word (.docx)**: when RTL, requests **`Dima Mitra `** (install the font so Word matches). When LTR, **Calibri**.
 - If extracted text shows **random Latin/CJK symbols or �**, the PDF’s **text mapping is wrong** — no font change fixes that; try another PDF or OCR.
 

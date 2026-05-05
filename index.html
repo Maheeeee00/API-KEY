@@ -5,13 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Book syllabus designer</title>
   <style>
-    /* Optional: place DimaMitra.ttf next to index.html (same idea as UIAppFonts + file in iOS bundle). */
+    /* Optional: place DimaMitra.ttf next to index.html. Font internal name may include trailing space (Swift: "Dima Mitra "). */
+    @font-face {
+      font-family: "Dima Mitra ";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src:
+        local("Dima Mitra "),
+        local("Dima Mitra"),
+        local("DimaMitra"),
+        url("./DimaMitra.ttf") format("truetype");
+    }
     @font-face {
       font-family: "Dima Mitra";
       font-style: normal;
       font-weight: 400;
       font-display: swap;
       src:
+        local("Dima Mitra "),
         local("Dima Mitra"),
         local("DimaMitra"),
         url("./DimaMitra.ttf") format("truetype");
@@ -217,13 +229,14 @@
       direction: rtl;
       text-align: right;
       font-family:
+        "Dima Mitra ",
         "Dima Mitra",
-        "DimaMitra",
+        DimaMitra,
         "Jameel Noori Nastaleeq",
         "Noto Nastaliq Urdu",
         "Urdu Typesetting",
         "Traditional Arabic",
-        serif;
+        sans-serif;
       font-size: 1.14rem;
       line-height: 2.15;
       font-synthesis: none;
@@ -922,7 +935,7 @@
         return;
       }
       const rtl = els.extractRtl.checked;
-      const wordFont = rtl ? "Dima Mitra" : "Calibri";
+      const wordFont = rtl ? "Dima Mitra " : "Calibri";
       const blocks = body
         .split(/\n\s*\n/)
         .map((s) => s.replace(/\s+/g, " ").trim())
