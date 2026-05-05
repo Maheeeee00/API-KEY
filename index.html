@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Book syllabus designer</title>
   <style>
+    /* Optional: place DimaMitra.ttf next to index.html (same idea as UIAppFonts + file in iOS bundle). */
+    @font-face {
+      font-family: "Dima Mitra";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src:
+        local("Dima Mitra"),
+        local("DimaMitra"),
+        url("./DimaMitra.ttf") format("truetype");
+    }
     /* Embedded fallback so Urdu shapes even when Google Fonts is blocked and Jameel is not installed */
     @font-face {
       font-family: "Noto Nastaliq Urdu";
@@ -205,7 +216,14 @@
     .extract-box.rtl {
       direction: rtl;
       text-align: right;
-      font-family: "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", "Urdu Typesetting", "Traditional Arabic", serif;
+      font-family:
+        "Dima Mitra",
+        "DimaMitra",
+        "Jameel Noori Nastaleeq",
+        "Noto Nastaliq Urdu",
+        "Urdu Typesetting",
+        "Traditional Arabic",
+        serif;
       font-size: 1.14rem;
       line-height: 2.15;
       font-synthesis: none;
@@ -897,7 +915,7 @@
         return;
       }
       const rtl = els.extractRtl.checked;
-      const wordFont = rtl ? "Jameel Noori Nastaleeq" : "Calibri";
+      const wordFont = rtl ? "Dima Mitra" : "Calibri";
       const blocks = body
         .split(/\n\s*\n/)
         .map((s) => s.replace(/\s+/g, " ").trim())
