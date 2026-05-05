@@ -235,7 +235,8 @@
       extractBtn.disabled = true;
       setStatus('Extracting…');
       try {
-        const text = await extractTextFromPdf(currentBuffer);
+        // pdf.js may detach the ArrayBuffer when loading; clone each run so repeat extracts work.
+        const text = await extractTextFromPdf(currentBuffer.slice(0));
         output.value = text || '(No text layer found in this PDF.)';
         output.readOnly = false;
         copyBtn.disabled = !text;
