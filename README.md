@@ -12,6 +12,8 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080/index.html`.
 
+**All pages (visual):** toolbar button that draws every page as an image so Urdu/English look exactly as in the PDF (ignores a broken text layer). Large books can be slow; zoom may prompt to re-draw.
+
 ## Limits
 
 - **Cross-origin URLs**: Many hosts do not allow browsers to fetch PDFs from another origin (CORS). If loading by URL fails, download the PDF and use **Open local PDF**.

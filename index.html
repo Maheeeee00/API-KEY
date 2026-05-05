@@ -204,6 +204,21 @@
       gap: 0.75rem;
     }
     canvas { max-width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.45); background: #fff; }
+    .pdf-pages-stack {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem 0 1rem;
+    }
+    .pdf-pages-stack canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+      background: #fff;
+    }
     .notice {
       font-size: 0.78rem;
       color: var(--muted);
@@ -378,7 +393,9 @@
         <button type="button" class="small" id="extractPage">Extract text (this page)</button>
         <button type="button" class="small" id="scanPage" title="OCR — read text from the page image (Urdu + English)">Scan page (OCR)</button>
         <button type="button" class="secondary small" id="scanAll" title="OCR every page — slow for large books">Scan all pages</button>
-        <button type="button" class="secondary small" id="zoomOut">−</button>
+        <button type="button" class="secondary small" id="toggleVisualPages" disabled title="Show every page as a picture — exact Urdu/English as printed (no text extract)">
+          All pages (visual)
+        </button>
         <button type="button" class="secondary small" id="zoomIn">+</button>
         <label class="ocr-lang-label" for="ocrLang" title="First scan downloads selected languages (~large for ara+urd+eng)">
           OCR langs
@@ -392,12 +409,13 @@
       <div class="pdf-scroll" id="pdfScroll">
         <p id="pdfPlaceholder" style="color:var(--muted);text-align:center;margin-top:2rem;">Select a book or open a PDF.</p>
         <canvas id="pdfCanvas" class="hidden"></canvas>
+        <div id="pdfPagesStack" class="pdf-pages-stack hidden" aria-label="All pages as images"></div>
         <canvas id="ocrCanvas" class="hidden" aria-hidden="true"></canvas>
       </div>
       <div class="panel-body" style="border-top:1px solid var(--border);max-height:420px;">
         <strong style="font-size:0.8rem;">Extracted / scanned text</strong>
         <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
-          <strong>Urdu:</strong> Garbled <strong>Extract</strong> = bad PDF text mapping → use <strong>Scan</strong>. Install <strong>Jameel Noori Nastaleeq</strong> on your PC for Word/display.
+          <strong>Visual:</strong> Use <strong>All pages (visual)</strong> to see every page exactly as printed (best when Extract shows garbage). Extract/Scan still work from the current page number in single-page view.
           In-browser OCR is weaker than <strong>desktop OCR</strong> (Adobe Acrobat, ABBYY, or upload PDF to Google Drive → open with Google Docs).
           Try OCR langs <strong>Arabic + Urdu + English</strong> if Urdu scan is poor.
         </p>
@@ -469,6 +487,8 @@
       exportWord: document.getElementById("exportWord"),
       zoomIn: document.getElementById("zoomIn"),
       zoomOut: document.getElementById("zoomOut"),
+      toggleVisualPages: document.getElementById("toggleVisualPages"),
+      pdfPagesStack: document.getElementById("pdfPagesStack"),
       ocrLang: document.getElementById("ocrLang"),
       syllabusRoot: document.getElementById("syllabusRoot"),
       addRootTopic: document.getElementById("addRootTopic"),
@@ -492,6 +512,9 @@
     let ocrWorkerLangKey = null;
     let scanInProgress = false;
     let scanCancelled = false;
+    /** Stack of page images — shows Urdu exactly as printed (bypasses broken text layer). */
+    let visualAllPagesMode = false;
+    let visualPagesRendering = false;
 
     function loadJson(key, fallback) {
       try {
@@ -648,9 +671,22 @@
       }
     }
 
+    function emptyPdfPagesStack() {
+      if (els.pdfPagesStack) els.pdfPagesStack.innerHTML = "";
+    }
+
     function clearPdfView() {
       pdfDoc = null;
       currentPage = 1;
+      visualAllPagesMode = false;
+      visualPagesRendering = false;
+      emptyPdfPagesStack();
+      if (els.pdfPagesStack) els.pdfPagesStack.classList.add("hidden");
+      if (els.toggleVisualPages) {
+        els.toggleVisualPages.textContent = "All pages (visual)";
+        els.toggleVisualPages.classList.add("secondary");
+        els.toggleVisualPages.disabled = true;
+      }
       if (els.pdfCanvas) els.pdfCanvas.classList.add("hidden");
       if (els.pdfPlaceholder) els.pdfPlaceholder.classList.remove("hidden");
       els.pageNum.textContent = "0";
@@ -661,15 +697,72 @@
       }
     }
 
+    function applyPdfViewMode() {
+      const vis = !!(visualAllPagesMode && pdfDoc);
+      if (els.pdfCanvas) {
+        if (pdfDoc && !vis) els.pdfCanvas.classList.remove("hidden");
+        else els.pdfCanvas.classList.add("hidden");
+      }
+      if (els.pdfPagesStack) {
+        if (vis) els.pdfPagesStack.classList.remove("hidden");
+        else els.pdfPagesStack.classList.add("hidden");
+      }
+      if (els.toggleVisualPages) {
+        els.toggleVisualPages.textContent = vis ? "Single page view" : "All pages (visual)";
+      }
+    }
+
+    function scrollVisualPageIntoView(pageNum) {
+      const c = els.pdfPagesStack?.querySelector(`canvas[data-page="${pageNum}"]`);
+      c?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function renderAllPagesVisual() {
+      if (!pdfDoc || !els.pdfPagesStack || visualPagesRendering) return;
+      visualPagesRendering = true;
+      emptyPdfPagesStack();
+      const total = pdfDoc.numPages;
+      const stackScale = Math.min(scale, 2);
+      try {
+        for (let p = 1; p <= total; p++) {
+          if (!visualAllPagesMode || !pdfDoc) break;
+          const page = await pdfDoc.getPage(p);
+          const viewport = page.getViewport({ scale: stackScale });
+          const c = document.createElement("canvas");
+          c.dataset.page = String(p);
+          c.width = viewport.width;
+          c.height = viewport.height;
+          const ctx = c.getContext("2d");
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          els.pdfPagesStack.appendChild(c);
+          if (p % 2 === 0) await new Promise((r) => requestAnimationFrame(r));
+        }
+      } finally {
+        visualPagesRendering = false;
+        if (visualAllPagesMode && pdfDoc) scrollVisualPageIntoView(currentPage);
+      }
+    }
+
+    async function refreshVisualStackAfterZoom() {
+      if (!visualAllPagesMode || !pdfDoc || visualPagesRendering) return;
+      const total = pdfDoc.numPages;
+      if (total > 35) {
+        const ok = confirm(`Re-draw all ${total} pages at the new zoom? This may take a while.`);
+        if (!ok) return;
+      }
+      await renderAllPagesVisual();
+    }
+
     async function loadPdfFromUrl(url) {
       clearPdfView();
       try {
         const task = pdfjsLib.getDocument({ url, withCredentials: false });
         pdfDoc = await task.promise;
         if (els.pdfPlaceholder) els.pdfPlaceholder.classList.add("hidden");
-        if (els.pdfCanvas) els.pdfCanvas.classList.remove("hidden");
         currentPage = 1;
         els.pageCount.textContent = String(pdfDoc.numPages);
+        if (els.toggleVisualPages) els.toggleVisualPages.disabled = false;
+        applyPdfViewMode();
         await renderPage();
       } catch (e) {
         console.error(e);
@@ -688,9 +781,10 @@
         const task = pdfjsLib.getDocument({ data: buf });
         pdfDoc = await task.promise;
         if (els.pdfPlaceholder) els.pdfPlaceholder.classList.add("hidden");
-        if (els.pdfCanvas) els.pdfCanvas.classList.remove("hidden");
         currentPage = 1;
         els.pageCount.textContent = String(pdfDoc.numPages);
+        if (els.toggleVisualPages) els.toggleVisualPages.disabled = false;
+        applyPdfViewMode();
         await renderPage();
       } catch (e) {
         console.error(e);
@@ -708,6 +802,7 @@
       canvas.height = viewport.height;
       await page.render({ canvasContext: ctx, viewport }).promise;
       els.pageNum.textContent = String(currentPage);
+      if (visualAllPagesMode) scrollVisualPageIntoView(currentPage);
     }
 
     function setScanUiVisible(visible, showCancel = false) {
@@ -726,7 +821,14 @@
     }
 
     function setToolbarBusy(busy) {
-      [els.extractPage, els.scanPage, els.scanAll, els.prevPage, els.nextPage].forEach((el) => {
+      [
+        els.extractPage,
+        els.scanPage,
+        els.scanAll,
+        els.prevPage,
+        els.nextPage,
+        els.toggleVisualPages,
+      ].forEach((el) => {
         if (el) el.disabled = busy;
       });
     }
@@ -1139,11 +1241,21 @@
     });
     els.zoomIn.addEventListener("click", async () => {
       scale = Math.min(scale + 0.15, 2.5);
-      await renderPage();
+      if (visualAllPagesMode) await refreshVisualStackAfterZoom();
+      else await renderPage();
     });
     els.zoomOut.addEventListener("click", async () => {
       scale = Math.max(scale - 0.15, 0.5);
-      await renderPage();
+      if (visualAllPagesMode) await refreshVisualStackAfterZoom();
+      else await renderPage();
+    });
+
+    els.toggleVisualPages?.addEventListener("click", async () => {
+      if (!pdfDoc || visualPagesRendering) return;
+      visualAllPagesMode = !visualAllPagesMode;
+      applyPdfViewMode();
+      if (visualAllPagesMode) await renderAllPagesVisual();
+      else await renderPage();
     });
 
     els.addRootTopic.addEventListener("click", () => {
