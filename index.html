@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF → Text (Noori & Times New Roman)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --fg: #1a1a1a;
+      --border: #cfd4dc;
+      --accent: #2563eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121418;
+        --fg: #e8eaed;
+        --border: #3d4450;
+        --accent: #60a5fa;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      padding: 1.25rem;
+      max-width: 56rem;
+      margin-inline: auto;
+    }
+    h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 1rem; }
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      background: color-mix(in srgb, var(--bg) 92%, white);
+    }
+    @media (prefers-color-scheme: dark) {
+      .panel { background: color-mix(in srgb, var(--bg) 85%, black); }
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+    label { font-size: 0.875rem; font-weight: 500; }
+    input[type="file"] { font-size: 0.85rem; max-width: 100%; }
+    select, button {
+      font: inherit;
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+    }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+      font-weight: 500;
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    button.secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    textarea {
+      width: 100%;
+      min-height: 280px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      line-height: 1.65;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+      resize: vertical;
+    }
+    .output-visual {
+      width: 100%;
+      min-height: 280px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      line-height: 1.65;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .output-visual .mixed-line {
+      display: block;
+      width: 100%;
+      direction: ltr;
+      text-align: start;
+    }
+    /* Isolated runs: English reads left-to-right, Urdu/Arabic right-to-left */
+    .output-visual .run-ltr {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline;
+      text-align: left;
+    }
+    .output-visual .run-rtl {
+      direction: rtl;
+      unicode-bidi: isolate;
+      display: inline;
+      text-align: right;
+    }
+    .mixed-font-noori .run-ltr {
+      font-family: 'Times New Roman', Times, serif;
+    }
+    .mixed-font-noori .run-rtl {
+      font-family:
+        'Jameel Noori Nastaleeq',
+        'Jameel Noori Nastaleeq LT',
+        'Jameel Noori',
+        'Jameel Noori Regular',
+        'Alvi Nastaleeq',
+        'Noori Nastaleeq',
+        'BundledUrdu',
+        'Noto Nastaliq Urdu',
+        serif;
+      font-feature-settings: 'liga' 1, 'calt' 1;
+    }
+    .mixed-font-times .run-ltr,
+    .mixed-font-times .run-rtl {
+      font-family: 'Times New Roman', Times, serif;
+    }
+    /*
+      Urdu preview: prefer fonts installed on the OS (Jameel Noori is common on Windows).
+      Do not register a webfont under the name "Noori" — that prevented local("Jameel Noori…") from matching.
+      Optional bundled files use the separate family name "BundledUrdu".
+    */
+    @font-face {
+      font-family: 'BundledUrdu';
+      src:
+        url('fonts/noori.woff2') format('woff2'),
+        url('fonts/noori.ttf') format('truetype'),
+        url('fonts/Noori.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    textarea.font-noori {
+      font-family:
+        'Jameel Noori Nastaleeq',
+        'Jameel Noori Nastaleeq LT',
+        'Jameel Noori',
+        'Jameel Noori Regular',
+        'Alvi Nastaleeq',
+        'Noori Nastaleeq',
+        'BundledUrdu',
+        'Noto Nastaliq Urdu',
+        serif;
+      direction: rtl;
+      text-align: right;
+      font-feature-settings: 'liga' 1, 'calt' 1;
+    }
+    textarea.font-times {
+      font-family: 'Times New Roman', Times, serif;
+      direction: ltr;
+      text-align: left;
+    }
+    .inline-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+    }
+    .inline-check input { cursor: pointer; }
+    .hint { font-size: 0.8rem; opacity: 0.85; margin-top: 0.5rem; }
+    .status { font-size: 0.85rem; margin-top: 0.35rem; min-height: 1.25em; }
+    .status.error { color: #dc2626; }
+    @media (prefers-color-scheme: dark) {
+      .status.error { color: #f87171; }
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF text extractor</h1>
+  <div class="panel">
+    <div class="row">
+      <label for="pdf-input">PDF file</label>
+      <input id="pdf-input" type="file" accept="application/pdf,.pdf" />
+      <button type="button" id="extract-btn" disabled>Extract text</button>
+      <button type="button" id="copy-btn" class="secondary" disabled>Copy</button>
+    </div>
+    <div class="row">
+      <label for="font-select">Preview font</label>
+      <select id="font-select">
+        <option value="noori">Urdu (Jameel / Noori / Noto)</option>
+        <option value="times">Times New Roman</option>
+      </select>
+      <label class="inline-check"><input type="checkbox" id="cleanup-check" checked /> Simple text (drop garbled Urdu lines)</label>
+      <label class="inline-check"><input type="checkbox" id="bidi-check" checked /> Mixed layout (English LTR / Urdu RTL)</label>
+    </div>
+    <textarea id="output" class="font-noori" lang="ur" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly hidden></textarea>
+    <div id="output-visual" class="output-visual mixed-font-noori" role="region" aria-label="Extracted text preview"></div>
+    <p class="hint">
+      Many textbook PDFs store Urdu with custom fonts: extraction can show random Latin/CJK symbols (<strong>not fixable</strong> by choosing Jameel Noori). Enable <strong>Simple text</strong> to drop those lines so English exercises stay readable. Text is <strong>reassembled</strong> by position (lines top-to-bottom, words left-to-right or right-to-left for Arabic script lines).
+      <strong>Mixed layout</strong> shows Latin text left-to-right and Arabic-script text right-to-left (same characters as extraction — use <strong>Copy</strong> for the exact plain text). Turn it off for a single-direction editor.
+    </p>
+    <div id="status" class="status" aria-live="polite"></div>
+  </div>
+
+  <script type="module">
+    import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+
+    const pdfInput = document.getElementById('pdf-input');
+    const extractBtn = document.getElementById('extract-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const fontSelect = document.getElementById('font-select');
+    const cleanupCheck = document.getElementById('cleanup-check');
+    const bidiCheck = document.getElementById('bidi-check');
+    const output = document.getElementById('output');
+    const outputVisual = document.getElementById('output-visual');
+    const statusEl = document.getElementById('status');
+
+    let currentBuffer = null;
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg || '';
+      statusEl.classList.toggle('error', Boolean(isError && msg));
+    }
+
+    pdfInput.addEventListener('change', () => {
+      const f = pdfInput.files?.[0];
+      extractBtn.disabled = !f;
+      copyBtn.disabled = true;
+      output.value = '';
+      outputVisual.innerHTML = '';
+      setStatus('');
+      if (!f) {
+        currentBuffer = null;
+        return;
+      }
+      f.arrayBuffer().then((buf) => {
+        currentBuffer = buf.slice(0);
+      });
+    });
+
+    function applyFontClasses() {
+      output.classList.remove('font-noori', 'font-times');
+      outputVisual.classList.remove('mixed-font-noori', 'mixed-font-times');
+      if (fontSelect.value === 'times') {
+        output.classList.add('font-times');
+        output.lang = 'en';
+        outputVisual.classList.add('mixed-font-times');
+      } else {
+        output.classList.add('font-noori');
+        output.lang = 'ur';
+        outputVisual.classList.add('mixed-font-noori');
+      }
+      refreshOutputVisual();
+    }
+
+    fontSelect.addEventListener('change', applyFontClasses);
+
+    /** Split one line into LTR (Latin etc.) and RTL (Arabic script) runs for mixed display. */
+    function segmentLine(line) {
+      const runs = [];
+      let buf = '';
+      /** @type {'rtl' | 'ltr' | null} */
+      let dir = null;
+
+      function flush() {
+        if (!buf) return;
+        runs.push({ dir: dir === 'rtl' ? 'rtl' : 'ltr', text: buf });
+        buf = '';
+        dir = null;
+      }
+
+      for (const ch of line) {
+        let d = null;
+        if (/\p{Script=Arabic}/u.test(ch)) d = 'rtl';
+        else if (/\p{Script=Latin}/u.test(ch)) d = 'ltr';
+        else if (/[0-9\u0660-\u0669]/.test(ch)) d = dir || 'ltr';
+
+        if (d) {
+          if (dir !== null && d !== dir) flush();
+          dir = d;
+          buf += ch;
+        } else {
+          buf += ch;
+          if (dir === null) dir = 'ltr';
+        }
+      }
+      flush();
+      return runs.length ? runs : [{ dir: 'ltr', text: line }];
+    }
+
+    function escapeHtml(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderMixedHtml(text) {
+      const lines = text.split('\n');
+      return lines
+        .map((line) => {
+          if (!line) return '<span class="mixed-line">\u00a0</span>';
+          const runs = segmentLine(line);
+          const inner = runs
+            .map((r) => {
+              const cls = r.dir === 'rtl' ? 'run-rtl' : 'run-ltr';
+              return `<span class="${cls}" dir="${r.dir}">${escapeHtml(r.text)}</span>`;
+            })
+            .join('');
+          return `<span class="mixed-line">${inner}</span>`;
+        })
+        .join('<br>');
+    }
+
+    function refreshOutputVisual() {
+      if (!bidiCheck.checked) return;
+      const text = output.value;
+      outputVisual.innerHTML = text ? renderMixedHtml(text) : '';
+    }
+
+    function setMixedLayout(on) {
+      output.hidden = on;
+      outputVisual.hidden = !on;
+      if (on) {
+        output.readOnly = true;
+        refreshOutputVisual();
+      } else {
+        output.readOnly = false;
+      }
+    }
+
+    bidiCheck.addEventListener('change', () => setMixedLayout(bidiCheck.checked));
+
+    applyFontClasses();
+    setMixedLayout(bidiCheck.checked);
+
+    /** Lines that look like broken CID/custom-font Urdu (CJK/PUA/etc.) — not real Unicode Urdu. */
+    function isLikelyGarbledLine(line) {
+      if (!line.trim()) return false;
+      // CJK blocks + compatibility ideographs
+      if (/[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3200-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]/.test(line)) return true;
+      // Private use (often placeholder glyphs)
+      if (/[\uE000-\uF8FF]/.test(line)) return true;
+      return false;
+    }
+
+    function cleanupExtractedText(raw, dropGarbledLines) {
+      let s = raw.normalize('NFKC');
+      s = s.replace(/[\u200B-\u200D\uFEFF]/g, '');
+      s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+      s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      s = s.replace(/[ \t]+\n/g, '\n');
+      s = s.replace(/\n{3,}/g, '\n\n');
+
+      if (!dropGarbledLines) return s.trim();
+
+      const lines = s.split('\n');
+      const kept = [];
+      let dropped = 0;
+      for (const line of lines) {
+        if (isLikelyGarbledLine(line)) {
+          dropped += 1;
+          continue;
+        }
+        kept.push(line);
+      }
+      let out = kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+      return { text: out, droppedLines: dropped };
+    }
+
+    /**
+     * Build readable lines: cluster items by vertical position, sort each line in reading order,
+     * insert gaps between words where horizontal spacing is large.
+     */
+    function extractPageText(content) {
+      const rawItems = [];
+      for (const item of content.items) {
+        if (!item.str) continue;
+        const tr = item.transform;
+        const x = tr[4];
+        const y = tr[5];
+        const scale = Math.hypot(tr[0], tr[1]) || Math.hypot(tr[2], tr[3]) || 1;
+        const h = item.height || scale || 12;
+        let w = typeof item.width === 'number' && item.width > 0 ? item.width : 0;
+        if (!w) w = Math.max(h * 0.45 * item.str.length * 0.35, h * 0.25);
+        rawItems.push({ str: item.str, x, y, w, h });
+      }
+      if (!rawItems.length) return '';
+
+      const heights = rawItems.map((i) => i.h).sort((a, b) => a - b);
+      const medianH = heights[Math.floor(heights.length / 2)] || 12;
+      const lineEps = Math.max(3, medianH * 0.55);
+
+      rawItems.sort((a, b) => b.y - a.y);
+
+      const lines = [];
+      let bucket = [];
+      let anchorY = rawItems[0].y;
+
+      function flushBucket() {
+        if (!bucket.length) return;
+        const sample = bucket.map((i) => i.str).join('');
+        const letters = [...sample].filter((ch) => /\p{L}/u.test(ch));
+        const arabicCount = [...sample].filter((ch) => /\p{Script=Arabic}/u.test(ch)).length;
+        const rtl = letters.length > 0 && arabicCount / letters.length > 0.35;
+        bucket.sort((a, b) => (rtl ? b.x - a.x : a.x - b.x));
+
+        let out = '';
+        const spaceGap = medianH * 0.35;
+        for (let i = 0; i < bucket.length; i++) {
+          const it = bucket[i];
+          if (i > 0) {
+            const prev = bucket[i - 1];
+            let gap;
+            if (rtl) gap = prev.x - (it.x + it.w);
+            else gap = it.x - (prev.x + prev.w);
+            if (gap > spaceGap) out += ' ';
+          }
+          out += it.str;
+        }
+        lines.push(out);
+        bucket = [];
+      }
+
+      for (const it of rawItems) {
+        if (!bucket.length) {
+          bucket.push(it);
+          anchorY = it.y;
+          continue;
+        }
+        if (Math.abs(it.y - anchorY) <= lineEps) {
+          bucket.push(it);
+          anchorY = (anchorY * (bucket.length - 1) + it.y) / bucket.length;
+        } else {
+          flushBucket();
+          bucket.push(it);
+          anchorY = it.y;
+        }
+      }
+      flushBucket();
+
+      return lines.join('\n').trim();
+    }
+
+    async function extractTextFromPdf(data) {
+      const pdf = await pdfjsLib.getDocument({ data }).promise;
+      const parts = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent({ normalizeWhitespace: true });
+        const pageText = extractPageText(content);
+        if (pageText) parts.push(pageText);
+      }
+      return parts.join('\n\n');
+    }
+
+    extractBtn.addEventListener('click', async () => {
+      if (!currentBuffer) {
+        setStatus('Select a PDF file first.', true);
+        return;
+      }
+      extractBtn.disabled = true;
+      setStatus('Extracting…');
+      try {
+        // pdf.js may detach the ArrayBuffer when loading; clone each run so repeat extracts work.
+        const raw = await extractTextFromPdf(currentBuffer.slice(0));
+        const cleanup = cleanupExtractedText(raw, cleanupCheck.checked);
+        const text = typeof cleanup === 'string' ? cleanup : cleanup.text;
+        const dropped = typeof cleanup === 'string' ? 0 : cleanup.droppedLines;
+
+        output.value =
+          text ||
+          (cleanupCheck.checked && raw.trim()
+            ? '(All lines looked like broken encoding. Uncheck “Simple text” to see raw extraction.)'
+            : '(No text layer found in this PDF.)');
+        output.readOnly = bidiCheck.checked;
+        refreshOutputVisual();
+        copyBtn.disabled = !output.value.trim();
+
+        let msg = 'Done.';
+        if (!raw.trim()) msg = 'Done — no text in this PDF.';
+        else if (raw.trim() && !text && cleanupCheck.checked)
+          msg = 'Done — try turning off Simple text if everything was removed.';
+        else if (dropped > 0)
+          msg = `Done — removed ${dropped} garbled line(s) (bad Urdu encoding in PDF). English text should be clearer.`;
+        setStatus(msg);
+      } catch (e) {
+        console.error(e);
+        setStatus(e?.message || 'Failed to read PDF.', true);
+        copyBtn.disabled = true;
+      } finally {
+        extractBtn.disabled = false;
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+        setStatus('Copied to clipboard.');
+      } catch {
+        setStatus('Could not copy (clipboard permission).', true);
+      }
+    });
+  </script>
+</body>
+</html>
