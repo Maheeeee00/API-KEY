@@ -21,7 +21,8 @@ Data is stored in **localStorage** in this browser (library + outlines). Use **E
 
 ## Extractor (Urdu + Word)
 
-- The extractor uses **Jameel Noori Nastaleeq** when that font is installed locally (several common PostScript names are checked).
-- **Noto Nastaliq Urdu** is embedded via jsDelivr WOFF2 so Nastaliq shaping works even when Google Fonts is blocked or Jameel is missing.
+- After each extract, direction is chosen automatically: **Arabic/Urdu script → RTL**, mostly **Latin → LTR**. Use **Force RTL** to override; toggling it stops auto-updates until the next placeholder message clears.
+- **RTL** uses **Jameel Noori Nastaleeq** (if installed) and embedded **Noto Nastaliq Urdu** with larger line-height for clearer Nastaliq. **LTR** uses a clean system sans stack for English.
+- **Download Word (.docx)** uses **Jameel Noori Nastaleeq** when RTL is on, **Calibri** when LTR (standard on Windows Word).
 - If extracted text shows **random Latin/CJK symbols or �**, the PDF’s **text mapping is wrong** — no font change fixes that; try another PDF or OCR.
 

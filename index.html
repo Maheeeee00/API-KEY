@@ -175,16 +175,11 @@
       line-height: 1.4;
     }
     .extract-box {
-      font-family: "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", "Urdu Typesetting", "Traditional Arabic", serif;
-      font-size: 1.05rem;
-      line-height: 2;
-      font-synthesis: none;
-      font-variant-ligatures: common-ligatures contextual;
-      max-height: 200px;
+      max-height: 220px;
       overflow: auto;
       white-space: pre-wrap;
       word-break: break-word;
-      padding: 0.5rem;
+      padding: 0.55rem 0.65rem;
       background: var(--bg);
       border-radius: 6px;
       border: 1px solid var(--border);
@@ -194,6 +189,26 @@
     .extract-box.rtl {
       direction: rtl;
       text-align: right;
+      font-family: "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", "Urdu Typesetting", "Traditional Arabic", serif;
+      font-size: 1.14rem;
+      line-height: 2.15;
+      font-synthesis: none;
+      font-variant-ligatures: common-ligatures contextual;
+      font-feature-settings: "liga" 1, "calt" 1;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .extract-box.ltr {
+      direction: ltr;
+      text-align: left;
+      font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      letter-spacing: 0.015em;
+      font-variant-ligatures: normal;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
     }
     .extract-toolbar {
       display: flex;
@@ -290,16 +305,15 @@
       <div class="panel-body" style="border-top:1px solid var(--border);max-height:260px;">
         <strong style="font-size:0.8rem;">Extracted text</strong>
         <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
-          <strong>Jameel Noori Nastaleeq</strong> applies only if that font is installed (see bar below).
-          Otherwise text uses embedded <strong>Noto Nastaliq Urdu</strong>.
-          If you see random Latin/CJK symbols, the PDF’s text encoding is broken — changing font cannot fix it; use OCR or another PDF.
+          Text direction is set <strong>automatically</strong> after extract (Urdu → RTL, English → LTR). Use the checkbox to override.
+          Urdu uses Nastaliq fonts for clearer shaping; English uses a plain sans font.
         </p>
         <div class="extract-toolbar">
-          <label><input type="checkbox" id="extractRtl" checked /> Urdu (right‑to‑left)</label>
+          <label><input type="checkbox" id="extractRtl" /> Force RTL (Urdu)</label>
           <button type="button" class="secondary small" id="exportWord" title="Download .docx for Microsoft Word">Download Word (.docx)</button>
         </div>
         <div class="extract-encoding-warn" id="extractEncodingWarn"></div>
-        <div class="extract-box rtl" id="extractOutput" lang="ur" dir="rtl">—</div>
+        <div class="extract-box ltr" id="extractOutput" lang="en" dir="ltr">—</div>
         <div class="extract-font-line" id="extractFontLine" title="Computed font on the extractor box"></div>
       </div>
     </section>
@@ -362,6 +376,8 @@
     let currentObjectUrl = null;
     /** Latest plain text shown in the extractor (for Word export). */
     let lastExtractedPlain = "";
+    /** Until the user toggles “Force RTL”, direction follows each extraction automatically. */
+    let extractRtlFollowAuto = true;
 
     function loadJson(key, fallback) {
       try {
@@ -386,6 +402,14 @@
       if (!els.extractOutput) return;
       els.extractOutput.textContent = text;
       lastExtractedPlain = isPlaceholder ? "" : text;
+      if (isPlaceholder) {
+        extractRtlFollowAuto = true;
+        els.extractRtl.checked = false;
+        syncExtractDirection();
+      } else if (text.trim()) {
+        if (extractRtlFollowAuto) els.extractRtl.checked = inferRtlFromExtract(text);
+        syncExtractDirection();
+      }
       updateEncodingWarn(text, isPlaceholder);
       updateExtractFontProbe();
     }
@@ -415,6 +439,19 @@
       return false;
     }
 
+    /** Guess RTL (Urdu/Arabic script) vs LTR (English) from character counts. */
+    function inferRtlFromExtract(text) {
+      if (!text || !text.trim()) return false;
+      if (looksLikeBrokenPdfEncoding(text)) return false;
+      const st = scriptStats(text);
+      const { arabic, latin, len } = st;
+      if (len < 2) return false;
+      if (arabic >= 8 && arabic >= latin * 1.15) return true;
+      if (arabic >= 4 && arabic > latin * 1.8) return true;
+      if (arabic > latin && arabic >= 6) return true;
+      return false;
+    }
+
     function updateEncodingWarn(text, isPlaceholder) {
       const el = els.extractEncodingWarn;
       if (isPlaceholder || !text) {
@@ -438,7 +475,8 @@
         const cs = getComputedStyle(els.extractOutput);
         const fam = (cs.fontFamily || "").split(",")[0]?.trim().replace(/^["']|["']$/g, "") || "?";
         const size = cs.fontSize || "";
-        els.extractFontLine.textContent = `Font applied here: ${fam} · ${size}`;
+        const rtl = els.extractRtl.checked;
+        els.extractFontLine.textContent = `${rtl ? "RTL (Urdu-style)" : "LTR (English-style)"} · ${fam} · ${size}`;
       });
     }
 
@@ -446,6 +484,7 @@
       if (!els.extractOutput) return;
       const rtl = els.extractRtl.checked;
       els.extractOutput.classList.toggle("rtl", rtl);
+      els.extractOutput.classList.toggle("ltr", !rtl);
       els.extractOutput.style.direction = rtl ? "rtl" : "ltr";
       els.extractOutput.style.textAlign = rtl ? "right" : "left";
       els.extractOutput.setAttribute("dir", rtl ? "rtl" : "ltr");
@@ -587,6 +626,7 @@
         return;
       }
       const rtl = els.extractRtl.checked;
+      const wordFont = rtl ? "Jameel Noori Nastaleeq" : "Calibri";
       const blocks = body
         .split(/\n\s*\n/)
         .map((s) => s.replace(/\s+/g, " ").trim())
@@ -599,7 +639,7 @@
             children: [
               new TextRun({
                 text: t,
-                font: "Jameel Noori Nastaleeq",
+                font: wordFont,
                 rightToLeft: rtl,
               }),
             ],
@@ -612,7 +652,7 @@
           children: [
             new TextRun({
               text: title,
-              font: "Jameel Noori Nastaleeq",
+              font: wordFont,
               bold: true,
               rightToLeft: rtl,
             }),
@@ -753,7 +793,10 @@
       await renderPage();
     });
     els.extractPage.addEventListener("click", extractCurrentPageText);
-    els.extractRtl.addEventListener("change", syncExtractDirection);
+    els.extractRtl.addEventListener("change", () => {
+      extractRtlFollowAuto = false;
+      syncExtractDirection();
+    });
     els.exportWord.addEventListener("click", () => {
       exportExtractToWord().catch((err) => {
         console.error(err);
