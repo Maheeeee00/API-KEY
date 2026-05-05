@@ -86,6 +86,59 @@
       color: var(--fg);
       resize: vertical;
     }
+    .output-visual {
+      width: 100%;
+      min-height: 280px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      line-height: 1.65;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .output-visual .mixed-line {
+      display: block;
+      width: 100%;
+      direction: ltr;
+      text-align: start;
+    }
+    /* Isolated runs: English reads left-to-right, Urdu/Arabic right-to-left */
+    .output-visual .run-ltr {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline;
+      text-align: left;
+    }
+    .output-visual .run-rtl {
+      direction: rtl;
+      unicode-bidi: isolate;
+      display: inline;
+      text-align: right;
+    }
+    .mixed-font-noori .run-ltr {
+      font-family: 'Times New Roman', Times, serif;
+    }
+    .mixed-font-noori .run-rtl {
+      font-family:
+        'Jameel Noori Nastaleeq',
+        'Jameel Noori Nastaleeq LT',
+        'Jameel Noori',
+        'Jameel Noori Regular',
+        'Alvi Nastaleeq',
+        'Noori Nastaleeq',
+        'BundledUrdu',
+        'Noto Nastaliq Urdu',
+        serif;
+      font-feature-settings: 'liga' 1, 'calt' 1;
+    }
+    .mixed-font-times .run-ltr,
+    .mixed-font-times .run-rtl {
+      font-family: 'Times New Roman', Times, serif;
+    }
     /*
       Urdu preview: prefer fonts installed on the OS (Jameel Noori is common on Windows).
       Do not register a webfont under the name "Noori" — that prevented local("Jameel Noori…") from matching.
@@ -155,11 +208,13 @@
         <option value="times">Times New Roman</option>
       </select>
       <label class="inline-check"><input type="checkbox" id="cleanup-check" checked /> Simple text (drop garbled Urdu lines)</label>
+      <label class="inline-check"><input type="checkbox" id="bidi-check" checked /> Mixed layout (English LTR / Urdu RTL)</label>
     </div>
-    <textarea id="output" class="font-noori" lang="ur" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly></textarea>
+    <textarea id="output" class="font-noori" lang="ur" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly hidden></textarea>
+    <div id="output-visual" class="output-visual mixed-font-noori" role="region" aria-label="Extracted text preview"></div>
     <p class="hint">
       Many textbook PDFs store Urdu with custom fonts: extraction can show random Latin/CJK symbols (<strong>not fixable</strong> by choosing Jameel Noori). Enable <strong>Simple text</strong> to drop those lines so English exercises stay readable. For real Urdu you need a PDF with proper Unicode text or OCR.
-      Preview fonts: install <strong>Jameel Noori</strong>, or add <code>fonts/noori.woff2</code> / <code>fonts/noori.ttf</code>; otherwise Noto Nastaliq Urdu loads from Google Fonts.
+      <strong>Mixed layout</strong> shows Latin text left-to-right and Arabic-script text right-to-left (same characters as extraction — use <strong>Copy</strong> for the exact plain text). Turn it off for a single-direction editor.
     </p>
     <div id="status" class="status" aria-live="polite"></div>
   </div>
@@ -175,7 +230,9 @@
     const copyBtn = document.getElementById('copy-btn');
     const fontSelect = document.getElementById('font-select');
     const cleanupCheck = document.getElementById('cleanup-check');
+    const bidiCheck = document.getElementById('bidi-check');
     const output = document.getElementById('output');
+    const outputVisual = document.getElementById('output-visual');
     const statusEl = document.getElementById('status');
 
     let currentBuffer = null;
@@ -190,6 +247,7 @@
       extractBtn.disabled = !f;
       copyBtn.disabled = true;
       output.value = '';
+      outputVisual.innerHTML = '';
       setStatus('');
       if (!f) {
         currentBuffer = null;
@@ -200,16 +258,102 @@
       });
     });
 
-    fontSelect.addEventListener('change', () => {
+    function applyFontClasses() {
       output.classList.remove('font-noori', 'font-times');
+      outputVisual.classList.remove('mixed-font-noori', 'mixed-font-times');
       if (fontSelect.value === 'times') {
         output.classList.add('font-times');
         output.lang = 'en';
+        outputVisual.classList.add('mixed-font-times');
       } else {
         output.classList.add('font-noori');
         output.lang = 'ur';
+        outputVisual.classList.add('mixed-font-noori');
       }
-    });
+      refreshOutputVisual();
+    }
+
+    fontSelect.addEventListener('change', applyFontClasses);
+
+    /** Split one line into LTR (Latin etc.) and RTL (Arabic script) runs for mixed display. */
+    function segmentLine(line) {
+      const runs = [];
+      let buf = '';
+      /** @type {'rtl' | 'ltr' | null} */
+      let dir = null;
+
+      function flush() {
+        if (!buf) return;
+        runs.push({ dir: dir === 'rtl' ? 'rtl' : 'ltr', text: buf });
+        buf = '';
+        dir = null;
+      }
+
+      for (const ch of line) {
+        let d = null;
+        if (/\p{Script=Arabic}/u.test(ch)) d = 'rtl';
+        else if (/\p{Script=Latin}/u.test(ch)) d = 'ltr';
+        else if (/[0-9\u0660-\u0669]/.test(ch)) d = dir || 'ltr';
+
+        if (d) {
+          if (dir !== null && d !== dir) flush();
+          dir = d;
+          buf += ch;
+        } else {
+          buf += ch;
+          if (dir === null) dir = 'ltr';
+        }
+      }
+      flush();
+      return runs.length ? runs : [{ dir: 'ltr', text: line }];
+    }
+
+    function escapeHtml(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderMixedHtml(text) {
+      const lines = text.split('\n');
+      return lines
+        .map((line) => {
+          if (!line) return '<span class="mixed-line">\u00a0</span>';
+          const runs = segmentLine(line);
+          const inner = runs
+            .map((r) => {
+              const cls = r.dir === 'rtl' ? 'run-rtl' : 'run-ltr';
+              return `<span class="${cls}" dir="${r.dir}">${escapeHtml(r.text)}</span>`;
+            })
+            .join('');
+          return `<span class="mixed-line">${inner}</span>`;
+        })
+        .join('<br>');
+    }
+
+    function refreshOutputVisual() {
+      if (!bidiCheck.checked) return;
+      const text = output.value;
+      outputVisual.innerHTML = text ? renderMixedHtml(text) : '';
+    }
+
+    function setMixedLayout(on) {
+      output.hidden = on;
+      outputVisual.hidden = !on;
+      if (on) {
+        output.readOnly = true;
+        refreshOutputVisual();
+      } else {
+        output.readOnly = false;
+      }
+    }
+
+    bidiCheck.addEventListener('change', () => setMixedLayout(bidiCheck.checked));
+
+    applyFontClasses();
+    setMixedLayout(bidiCheck.checked);
 
     /** Lines that look like broken CID/custom-font Urdu (CJK/PUA/etc.) — not real Unicode Urdu. */
     function isLikelyGarbledLine(line) {
@@ -292,7 +436,8 @@
           (cleanupCheck.checked && raw.trim()
             ? '(All lines looked like broken encoding. Uncheck “Simple text” to see raw extraction.)'
             : '(No text layer found in this PDF.)');
-        output.readOnly = false;
+        output.readOnly = bidiCheck.checked;
+        refreshOutputVisual();
         copyBtn.disabled = !output.value.trim();
 
         let msg = 'Done.';
