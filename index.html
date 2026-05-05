@@ -86,11 +86,14 @@
       color: var(--fg);
       resize: vertical;
     }
-    /* Noori: load from ./fonts/ if present; otherwise Noto Nastaliq Urdu as Urdu/Nastaliq fallback */
+    /*
+      Urdu preview: prefer fonts installed on the OS (Jameel Noori is common on Windows).
+      Do not register a webfont under the name "Noori" — that prevented local("Jameel Noori…") from matching.
+      Optional bundled files use the separate family name "BundledUrdu".
+    */
     @font-face {
-      font-family: 'Noori';
+      font-family: 'BundledUrdu';
       src:
-        local('Noori Nastaleeq'),
         url('fonts/noori.woff2') format('woff2'),
         url('fonts/noori.ttf') format('truetype'),
         url('fonts/Noori.ttf') format('truetype');
@@ -99,9 +102,19 @@
       font-display: swap;
     }
     textarea.font-noori {
-      font-family: 'Noori', 'Noto Nastaliq Urdu', serif;
+      font-family:
+        'Jameel Noori Nastaleeq',
+        'Jameel Noori Nastaleeq LT',
+        'Jameel Noori',
+        'Jameel Noori Regular',
+        'Alvi Nastaleeq',
+        'Noori Nastaleeq',
+        'BundledUrdu',
+        'Noto Nastaliq Urdu',
+        serif;
       direction: rtl;
       text-align: right;
+      font-feature-settings: 'liga' 1, 'calt' 1;
     }
     textarea.font-times {
       font-family: 'Times New Roman', Times, serif;
@@ -128,14 +141,14 @@
     <div class="row">
       <label for="font-select">Preview font</label>
       <select id="font-select">
-        <option value="noori">Noori (Urdu / Nastaliq)</option>
+        <option value="noori">Urdu (Jameel / Noori / Noto)</option>
         <option value="times">Times New Roman</option>
       </select>
     </div>
-    <textarea id="output" class="font-noori" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly></textarea>
+    <textarea id="output" class="font-noori" lang="ur" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly></textarea>
     <p class="hint">
-      Put your Noori font files as <code>fonts/noori.woff2</code> or <code>fonts/noori.ttf</code> next to this HTML for authentic Noori shaping.
-      Without them, Urdu still uses Noto Nastaliq Urdu from Google Fonts. Text is extracted as plain Unicode; PDF layout may differ from the preview.
+      Urdu uses your installed fonts first (e.g. <strong>Jameel Noori Nastaleeq</strong> on Windows). You can also add <code>fonts/noori.woff2</code> or <code>fonts/noori.ttf</code> next to this file.
+      If nothing matches, Noto Nastaliq Urdu loads from Google Fonts. Text is extracted as plain Unicode; PDF layout may differ from the preview.
     </p>
     <div id="status" class="status" aria-live="polite"></div>
   </div>
@@ -179,8 +192,10 @@
       output.classList.remove('font-noori', 'font-times');
       if (fontSelect.value === 'times') {
         output.classList.add('font-times');
+        output.lang = 'en';
       } else {
         output.classList.add('font-noori');
+        output.lang = 'ur';
       }
     });
 
