@@ -287,6 +287,15 @@
     }
     .node-actions { float: right; display: flex; gap: 0.2rem; }
     .hidden { display: none !important; }
+    /* Screen-reader only: keeps file input focusable; programmatic .click() works where display:none fails */
+    .sr-only-file {
+      position: absolute;
+      width: 0.01px;
+      height: 0.01px;
+      opacity: 0;
+      overflow: hidden;
+      z-index: -1;
+    }
   </style>
 </head>
 <body>
@@ -308,7 +317,7 @@
         <div class="row">
           <button type="button" id="addBook">Add to library</button>
           <button type="button" class="secondary" id="pickFile">Open local PDF</button>
-          <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+          <input type="file" id="fileInput" accept=".pdf,application/pdf" class="sr-only-file" tabindex="-1" aria-hidden="true" />
         </div>
         <ul class="book-list" id="bookList"></ul>
       </div>
@@ -576,8 +585,8 @@
     function clearPdfView() {
       pdfDoc = null;
       currentPage = 1;
-      els.pdfCanvas.classList.add("hidden");
-      els.pdfPlaceholder.classList.remove("hidden");
+      if (els.pdfCanvas) els.pdfCanvas.classList.add("hidden");
+      if (els.pdfPlaceholder) els.pdfPlaceholder.classList.remove("hidden");
       els.pageNum.textContent = "0";
       els.pageCount.textContent = "0";
       if (currentObjectUrl) {
@@ -591,8 +600,8 @@
       try {
         const task = pdfjsLib.getDocument({ url, withCredentials: false });
         pdfDoc = await task.promise;
-        els.pdfPlaceholder.classList.add("hidden");
-        els.pdfCanvas.classList.remove("hidden");
+        if (els.pdfPlaceholder) els.pdfPlaceholder.classList.add("hidden");
+        if (els.pdfCanvas) els.pdfCanvas.classList.remove("hidden");
         currentPage = 1;
         els.pageCount.textContent = String(pdfDoc.numPages);
         await renderPage();
@@ -612,8 +621,8 @@
       try {
         const task = pdfjsLib.getDocument({ data: buf });
         pdfDoc = await task.promise;
-        els.pdfPlaceholder.classList.add("hidden");
-        els.pdfCanvas.classList.remove("hidden");
+        if (els.pdfPlaceholder) els.pdfPlaceholder.classList.add("hidden");
+        if (els.pdfCanvas) els.pdfCanvas.classList.remove("hidden");
         currentPage = 1;
         els.pageCount.textContent = String(pdfDoc.numPages);
         await renderPage();
@@ -706,6 +715,7 @@
       return ocrWorkerPromise;
     }
 
+    async function scanCurrentPageOcr() {
       if (!pdfDoc) {
         setExtractContent("Open a PDF first, then scan.", { isPlaceholder: true });
         return;
