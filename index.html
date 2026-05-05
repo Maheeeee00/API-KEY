@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book syllabus designer</title>
+  <style>
+    /* Optional: place DimaMitra.ttf next to index.html. Font internal name may include trailing space (Swift: "Dima Mitra "). */
+    @font-face {
+      font-family: "Dima Mitra ";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src:
+        local("Dima Mitra "),
+        local("Dima Mitra"),
+        local("DimaMitra"),
+        url("./DimaMitra.ttf") format("truetype");
+    }
+    @font-face {
+      font-family: "Dima Mitra";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src:
+        local("Dima Mitra "),
+        local("Dima Mitra"),
+        local("DimaMitra"),
+        url("./DimaMitra.ttf") format("truetype");
+    }
+    /* Embedded fallback so Urdu shapes even when Google Fonts is blocked and Jameel is not installed */
+    @font-face {
+      font-family: "Noto Nastaliq Urdu";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url("https://cdn.jsdelivr.net/npm/@fontsource/noto-nastaliq-urdu@5.2.6/files/noto-nastaliq-urdu-arabic-400-normal.woff2")
+        format("woff2");
+    }
+    @font-face {
+      font-family: "Noto Nastaliq Urdu";
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url("https://cdn.jsdelivr.net/npm/@fontsource/noto-nastaliq-urdu@5.2.6/files/noto-nastaliq-urdu-arabic-700-normal.woff2")
+        format("woff2");
+    }
+    @font-face {
+      font-family: "Jameel Noori Nastaleeq";
+      font-style: normal;
+      font-weight: 400;
+      src:
+        local("Jameel Noori Nastaleeq"),
+        local("JameelNooriNastaleeq"),
+        local("Jameel Noori Nastaliqe"),
+        local("Jameel Noori Nastaliq"),
+        local("JameelNoori Nastaleeq"),
+        local("Jameel Noori"),
+        local("Alvi Nastaleeq"),
+        local("Alvi Nastaliq");
+    }
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #5b9fd4;
+      --accent-dim: #3d7aad;
+      --danger: #e06c75;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    header p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      flex: 1;
+    }
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px 1fr 320px;
+      min-height: 0;
+    }
+    @media (max-width: 960px) {
+      main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    }
+    section.panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--surface);
+    }
+    section.panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+    .panel-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-body { flex: 1; overflow: auto; padding: 0.5rem; }
+    label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.25rem; }
+    input[type="text"], input[type="url"], textarea {
+      width: 100%;
+      padding: 0.45rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    textarea { min-height: 72px; resize: vertical; font-family: inherit; }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.8rem;
+      background: var(--accent);
+      color: #0a0e14;
+      font-weight: 600;
+    }
+    button.secondary { background: var(--border); color: var(--text); }
+    button.small { padding: 0.25rem 0.5rem; font-size: 0.72rem; }
+    button.danger { background: var(--danger); color: #fff; }
+    .row { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem; }
+    .book-list { list-style: none; margin: 0; padding: 0; }
+    .book-list li {
+      padding: 0.45rem 0.5rem;
+      border-radius: 6px;
+      margin-bottom: 0.25rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-size: 0.85rem;
+    }
+    .book-list li:hover { background: rgba(91, 159, 212, 0.12); }
+    .book-list li.active { border-color: var(--accent); background: rgba(91, 159, 212, 0.18); }
+    .pdf-stage {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #111;
+    }
+    .pdf-toolbar {
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+    }
+    .pdf-toolbar span { color: var(--muted); }
+    .ocr-lang-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .ocr-lang-label select {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.35rem;
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      max-width: 12rem;
+    }
+    .pdf-scroll {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.75rem;
+      gap: 0.75rem;
+    }
+    canvas { max-width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.45); background: #fff; }
+    .pdf-pages-stack {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem 0 1rem;
+    }
+    .pdf-pages-stack canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+      background: #fff;
+    }
+    .notice {
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding: 0.5rem 0.75rem;
+      background: rgba(224, 108, 117, 0.12);
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+    .extract-box {
+      max-height: 280px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding: 0.55rem 0.65rem;
+      background: var(--bg);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-top: 0.35rem;
+      unicode-bidi: plaintext;
+    }
+    .extract-box.rtl {
+      direction: rtl;
+      text-align: right;
+      font-family:
+        "Dima Mitra ",
+        "Dima Mitra",
+        DimaMitra,
+        "Jameel Noori Nastaleeq",
+        "Noto Nastaliq Urdu",
+        "Urdu Typesetting",
+        "Traditional Arabic",
+        sans-serif;
+      font-size: 1.14rem;
+      line-height: 2.15;
+      font-synthesis: none;
+      font-variant-ligatures: common-ligatures contextual;
+      font-feature-settings: "liga" 1, "calt" 1;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .extract-box.ltr {
+      direction: ltr;
+      text-align: left;
+      font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      letter-spacing: 0.015em;
+      font-variant-ligatures: normal;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    .extract-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+      margin-top: 0.35rem;
+    }
+    .extract-toolbar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin: 0;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .extract-encoding-warn {
+      font-size: 0.72rem;
+      color: #f0c674;
+      background: rgba(240, 198, 116, 0.12);
+      border: 1px solid rgba(240, 198, 116, 0.35);
+      border-radius: 6px;
+      padding: 0.45rem 0.55rem;
+      margin-top: 0.35rem;
+      line-height: 1.45;
+      display: none;
+    }
+    .extract-encoding-warn.visible { display: block; }
+    .extract-font-line {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      font-family: ui-monospace, monospace;
+      word-break: break-all;
+    }
+    .scan-progress {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      padding: 0.4rem 0.5rem;
+      background: var(--bg);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .scan-progress.visible { display: block; }
+    .scan-progress .bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 0.35rem;
+      overflow: hidden;
+    }
+    .scan-progress .bar > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.2s ease;
+    }
+    .syllabus-tree { list-style: none; margin: 0; padding-left: 0; }
+    .syllabus-tree ul { list-style: none; margin: 0.25rem 0 0 0; padding-left: 1rem; border-left: 1px solid var(--border); }
+    .syllabus-node {
+      margin-bottom: 0.35rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .syllabus-node input {
+      width: calc(100% - 100px);
+      margin: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .node-actions { float: right; display: flex; gap: 0.2rem; }
+    .hidden { display: none !important; }
+    /* Screen-reader only: keeps file input focusable; programmatic .click() works where display:none fails */
+    .sr-only-file {
+      position: absolute;
+      width: 0.01px;
+      height: 0.01px;
+      opacity: 0;
+      overflow: hidden;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Book syllabus designer</h1>
+    <p>Add PDF links or open a local file. Build your syllabus outline alongside the book.</p>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="panel-header">Library</div>
+      <div class="panel-body">
+        <div class="notice">
+          Many sites block cross-origin PDF loading. If a URL fails, use <strong>Open local PDF</strong> below.
+        </div>
+        <label for="bookTitle">Title</label>
+        <input type="text" id="bookTitle" placeholder="e.g. Linear Algebra — Strang" />
+        <label for="bookUrl">PDF URL (optional)</label>
+        <input type="url" id="bookUrl" placeholder="https://example.com/book.pdf" />
+        <div class="row">
+          <button type="button" id="addBook">Add to library</button>
+          <button type="button" class="secondary" id="pickFile">Open local PDF</button>
+          <input type="file" id="fileInput" accept=".pdf,application/pdf" class="sr-only-file" tabindex="-1" aria-hidden="true" />
+        </div>
+        <ul class="book-list" id="bookList"></ul>
+      </div>
+    </section>
+    <section class="panel pdf-stage">
+      <div class="panel-header">PDF</div>
+      <div class="pdf-toolbar">
+        <button type="button" class="secondary small" id="prevPage">Prev</button>
+        <button type="button" class="secondary small" id="nextPage">Next</button>
+        <span>Page <span id="pageNum">0</span> / <span id="pageCount">0</span></span>
+        <button type="button" class="small" id="extractPage">Extract text (this page)</button>
+        <button type="button" class="small" id="scanPage" title="OCR — read text from the page image (Urdu + English)">Scan page (OCR)</button>
+        <button type="button" class="secondary small" id="scanAll" title="OCR every page — slow for large books">Scan all pages</button>
+        <button type="button" class="secondary small" id="toggleVisualPages" disabled title="Show every page as a picture — exact Urdu/English as printed (no text extract)">
+          All pages (visual)
+        </button>
+        <button type="button" class="secondary small" id="zoomIn">+</button>
+        <label class="ocr-lang-label" for="ocrLang" title="First scan downloads selected languages (~large for ara+urd+eng)">
+          OCR langs
+          <select id="ocrLang">
+            <option value="urd+eng" selected>Urdu + English</option>
+            <option value="ara+urd+eng">Arabic + Urdu + English</option>
+            <option value="eng">English only</option>
+          </select>
+        </label>
+      </div>
+      <div class="pdf-scroll" id="pdfScroll">
+        <p id="pdfPlaceholder" style="color:var(--muted);text-align:center;margin-top:2rem;">Select a book or open a PDF.</p>
+        <canvas id="pdfCanvas" class="hidden"></canvas>
+        <div id="pdfPagesStack" class="pdf-pages-stack hidden" aria-label="All pages as images"></div>
+        <canvas id="ocrCanvas" class="hidden" aria-hidden="true"></canvas>
+      </div>
+      <div class="panel-body" style="border-top:1px solid var(--border);max-height:420px;">
+        <strong style="font-size:0.8rem;">Extracted / scanned text</strong>
+        <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
+          <strong>Visual:</strong> Use <strong>All pages (visual)</strong> to see every page exactly as printed (best when Extract shows garbage). Extract/Scan still work from the current page number in single-page view.
+          In-browser OCR is weaker than <strong>desktop OCR</strong> (Adobe Acrobat, ABBYY, or upload PDF to Google Drive → open with Google Docs).
+          <strong>ConvertAPI:</strong> optional PDF→TXT via your own token (below). Uses their servers; token stays in this browser only — do not put secrets in shared HTML files.
+        </p>
+        <div class="row" style="margin-bottom:0.35rem;">
+          <label for="convertApiToken" style="flex:1;min-width:140px;margin:0;">ConvertAPI token</label>
+        </div>
+        <input
+          type="password"
+          id="convertApiToken"
+          autocomplete="off"
+          placeholder="Paste API token from convertapi.com dashboard"
+          style="margin-bottom:0.35rem;"
+        />
+        <div class="row" style="margin-bottom:0.35rem;">
+          <label for="convertApiOcrMode" style="margin:0;font-size:0.72rem;color:var(--muted);">OCR mode</label>
+          <select id="convertApiOcrMode" style="flex:1;max-width:12rem;font-size:0.78rem;padding:0.25rem;">
+            <option value="auto" selected>Auto</option>
+            <option value="never">Never (text layer only)</option>
+            <option value="force">Force (all pages)</option>
+          </select>
+          <button type="button" class="secondary small" id="convertApiClearToken" title="Remove saved token from this browser">Clear token</button>
+        </div>
+        <div class="extract-toolbar">
+          <label><input type="checkbox" id="extractRtl" /> Force RTL (Urdu)</label>
+          <button type="button" class="secondary small" id="exportWord" title="Download .docx for Microsoft Word">Download Word (.docx)</button>
+          <button type="button" class="small" id="convertApiPdfToTxt" title="POST full PDF to ConvertAPI (Bearer token) — full-document text">
+            ConvertAPI PDF→TXT
+          </button>
+        </div>
+        <div class="scan-progress" id="scanProgress" aria-live="polite">
+          <span id="scanProgressText"></span>
+          <div class="row" style="margin-top:0.35rem;margin-bottom:0;">
+            <button type="button" class="secondary small hidden" id="scanCancel">Cancel scan</button>
+          </div>
+          <div class="bar"><i id="scanProgressBar"></i></div>
+        </div>
+        <div class="extract-encoding-warn" id="extractEncodingWarn"></div>
+        <div class="extract-box ltr" id="extractOutput" lang="en" dir="ltr">—</div>
+        <div class="extract-font-line" id="extractFontLine" title="Computed font on the extractor box"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-header">Syllabus outline</div>
+      <div class="panel-body">
+        <p style="font-size:0.78rem;color:var(--muted);margin:0 0 0.5rem;">Linked to the selected book. Saved in this browser only.</p>
+        <div class="row">
+          <button type="button" id="addRootTopic">Add unit</button>
+          <button type="button" class="secondary small" id="exportSyllabus">Export JSON</button>
+        </div>
+        <ul class="syllabus-tree" id="syllabusRoot"></ul>
+      </div>
+    </section>
+  </main>
+  <script type="module">
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
+    import { Document, Packer, Paragraph, TextRun } from "https://esm.sh/docx@8.5.0";
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+    const STORAGE_BOOKS = "syllabusDesigner_books_v1";
+    const STORAGE_SYLLABI = "syllabusDesigner_syllabi_v1";
+    const STORAGE_ACTIVE = "syllabusDesigner_activeBook_v1";
+    const STORAGE_CONVERTAPI_TOKEN = "syllabusDesigner_convertApiToken_v1";
+
+    const els = {
+      bookTitle: document.getElementById("bookTitle"),
+      bookUrl: document.getElementById("bookUrl"),
+      addBook: document.getElementById("addBook"),
+      pickFile: document.getElementById("pickFile"),
+      fileInput: document.getElementById("fileInput"),
+      bookList: document.getElementById("bookList"),
+      pdfCanvas: document.getElementById("pdfCanvas"),
+      ocrCanvas: document.getElementById("ocrCanvas"),
+      pdfPlaceholder: document.getElementById("pdfPlaceholder"),
+      pdfScroll: document.getElementById("pdfScroll"),
+      pageNum: document.getElementById("pageNum"),
+      pageCount: document.getElementById("pageCount"),
+      prevPage: document.getElementById("prevPage"),
+      nextPage: document.getElementById("nextPage"),
+      extractPage: document.getElementById("extractPage"),
+      scanPage: document.getElementById("scanPage"),
+      scanAll: document.getElementById("scanAll"),
+      scanProgress: document.getElementById("scanProgress"),
+      scanProgressText: document.getElementById("scanProgressText"),
+      scanProgressBar: document.getElementById("scanProgressBar"),
+      scanCancel: document.getElementById("scanCancel"),
+      extractOutput: document.getElementById("extractOutput"),
+      extractRtl: document.getElementById("extractRtl"),
+      extractEncodingWarn: document.getElementById("extractEncodingWarn"),
+      extractFontLine: document.getElementById("extractFontLine"),
+      exportWord: document.getElementById("exportWord"),
+      zoomIn: document.getElementById("zoomIn"),
+      zoomOut: document.getElementById("zoomOut"),
+      toggleVisualPages: document.getElementById("toggleVisualPages"),
+      pdfPagesStack: document.getElementById("pdfPagesStack"),
+      ocrLang: document.getElementById("ocrLang"),
+      syllabusRoot: document.getElementById("syllabusRoot"),
+      addRootTopic: document.getElementById("addRootTopic"),
+      exportSyllabus: document.getElementById("exportSyllabus"),
+      convertApiToken: document.getElementById("convertApiToken"),
+      convertApiOcrMode: document.getElementById("convertApiOcrMode"),
+      convertApiPdfToTxt: document.getElementById("convertApiPdfToTxt"),
+      convertApiClearToken: document.getElementById("convertApiClearToken"),
+    };
+
+    let books = loadJson(STORAGE_BOOKS, []);
+    let syllabi = loadJson(STORAGE_SYLLABI, {});
+    let activeBookId = loadJson(STORAGE_ACTIVE, null);
+    let pdfDoc = null;
+    let currentPage = 1;
+    let scale = 1.15;
+    let currentObjectUrl = null;
+    /** Latest plain text shown in the extractor (for Word export). */
+    let lastExtractedPlain = "";
+    /** Until the user toggles “Force RTL”, direction follows each extraction automatically. */
+    let extractRtlFollowAuto = true;
+
+    /** Lazy Tesseract worker; recreated when OCR language pack changes. */
+    let ocrWorkerPromise = null;
+    let ocrWorkerLangKey = null;
+    let scanInProgress = false;
+    let scanCancelled = false;
+    /** Stack of page images — shows Urdu exactly as printed (bypasses broken text layer). */
+    let visualAllPagesMode = false;
+    let visualPagesRendering = false;
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+    function saveBooks() {
+      localStorage.setItem(STORAGE_BOOKS, JSON.stringify(books));
+    }
+    function saveSyllabi() {
+      localStorage.setItem(STORAGE_SYLLABI, JSON.stringify(syllabi));
+    }
+    function uid() {
+      return crypto.randomUUID?.() || String(Date.now()) + Math.random();
+    }
+
+    function setExtractContent(text, options = {}) {
+      const { isPlaceholder = false } = options;
+      if (!els.extractOutput) return;
+      els.extractOutput.textContent = text;
+      lastExtractedPlain = isPlaceholder ? "" : text;
+      if (isPlaceholder) {
+        extractRtlFollowAuto = true;
+        els.extractRtl.checked = false;
+        syncExtractDirection();
+      } else if (text.trim()) {
+        if (extractRtlFollowAuto) els.extractRtl.checked = inferRtlFromExtract(text);
+        syncExtractDirection();
+      }
+      updateEncodingWarn(text, isPlaceholder);
+      updateExtractFontProbe();
+    }
+
+    function scriptStats(s) {
+      let arabic = 0;
+      let latin = 0;
+      let cjk = 0;
+      let cyrillic = 0;
+      let replacement = 0;
+      const arabicRe = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+      const cjkRe = /[\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/;
+      const cyrillicRe = /[\u0400-\u04FF]/;
+      for (const ch of s) {
+        if (ch === "\uFFFD") replacement++;
+        if (arabicRe.test(ch)) arabic++;
+        else if (/[A-Za-z]/.test(ch)) latin++;
+        else if (cjkRe.test(ch)) cjk++;
+        else if (cyrillicRe.test(ch)) cyrillic++;
+      }
+      return { arabic, latin, cjk, cyrillic, replacement, len: s.length };
+    }
+
+    function looksLikeBrokenPdfEncoding(text) {
+      if (!text || text.length < 12) return false;
+      const st = scriptStats(text);
+      if (st.replacement >= 2 || st.replacement / st.len > 0.015) return true;
+      /* Mojibake Urdu PDFs often decode as random Han/Hangul/Japanese — should not appear in real Urdu text layer */
+      if (st.cjk >= 2) return true;
+      if (st.len >= 24 && st.cjk >= 1 && st.arabic >= 2) return true;
+      if (st.cyrillic >= 4) return true;
+      if (st.len > 40 && st.arabic < 6 && st.latin + st.cjk > 20 && st.latin + st.cjk > st.arabic * 5)
+        return true;
+      return false;
+    }
+
+    /** Guess RTL (Urdu/Arabic script) vs LTR (English) from character counts. */
+    function inferRtlFromExtract(text) {
+      if (!text || !text.trim()) return false;
+      if (looksLikeBrokenPdfEncoding(text)) return false;
+      const st = scriptStats(text);
+      const { arabic, latin, len } = st;
+      if (len < 2) return false;
+      if (arabic >= 8 && arabic >= latin * 1.15) return true;
+      if (arabic >= 4 && arabic > latin * 1.8) return true;
+      if (arabic > latin && arabic >= 6) return true;
+      return false;
+    }
+
+    function updateEncodingWarn(text, isPlaceholder) {
+      const el = els.extractEncodingWarn;
+      if (isPlaceholder || !text) {
+        el.classList.remove("visible");
+        el.textContent = "";
+        return;
+      }
+      if (looksLikeBrokenPdfEncoding(text)) {
+        el.classList.add("visible");
+        el.textContent =
+          "This is not a font problem — the PDF’s hidden text is corrupted (wrong encoding). Extract cannot fix it. Use Scan page (OCR) or try another PDF / Google Drive → Open with Google Docs.";
+      } else {
+        el.classList.remove("visible");
+        el.textContent = "";
+      }
+    }
+
+    function updateExtractFontProbe() {
+      requestAnimationFrame(() => {
+        if (!els.extractOutput || !els.extractFontLine) return;
+        const cs = getComputedStyle(els.extractOutput);
+        const fam = (cs.fontFamily || "").split(",")[0]?.trim().replace(/^["']|["']$/g, "") || "?";
+        const size = cs.fontSize || "";
+        const rtl = els.extractRtl.checked;
+        els.extractFontLine.textContent = `${rtl ? "RTL (Urdu-style)" : "LTR (English-style)"} · ${fam} · ${size}`;
+      });
+    }
+
+    function syncExtractDirection() {
+      if (!els.extractOutput) return;
+      const rtl = els.extractRtl.checked;
+      els.extractOutput.classList.toggle("rtl", rtl);
+      els.extractOutput.classList.toggle("ltr", !rtl);
+      els.extractOutput.style.direction = rtl ? "rtl" : "ltr";
+      els.extractOutput.style.textAlign = rtl ? "right" : "left";
+      els.extractOutput.setAttribute("dir", rtl ? "rtl" : "ltr");
+      els.extractOutput.setAttribute("lang", rtl ? "ur" : "en");
+      updateExtractFontProbe();
+    }
+
+    function renderBookList() {
+      els.bookList.innerHTML = "";
+      books.forEach((b) => {
+        const li = document.createElement("li");
+        li.textContent = b.title || "(untitled)";
+        li.dataset.id = b.id;
+        if (b.id === activeBookId) li.classList.add("active");
+        li.addEventListener("click", () => selectBook(b.id));
+        els.bookList.appendChild(li);
+      });
+    }
+
+    function getActiveBook() {
+      return books.find((b) => b.id === activeBookId) || null;
+    }
+
+    function ensureSyllabus(bookId) {
+      if (!syllabi[bookId]) syllabi[bookId] = [];
+    }
+
+    function selectBook(id) {
+      activeBookId = id;
+      if (id) localStorage.setItem(STORAGE_ACTIVE, JSON.stringify(id));
+      else localStorage.removeItem(STORAGE_ACTIVE);
+      renderBookList();
+      renderSyllabus();
+      const b = getActiveBook();
+      if (!b) return;
+      if (b.url) loadPdfFromUrl(b.url);
+      else {
+        setExtractContent("No URL for this book — use Open local PDF.", { isPlaceholder: true });
+        clearPdfView();
+      }
+    }
+
+    function emptyPdfPagesStack() {
+      if (els.pdfPagesStack) els.pdfPagesStack.innerHTML = "";
+    }
+
+    function clearPdfView() {
+      pdfDoc = null;
+      currentPage = 1;
+      visualAllPagesMode = false;
+      visualPagesRendering = false;
+      emptyPdfPagesStack();
+      if (els.pdfPagesStack) els.pdfPagesStack.classList.add("hidden");
+      if (els.toggleVisualPages) {
+        els.toggleVisualPages.textContent = "All pages (visual)";
+        els.toggleVisualPages.classList.add("secondary");
+        els.toggleVisualPages.disabled = true;
+      }
+      if (els.pdfCanvas) els.pdfCanvas.classList.add("hidden");
+      if (els.pdfPlaceholder) els.pdfPlaceholder.classList.remove("hidden");
+      els.pageNum.textContent = "0";
+      els.pageCount.textContent = "0";
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+      }
+    }
+
+    function applyPdfViewMode() {
+      const vis = !!(visualAllPagesMode && pdfDoc);
+      if (els.pdfCanvas) {
+        if (pdfDoc && !vis) els.pdfCanvas.classList.remove("hidden");
+        else els.pdfCanvas.classList.add("hidden");
+      }
+      if (els.pdfPagesStack) {
+        if (vis) els.pdfPagesStack.classList.remove("hidden");
+        else els.pdfPagesStack.classList.add("hidden");
+      }
+      if (els.toggleVisualPages) {
+        els.toggleVisualPages.textContent = vis ? "Single page view" : "All pages (visual)";
+      }
+    }
+
+    function scrollVisualPageIntoView(pageNum) {
+      const c = els.pdfPagesStack?.querySelector(`canvas[data-page="${pageNum}"]`);
+      c?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function renderAllPagesVisual() {
+      if (!pdfDoc || !els.pdfPagesStack || visualPagesRendering) return;
+      visualPagesRendering = true;
+      emptyPdfPagesStack();
+      const total = pdfDoc.numPages;
+      const stackScale = Math.min(scale, 2);
+      try {
+        for (let p = 1; p <= total; p++) {
+          if (!visualAllPagesMode || !pdfDoc) break;
+          const page = await pdfDoc.getPage(p);
+          const viewport = page.getViewport({ scale: stackScale });
+          const c = document.createElement("canvas");
+          c.dataset.page = String(p);
+          c.width = viewport.width;
+          c.height = viewport.height;
+          const ctx = c.getContext("2d");
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          els.pdfPagesStack.appendChild(c);
+          if (p % 2 === 0) await new Promise((r) => requestAnimationFrame(r));
+        }
+      } finally {
+        visualPagesRendering = false;
+        if (visualAllPagesMode && pdfDoc) scrollVisualPageIntoView(currentPage);
+      }
+    }
+
+    async function refreshVisualStackAfterZoom() {
+      if (!visualAllPagesMode || !pdfDoc || visualPagesRendering) return;
+      const total = pdfDoc.numPages;
+      if (total > 35) {
+        const ok = confirm(`Re-draw all ${total} pages at the new zoom? This may take a while.`);
+        if (!ok) return;
+      }
+      await renderAllPagesVisual();
+    }
+
+    async function loadPdfFromUrl(url) {
+      clearPdfView();
+      try {
+        const task = pdfjsLib.getDocument({ url, withCredentials: false });
+        pdfDoc = await task.promise;
+        if (els.pdfPlaceholder) els.pdfPlaceholder.classList.add("hidden");
+        currentPage = 1;
+        els.pageCount.textContent = String(pdfDoc.numPages);
+        if (els.toggleVisualPages) els.toggleVisualPages.disabled = false;
+        applyPdfViewMode();
+        await renderPage();
+      } catch (e) {
+        console.error(e);
+        setExtractContent(
+          "Could not load PDF from URL (CORS, auth, or invalid link). Try downloading the file and use Open local PDF.\n\n" +
+            String(e.message || e),
+          { isPlaceholder: true }
+        );
+        clearPdfView();
+      }
+    }
+
+    async function loadPdfFromArrayBuffer(buf) {
+      clearPdfView();
+      try {
+        const task = pdfjsLib.getDocument({ data: buf });
+        pdfDoc = await task.promise;
+        if (els.pdfPlaceholder) els.pdfPlaceholder.classList.add("hidden");
+        currentPage = 1;
+        els.pageCount.textContent = String(pdfDoc.numPages);
+        if (els.toggleVisualPages) els.toggleVisualPages.disabled = false;
+        applyPdfViewMode();
+        await renderPage();
+      } catch (e) {
+        console.error(e);
+        setExtractContent("Invalid PDF: " + String(e.message || e), { isPlaceholder: true });
+      }
+    }
+
+    async function renderPage() {
+      if (!pdfDoc || !els.pdfCanvas) return;
+      const page = await pdfDoc.getPage(currentPage);
+      const viewport = page.getViewport({ scale });
+      const canvas = els.pdfCanvas;
+      const ctx = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      els.pageNum.textContent = String(currentPage);
+      if (visualAllPagesMode) scrollVisualPageIntoView(currentPage);
+    }
+
+    function setScanUiVisible(visible, showCancel = false) {
+      els.scanProgress?.classList.toggle("visible", visible);
+      els.scanCancel?.classList.toggle("hidden", !showCancel);
+      if (!visible) {
+        if (els.scanProgressText) els.scanProgressText.textContent = "";
+        if (els.scanProgressBar) els.scanProgressBar.style.width = "0%";
+      }
+    }
+
+    function setScanProgressLabel(text, fraction) {
+      if (els.scanProgressText) els.scanProgressText.textContent = text;
+      if (els.scanProgressBar && typeof fraction === "number")
+        els.scanProgressBar.style.width = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%`;
+    }
+
+    function setToolbarBusy(busy) {
+      [
+        els.extractPage,
+        els.scanPage,
+        els.scanAll,
+        els.prevPage,
+        els.nextPage,
+        els.toggleVisualPages,
+        els.convertApiPdfToTxt,
+      ].forEach((el) => {
+        if (el) el.disabled = busy;
+      });
+    }
+
+    async function getOcrRenderScale(pageIndex1) {
+      const page = await pdfDoc.getPage(pageIndex1);
+      const vp = page.getViewport({ scale: 1 });
+      const maxDim = Math.max(vp.width, vp.height);
+      const target = 2800;
+      return Math.min(3, Math.max(1.15, target / maxDim));
+    }
+
+    async function renderPdfPageToOcrCanvas(pageIndex1) {
+      const ocrScale = await getOcrRenderScale(pageIndex1);
+      const page = await pdfDoc.getPage(pageIndex1);
+      const viewport = page.getViewport({ scale: ocrScale });
+      const canvas = els.ocrCanvas;
+      const ctx = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      return canvas;
+    }
+
+    async function terminateOcrWorkerInternal() {
+      if (!ocrWorkerPromise) return;
+      try {
+        const w = await ocrWorkerPromise.catch(() => null);
+        if (w && typeof w.terminate === "function") await w.terminate();
+      } catch {
+        /* ignore */
+      }
+      ocrWorkerPromise = null;
+      ocrWorkerLangKey = null;
+    }
+
+    async function getOcrWorker() {
+      const langs = els.ocrLang?.value?.trim() || "urd+eng";
+      if (ocrWorkerPromise && ocrWorkerLangKey !== langs) await terminateOcrWorkerInternal();
+
+      if (!ocrWorkerPromise) {
+        ocrWorkerLangKey = langs;
+        const langPath =
+          "https://raw.githubusercontent.com/naptha/tessdata/gh-pages/4.0.0/";
+        ocrWorkerPromise = (async () => {
+          const { createWorker } = await import(
+            "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.esm.min.js"
+          );
+          const worker = await createWorker(langs, 1, {
+            workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/worker.min.js",
+            corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0",
+            langPath,
+            gzip: true,
+            logger: (m) => {
+              if (!scanInProgress || scanCancelled) return;
+              const prog =
+                typeof m.progress === "number"
+                  ? m.progress
+                  : m.status === "loading tesseract core"
+                    ? 0.05
+                    : null;
+              if (prog != null)
+                setScanProgressLabel(m.status || "Working…", prog);
+            },
+          });
+          await worker.setParameters({
+            tessedit_pageseg_mode: "6",
+          });
+          return worker;
+        })();
+      }
+      return ocrWorkerPromise;
+    }
+
+    async function scanCurrentPageOcr() {
+      if (!pdfDoc) {
+        setExtractContent("Open a PDF first, then scan.", { isPlaceholder: true });
+        return;
+      }
+      if (scanInProgress) return;
+      scanInProgress = true;
+      scanCancelled = false;
+      setToolbarBusy(true);
+      setScanUiVisible(true, true);
+      setScanProgressLabel("Preparing OCR (first run downloads Urdu + English data)…", 0.02);
+      try {
+        const worker = await getOcrWorker();
+        if (scanCancelled) return;
+        setScanProgressLabel(`Rendering page ${currentPage}…`, 0.15);
+        await renderPdfPageToOcrCanvas(currentPage);
+        if (scanCancelled) return;
+        setScanProgressLabel("Recognizing text…", 0.35);
+        const {
+          data: { text },
+        } = await worker.recognize(els.ocrCanvas);
+        if (scanCancelled) return;
+        const raw = (text || "").trim();
+        if (!raw)
+          setExtractContent("(OCR returned no text — try zooming the PDF or a clearer scan.)", {
+            isPlaceholder: true,
+          });
+        else setExtractContent(raw);
+      } catch (e) {
+        console.error(e);
+        if (!scanCancelled)
+          setExtractContent("OCR failed: " + String(e.message || e), { isPlaceholder: true });
+      } finally {
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      }
+    }
+
+    async function scanAllPagesOcr() {
+      if (!pdfDoc) {
+        setExtractContent("Open a PDF first, then scan.", { isPlaceholder: true });
+        return;
+      }
+      const total = pdfDoc.numPages;
+      if (total > 80) {
+        const ok = confirm(
+          `This PDF has ${total} pages. Scanning all may take a long time and use heavy CPU. Continue?`
+        );
+        if (!ok) return;
+      }
+      if (scanInProgress) return;
+      scanInProgress = true;
+      scanCancelled = false;
+      setToolbarBusy(true);
+      setScanUiVisible(true, true);
+      const chunks = [];
+      try {
+        const worker = await getOcrWorker();
+        for (let p = 1; p <= total; p++) {
+          if (scanCancelled) break;
+          const frac = (p - 1) / total;
+          setScanProgressLabel(`Page ${p} / ${total} — rendering…`, 0.1 + frac * 0.85);
+          await renderPdfPageToOcrCanvas(p);
+          if (scanCancelled) break;
+          setScanProgressLabel(`Page ${p} / ${total} — recognizing…`, 0.1 + frac * 0.85 + 0.02);
+          const {
+            data: { text },
+          } = await worker.recognize(els.ocrCanvas);
+          const t = (text || "").trim();
+          if (t) chunks.push(`--- Page ${p} ---\n\n${t}`);
+        }
+        if (scanCancelled) {
+          const partial = chunks.join("\n\n");
+          setExtractContent(
+            partial
+              ? `${partial}\n\n[Scan cancelled — partial text above.]`
+              : "Scan cancelled.",
+            { isPlaceholder: !partial }
+          );
+        } else if (!chunks.length)
+          setExtractContent("(OCR found no text on any page.)", { isPlaceholder: true });
+        else setExtractContent(chunks.join("\n\n"));
+      } catch (e) {
+        console.error(e);
+        if (!scanCancelled)
+          setExtractContent("OCR failed: " + String(e.message || e), { isPlaceholder: true });
+      } finally {
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+        await renderPage();
+      }
+    }
+
+    async function extractCurrentPageText() {
+      if (!pdfDoc) {
+        setExtractContent("Open a PDF first (URL or local file), then extract.", { isPlaceholder: true });
+        return;
+      }
+      if (!els.extractOutput) {
+        console.error("extractOutput element missing from DOM");
+        return;
+      }
+      try {
+        const page = await pdfDoc.getPage(currentPage);
+        const tc = await page.getTextContent();
+        const parts = [];
+        for (const item of tc.items) {
+          if ("str" in item && item.str) parts.push(item.str);
+          if (item.hasEOL) parts.push("\n");
+        }
+        const text = parts.join("").replace(/\n{3,}/g, "\n\n").trim();
+        const raw = text.trim();
+        if (!raw)
+          setExtractContent("(no text layer on this page — scanned PDFs need OCR elsewhere)", {
+            isPlaceholder: true,
+          });
+        else setExtractContent(raw);
+      } catch (e) {
+        console.error(e);
+        setExtractContent("Extract failed: " + String(e.message || e), { isPlaceholder: true });
+      }
+    }
+
+    function decodeConvertApiBase64Utf8(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    function persistConvertApiToken() {
+      const t = els.convertApiToken?.value?.trim();
+      if (t) localStorage.setItem(STORAGE_CONVERTAPI_TOKEN, t);
+      else localStorage.removeItem(STORAGE_CONVERTAPI_TOKEN);
+    }
+
+    async function convertFullPdfViaConvertApi() {
+      if (!pdfDoc) {
+        setExtractContent("Open a PDF first.", { isPlaceholder: true });
+        return;
+      }
+      const token = els.convertApiToken?.value?.trim();
+      if (!token) {
+        alert("Paste your ConvertAPI token from https://www.convertapi.com/a/authentication — it is saved only in this browser.");
+        return;
+      }
+      persistConvertApiToken();
+      const ocrMode = els.convertApiOcrMode?.value || "auto";
+      setToolbarBusy(true);
+      setScanUiVisible(true, false);
+      setScanProgressLabel("Sending PDF to ConvertAPI…", 0.2);
+      try {
+        const pdfBytes = await pdfDoc.getData();
+        const title = getActiveBook()?.title?.trim() || "document";
+        const safeName = title.replace(/[^\w.\-]+/g, "_").slice(0, 80) || "document";
+        const fd = new FormData();
+        fd.append("File", new Blob([pdfBytes], { type: "application/pdf" }), `${safeName}.pdf`);
+        fd.append("OcrMode", ocrMode);
+        fd.append("OcrLanguage", "auto");
+        const res = await fetch("https://v2.convertapi.com/convert/pdf/to/txt", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+        setScanProgressLabel("Reading response…", 0.75);
+        let text = "";
+        if (ct.includes("application/json")) {
+          const j = await res.json();
+          if (!res.ok)
+            throw new Error(j?.Message || j?.message || JSON.stringify(j) || res.statusText);
+          const file = j.Files?.[0];
+          if (!file?.FileData) throw new Error("Unexpected ConvertAPI response (no Files[0].FileData)");
+          text = decodeConvertApiBase64Utf8(file.FileData);
+        } else {
+          const raw = await res.text();
+          if (!res.ok) throw new Error(raw || res.statusText);
+          text = raw;
+        }
+        const out = text.trim();
+        if (!out)
+          setExtractContent("(ConvertAPI returned empty text — try OCR mode Force if this is a scan.)", {
+            isPlaceholder: true,
+          });
+        else setExtractContent(out);
+      } catch (e) {
+        console.error(e);
+        const msg = String(e.message || e);
+        const corsHint =
+          msg.includes("Failed to fetch") || msg.includes("NetworkError")
+            ? " Blocked by browser CORS or network — ConvertAPI may only allow server-side calls from your plan; use a small backend proxy."
+            : "";
+        setExtractContent("ConvertAPI failed: " + msg + corsHint, { isPlaceholder: true });
+      } finally {
+        setScanUiVisible(false);
+        setToolbarBusy(false);
+      }
+    }
+
+    async function exportExtractToWord() {
+      const body = lastExtractedPlain.trim();
+      if (!body) {
+        alert("Nothing to export — extract or scan text first.");
+        return;
+      }
+      const rtl = els.extractRtl.checked;
+      const wordFont = rtl ? "Dima Mitra " : "Calibri";
+      const blocks = body
+        .split(/\n\s*\n/)
+        .map((s) => s.replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+      const parts = blocks.length ? blocks : [body.trim()];
+      const docParagraphs = parts.map(
+        (t) =>
+          new Paragraph({
+            bidirectional: rtl,
+            children: [
+              new TextRun({
+                text: t,
+                font: wordFont,
+                rightToLeft: rtl,
+              }),
+            ],
+          })
+      );
+      const title = getActiveBook()?.title?.trim() || "Extracted text";
+      const headerParas = [
+        new Paragraph({
+          bidirectional: rtl,
+          children: [
+            new TextRun({
+              text: title,
+              font: wordFont,
+              bold: true,
+              rightToLeft: rtl,
+            }),
+          ],
+        }),
+      ];
+      const doc = new Document({
+        sections: [{ children: [...headerParas, ...docParagraphs] }],
+      });
+      const blob = await Packer.toBlob(doc);
+      const safe = title.replace(/[^\w\-]+/g, "_").slice(0, 80) || "extract";
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${safe}-page-${currentPage}.docx`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function renderSyllabus() {
+      els.syllabusRoot.innerHTML = "";
+      if (!activeBookId) return;
+      ensureSyllabus(activeBookId);
+      const nodes = syllabi[activeBookId];
+      nodes.forEach((n, i) => renderNode(els.syllabusRoot, n, i, null));
+    }
+
+    function renderNode(ul, node, index, parentPath) {
+      const path = parentPath ? [...parentPath, index] : [index];
+      const li = document.createElement("li");
+      const wrap = document.createElement("div");
+      wrap.className = "syllabus-node";
+      const actions = document.createElement("div");
+      actions.className = "node-actions";
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.value = node.title;
+      inp.placeholder = "Unit or topic title";
+      inp.addEventListener("input", () => {
+        node.title = inp.value;
+        saveSyllabi();
+      });
+      const addChild = document.createElement("button");
+      addChild.type = "button";
+      addChild.className = "small secondary";
+      addChild.textContent = "+";
+      addChild.title = "Add subtopic";
+      addChild.addEventListener("click", () => {
+        if (!node.children) node.children = [];
+        node.children.push({ id: uid(), title: "", children: [] });
+        saveSyllabi();
+        renderSyllabus();
+      });
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "small danger";
+      del.textContent = "×";
+      del.title = "Remove";
+      del.addEventListener("click", () => {
+        removeAtPath(syllabi[activeBookId], path);
+        saveSyllabi();
+        renderSyllabus();
+      });
+      actions.appendChild(addChild);
+      actions.appendChild(del);
+      wrap.appendChild(actions);
+      wrap.appendChild(inp);
+      li.appendChild(wrap);
+      if (node.children && node.children.length) {
+        const sub = document.createElement("ul");
+        node.children.forEach((c, j) => renderNode(sub, c, j, path));
+        li.appendChild(sub);
+      }
+      ul.appendChild(li);
+    }
+
+    function removeAtPath(arr, path) {
+      if (path.length === 1) {
+        arr.splice(path[0], 1);
+        return;
+      }
+      const [head, ...rest] = path;
+      const parent = arr[head];
+      if (!parent.children) parent.children = [];
+      removeAtPath(parent.children, rest);
+    }
+
+    els.addBook.addEventListener("click", () => {
+      const title = els.bookTitle.value.trim() || "Untitled book";
+      const url = els.bookUrl.value.trim();
+      const id = uid();
+      books.push({ id, title, url: url || null });
+      saveBooks();
+      els.bookTitle.value = "";
+      els.bookUrl.value = "";
+      activeBookId = id;
+      ensureSyllabus(id);
+      saveSyllabi();
+      renderBookList();
+      renderSyllabus();
+      if (url) loadPdfFromUrl(url);
+      else {
+        setExtractContent("No URL — open a local PDF when ready.", { isPlaceholder: true });
+        clearPdfView();
+      }
+    });
+
+    els.pickFile.addEventListener("click", () => {
+      if (!els.fileInput) return;
+      els.fileInput.click();
+    });
+    els.fileInput.addEventListener("change", async (ev) => {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      const buf = await file.arrayBuffer();
+      let b = getActiveBook();
+      if (!b) {
+        const id = uid();
+        books.push({ id, title: file.name.replace(/\.pdf$/i, "") || "Local PDF", url: null });
+        activeBookId = id;
+        ensureSyllabus(id);
+        saveBooks();
+        saveSyllabi();
+        b = getActiveBook();
+        renderBookList();
+        renderSyllabus();
+      }
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+      currentObjectUrl = URL.createObjectURL(file);
+      await loadPdfFromArrayBuffer(buf);
+      ev.target.value = "";
+    });
+
+    els.prevPage.addEventListener("click", async () => {
+      if (!pdfDoc || currentPage <= 1) return;
+      currentPage--;
+      await renderPage();
+    });
+    els.nextPage.addEventListener("click", async () => {
+      if (!pdfDoc || currentPage >= pdfDoc.numPages) return;
+      currentPage++;
+      await renderPage();
+    });
+    els.extractPage.addEventListener("click", extractCurrentPageText);
+    els.scanPage.addEventListener("click", () => {
+      scanCurrentPageOcr().catch((err) => {
+        console.error(err);
+        setExtractContent("OCR error: " + String(err.message || err), { isPlaceholder: true });
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      });
+    });
+    els.scanAll.addEventListener("click", () => {
+      scanAllPagesOcr().catch((err) => {
+        console.error(err);
+        setExtractContent("OCR error: " + String(err.message || err), { isPlaceholder: true });
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      });
+    });
+    els.scanCancel?.addEventListener("click", () => {
+      scanCancelled = true;
+      setScanProgressLabel("Cancelling…", null);
+    });
+    els.extractRtl.addEventListener("change", () => {
+      extractRtlFollowAuto = false;
+      syncExtractDirection();
+    });
+    els.exportWord.addEventListener("click", () => {
+      exportExtractToWord().catch((err) => {
+        console.error(err);
+        alert("Word export failed: " + String(err.message || err));
+      });
+    });
+    els.zoomIn.addEventListener("click", async () => {
+      scale = Math.min(scale + 0.15, 2.5);
+      if (visualAllPagesMode) await refreshVisualStackAfterZoom();
+      else await renderPage();
+    });
+    els.zoomOut.addEventListener("click", async () => {
+      scale = Math.max(scale - 0.15, 0.5);
+      if (visualAllPagesMode) await refreshVisualStackAfterZoom();
+      else await renderPage();
+    });
+
+    els.toggleVisualPages?.addEventListener("click", async () => {
+      if (!pdfDoc || visualPagesRendering) return;
+      visualAllPagesMode = !visualAllPagesMode;
+      applyPdfViewMode();
+      if (visualAllPagesMode) await renderAllPagesVisual();
+      else await renderPage();
+    });
+
+    els.addRootTopic.addEventListener("click", () => {
+      if (!activeBookId) {
+        alert("Add or select a book first.");
+        return;
+      }
+      ensureSyllabus(activeBookId);
+      syllabi[activeBookId].push({ id: uid(), title: "", children: [] });
+      saveSyllabi();
+      renderSyllabus();
+    });
+
+    els.exportSyllabus.addEventListener("click", () => {
+      if (!activeBookId) return;
+      ensureSyllabus(activeBookId);
+      const data = {
+        book: getActiveBook(),
+        syllabus: syllabi[activeBookId],
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `syllabus-${activeBookId.slice(0, 8)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    renderBookList();
+    renderSyllabus();
+    if (els.convertApiToken) {
+      const savedTok = localStorage.getItem(STORAGE_CONVERTAPI_TOKEN);
+      if (savedTok) els.convertApiToken.value = savedTok;
+    }
+    els.convertApiToken?.addEventListener("change", persistConvertApiToken);
+    els.convertApiToken?.addEventListener("blur", persistConvertApiToken);
+    els.convertApiClearToken?.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_CONVERTAPI_TOKEN);
+      if (els.convertApiToken) els.convertApiToken.value = "";
+    });
+    els.convertApiPdfToTxt?.addEventListener("click", () => {
+      convertFullPdfViaConvertApi().catch((err) => {
+        console.error(err);
+        setExtractContent("ConvertAPI error: " + String(err.message || err), { isPlaceholder: true });
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      });
+    });
+    syncExtractDirection();
+    updateExtractFontProbe();
+    if (books.length) {
+      const exists = activeBookId && books.some((b) => b.id === activeBookId);
+      if (exists) selectBook(activeBookId);
+      else selectBook(books[0].id);
+    }
+  </script>
+</body>
+</html>
