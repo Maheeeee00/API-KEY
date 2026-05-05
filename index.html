@@ -121,6 +121,16 @@
       direction: ltr;
       text-align: left;
     }
+    .inline-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+    }
+    .inline-check input { cursor: pointer; }
     .hint { font-size: 0.8rem; opacity: 0.85; margin-top: 0.5rem; }
     .status { font-size: 0.85rem; margin-top: 0.35rem; min-height: 1.25em; }
     .status.error { color: #dc2626; }
@@ -144,11 +154,12 @@
         <option value="noori">Urdu (Jameel / Noori / Noto)</option>
         <option value="times">Times New Roman</option>
       </select>
+      <label class="inline-check"><input type="checkbox" id="cleanup-check" checked /> Simple text (drop garbled Urdu lines)</label>
     </div>
     <textarea id="output" class="font-noori" lang="ur" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly></textarea>
     <p class="hint">
-      Urdu uses your installed fonts first (e.g. <strong>Jameel Noori Nastaleeq</strong> on Windows). You can also add <code>fonts/noori.woff2</code> or <code>fonts/noori.ttf</code> next to this file.
-      If nothing matches, Noto Nastaliq Urdu loads from Google Fonts. Text is extracted as plain Unicode; PDF layout may differ from the preview.
+      Many textbook PDFs store Urdu with custom fonts: extraction can show random Latin/CJK symbols (<strong>not fixable</strong> by choosing Jameel Noori). Enable <strong>Simple text</strong> to drop those lines so English exercises stay readable. For real Urdu you need a PDF with proper Unicode text or OCR.
+      Preview fonts: install <strong>Jameel Noori</strong>, or add <code>fonts/noori.woff2</code> / <code>fonts/noori.ttf</code>; otherwise Noto Nastaliq Urdu loads from Google Fonts.
     </p>
     <div id="status" class="status" aria-live="polite"></div>
   </div>
@@ -163,6 +174,7 @@
     const extractBtn = document.getElementById('extract-btn');
     const copyBtn = document.getElementById('copy-btn');
     const fontSelect = document.getElementById('font-select');
+    const cleanupCheck = document.getElementById('cleanup-check');
     const output = document.getElementById('output');
     const statusEl = document.getElementById('status');
 
@@ -199,12 +211,46 @@
       }
     });
 
+    /** Lines that look like broken CID/custom-font Urdu (CJK/PUA/etc.) — not real Unicode Urdu. */
+    function isLikelyGarbledLine(line) {
+      if (!line.trim()) return false;
+      // CJK blocks + compatibility ideographs
+      if (/[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3200-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]/.test(line)) return true;
+      // Private use (often placeholder glyphs)
+      if (/[\uE000-\uF8FF]/.test(line)) return true;
+      return false;
+    }
+
+    function cleanupExtractedText(raw, dropGarbledLines) {
+      let s = raw.normalize('NFKC');
+      s = s.replace(/[\u200B-\u200D\uFEFF]/g, '');
+      s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+      s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      s = s.replace(/[ \t]+\n/g, '\n');
+      s = s.replace(/\n{3,}/g, '\n\n');
+
+      if (!dropGarbledLines) return s.trim();
+
+      const lines = s.split('\n');
+      const kept = [];
+      let dropped = 0;
+      for (const line of lines) {
+        if (isLikelyGarbledLine(line)) {
+          dropped += 1;
+          continue;
+        }
+        kept.push(line);
+      }
+      let out = kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+      return { text: out, droppedLines: dropped };
+    }
+
     async function extractTextFromPdf(data) {
       const pdf = await pdfjsLib.getDocument({ data }).promise;
       const parts = [];
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
-        const content = await page.getTextContent();
+        const content = await page.getTextContent({ normalizeWhitespace: true });
         let lastY = null;
         const lineChunks = [];
         let currentLine = [];
@@ -236,11 +282,26 @@
       setStatus('Extracting…');
       try {
         // pdf.js may detach the ArrayBuffer when loading; clone each run so repeat extracts work.
-        const text = await extractTextFromPdf(currentBuffer.slice(0));
-        output.value = text || '(No text layer found in this PDF.)';
+        const raw = await extractTextFromPdf(currentBuffer.slice(0));
+        const cleanup = cleanupExtractedText(raw, cleanupCheck.checked);
+        const text = typeof cleanup === 'string' ? cleanup : cleanup.text;
+        const dropped = typeof cleanup === 'string' ? 0 : cleanup.droppedLines;
+
+        output.value =
+          text ||
+          (cleanupCheck.checked && raw.trim()
+            ? '(All lines looked like broken encoding. Uncheck “Simple text” to see raw extraction.)'
+            : '(No text layer found in this PDF.)');
         output.readOnly = false;
-        copyBtn.disabled = !text;
-        setStatus(`Done${text ? '.' : ' — empty text layer.'}`);
+        copyBtn.disabled = !output.value.trim();
+
+        let msg = 'Done.';
+        if (!raw.trim()) msg = 'Done — no text in this PDF.';
+        else if (raw.trim() && !text && cleanupCheck.checked)
+          msg = 'Done — try turning off Simple text if everything was removed.';
+        else if (dropped > 0)
+          msg = `Done — removed ${dropped} garbled line(s) (bad Urdu encoding in PDF). English text should be clearer.`;
+        setStatus(msg);
       } catch (e) {
         console.error(e);
         setStatus(e?.message || 'Failed to read PDF.', true);
