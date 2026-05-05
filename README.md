@@ -21,9 +21,8 @@ Data is stored in **localStorage** in this browser (library + outlines). Use **E
 
 ## Scan (OCR)
 
-- **Scan page (OCR)** runs **Tesseract.js** in the browser on a high-resolution render of the **current** page (Urdu + English; first run downloads language data).
-- **Scan all pages** joins every page with `--- Page N ---` headings. Large PDFs are slow and CPU-heavy; the app asks for confirmation over **80** pages.
-- Quality depends on scan resolution and layout; Urdu Nastaliq can be harder than plain Latin OCR.
+- **Scan page** / **Scan all pages** run **Tesseract.js** in the browser (toolbar **OCR langs**: Urdu+English, Arabic+Urdu+English, or English only). Language files load from GitHub (`naptha/tessdata` `4.0.0`, gzipped); first run downloads them.
+- **Urdu Nastaliq** is difficult for Tesseract; try **Arabic + Urdu + English**, zoom the PDF before scanning, or use **desktop OCR** (Adobe Acrobat, ABBYY, or Google Drive → open PDF with Google Docs) for production-quality Urdu.
 
 ## Extractor (Urdu + Word)
 

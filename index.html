@@ -155,6 +155,22 @@
       font-size: 0.8rem;
     }
     .pdf-toolbar span { color: var(--muted); }
+    .ocr-lang-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .ocr-lang-label select {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.35rem;
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      max-width: 12rem;
+    }
     .pdf-scroll {
       flex: 1;
       overflow: auto;
@@ -333,6 +349,14 @@
         <button type="button" class="secondary small" id="scanAll" title="OCR every page — slow for large books">Scan all pages</button>
         <button type="button" class="secondary small" id="zoomOut">−</button>
         <button type="button" class="secondary small" id="zoomIn">+</button>
+        <label class="ocr-lang-label" for="ocrLang" title="First scan downloads selected languages (~large for ara+urd+eng)">
+          OCR langs
+          <select id="ocrLang">
+            <option value="urd+eng" selected>Urdu + English</option>
+            <option value="ara+urd+eng">Arabic + Urdu + English</option>
+            <option value="eng">English only</option>
+          </select>
+        </label>
       </div>
       <div class="pdf-scroll" id="pdfScroll">
         <p id="pdfPlaceholder" style="color:var(--muted);text-align:center;margin-top:2rem;">Select a book or open a PDF.</p>
@@ -342,7 +366,9 @@
       <div class="panel-body" style="border-top:1px solid var(--border);max-height:420px;">
         <strong style="font-size:0.8rem;">Extracted / scanned text</strong>
         <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
-          <strong>Extract</strong> reads the PDF text layer (fast). <strong>Scan (OCR)</strong> reads pixels — use for scanned books; loads Tesseract once, uses <strong>Urdu + English</strong>. Direction is auto-set after text appears.
+          <strong>Urdu:</strong> Garbled <strong>Extract</strong> = bad PDF text mapping → use <strong>Scan</strong>. Install <strong>Jameel Noori Nastaleeq</strong> on your PC for Word/display.
+          In-browser OCR is weaker than <strong>desktop OCR</strong> (Adobe Acrobat, ABBYY, or upload PDF to Google Drive → open with Google Docs).
+          Try OCR langs <strong>Arabic + Urdu + English</strong> if Urdu scan is poor.
         </p>
         <div class="extract-toolbar">
           <label><input type="checkbox" id="extractRtl" /> Force RTL (Urdu)</label>
@@ -412,6 +438,7 @@
       exportWord: document.getElementById("exportWord"),
       zoomIn: document.getElementById("zoomIn"),
       zoomOut: document.getElementById("zoomOut"),
+      ocrLang: document.getElementById("ocrLang"),
       syllabusRoot: document.getElementById("syllabusRoot"),
       addRootTopic: document.getElementById("addRootTopic"),
       exportSyllabus: document.getElementById("exportSyllabus"),
@@ -429,8 +456,9 @@
     /** Until the user toggles “Force RTL”, direction follows each extraction automatically. */
     let extractRtlFollowAuto = true;
 
-    /** Lazy Tesseract worker (Urdu + English). */
+    /** Lazy Tesseract worker; recreated when OCR language pack changes. */
     let ocrWorkerPromise = null;
+    let ocrWorkerLangKey = null;
     let scanInProgress = false;
     let scanCancelled = false;
 
@@ -669,7 +697,7 @@
       const page = await pdfDoc.getPage(pageIndex1);
       const vp = page.getViewport({ scale: 1 });
       const maxDim = Math.max(vp.width, vp.height);
-      const target = 2000;
+      const target = 2800;
       return Math.min(3, Math.max(1.15, target / maxDim));
     }
 
@@ -687,16 +715,35 @@
       return canvas;
     }
 
+    async function terminateOcrWorkerInternal() {
+      if (!ocrWorkerPromise) return;
+      try {
+        const w = await ocrWorkerPromise.catch(() => null);
+        if (w && typeof w.terminate === "function") await w.terminate();
+      } catch {
+        /* ignore */
+      }
+      ocrWorkerPromise = null;
+      ocrWorkerLangKey = null;
+    }
+
     async function getOcrWorker() {
+      const langs = els.ocrLang?.value?.trim() || "urd+eng";
+      if (ocrWorkerPromise && ocrWorkerLangKey !== langs) await terminateOcrWorkerInternal();
+
       if (!ocrWorkerPromise) {
+        ocrWorkerLangKey = langs;
+        const langPath =
+          "https://raw.githubusercontent.com/naptha/tessdata/gh-pages/4.0.0/";
         ocrWorkerPromise = (async () => {
           const { createWorker } = await import(
             "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.esm.min.js"
           );
-          const worker = await createWorker("urd+eng", 1, {
+          const worker = await createWorker(langs, 1, {
             workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/worker.min.js",
             corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0",
-            langPath: "https://tessdata.projectnaptha.com/4.0.0",
+            langPath,
+            gzip: true,
             logger: (m) => {
               if (!scanInProgress || scanCancelled) return;
               const prog =
@@ -708,6 +755,9 @@
               if (prog != null)
                 setScanProgressLabel(m.status || "Working…", prog);
             },
+          });
+          await worker.setParameters({
+            tessedit_pageseg_mode: "6",
           });
           return worker;
         })();
