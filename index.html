@@ -213,7 +213,7 @@
     <textarea id="output" class="font-noori" lang="ur" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly hidden></textarea>
     <div id="output-visual" class="output-visual mixed-font-noori" role="region" aria-label="Extracted text preview"></div>
     <p class="hint">
-      Many textbook PDFs store Urdu with custom fonts: extraction can show random Latin/CJK symbols (<strong>not fixable</strong> by choosing Jameel Noori). Enable <strong>Simple text</strong> to drop those lines so English exercises stay readable. For real Urdu you need a PDF with proper Unicode text or OCR.
+      Many textbook PDFs store Urdu with custom fonts: extraction can show random Latin/CJK symbols (<strong>not fixable</strong> by choosing Jameel Noori). Enable <strong>Simple text</strong> to drop those lines so English exercises stay readable. Text is <strong>reassembled</strong> by position (lines top-to-bottom, words left-to-right or right-to-left for Arabic script lines).
       <strong>Mixed layout</strong> shows Latin text left-to-right and Arabic-script text right-to-left (same characters as extraction — use <strong>Copy</strong> for the exact plain text). Turn it off for a single-direction editor.
     </p>
     <div id="status" class="status" aria-live="polite"></div>
@@ -389,29 +389,87 @@
       return { text: out, droppedLines: dropped };
     }
 
+    /**
+     * Build readable lines: cluster items by vertical position, sort each line in reading order,
+     * insert gaps between words where horizontal spacing is large.
+     */
+    function extractPageText(content) {
+      const rawItems = [];
+      for (const item of content.items) {
+        if (!item.str) continue;
+        const tr = item.transform;
+        const x = tr[4];
+        const y = tr[5];
+        const scale = Math.hypot(tr[0], tr[1]) || Math.hypot(tr[2], tr[3]) || 1;
+        const h = item.height || scale || 12;
+        let w = typeof item.width === 'number' && item.width > 0 ? item.width : 0;
+        if (!w) w = Math.max(h * 0.45 * item.str.length * 0.35, h * 0.25);
+        rawItems.push({ str: item.str, x, y, w, h });
+      }
+      if (!rawItems.length) return '';
+
+      const heights = rawItems.map((i) => i.h).sort((a, b) => a - b);
+      const medianH = heights[Math.floor(heights.length / 2)] || 12;
+      const lineEps = Math.max(3, medianH * 0.55);
+
+      rawItems.sort((a, b) => b.y - a.y);
+
+      const lines = [];
+      let bucket = [];
+      let anchorY = rawItems[0].y;
+
+      function flushBucket() {
+        if (!bucket.length) return;
+        const sample = bucket.map((i) => i.str).join('');
+        const letters = [...sample].filter((ch) => /\p{L}/u.test(ch));
+        const arabicCount = [...sample].filter((ch) => /\p{Script=Arabic}/u.test(ch)).length;
+        const rtl = letters.length > 0 && arabicCount / letters.length > 0.35;
+        bucket.sort((a, b) => (rtl ? b.x - a.x : a.x - b.x));
+
+        let out = '';
+        const spaceGap = medianH * 0.35;
+        for (let i = 0; i < bucket.length; i++) {
+          const it = bucket[i];
+          if (i > 0) {
+            const prev = bucket[i - 1];
+            let gap;
+            if (rtl) gap = prev.x - (it.x + it.w);
+            else gap = it.x - (prev.x + prev.w);
+            if (gap > spaceGap) out += ' ';
+          }
+          out += it.str;
+        }
+        lines.push(out);
+        bucket = [];
+      }
+
+      for (const it of rawItems) {
+        if (!bucket.length) {
+          bucket.push(it);
+          anchorY = it.y;
+          continue;
+        }
+        if (Math.abs(it.y - anchorY) <= lineEps) {
+          bucket.push(it);
+          anchorY = (anchorY * (bucket.length - 1) + it.y) / bucket.length;
+        } else {
+          flushBucket();
+          bucket.push(it);
+          anchorY = it.y;
+        }
+      }
+      flushBucket();
+
+      return lines.join('\n').trim();
+    }
+
     async function extractTextFromPdf(data) {
       const pdf = await pdfjsLib.getDocument({ data }).promise;
       const parts = [];
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
         const content = await page.getTextContent({ normalizeWhitespace: true });
-        let lastY = null;
-        const lineChunks = [];
-        let currentLine = [];
-        for (const item of content.items) {
-          const str = item.str;
-          if (!str) continue;
-          const tr = item.transform;
-          const y = tr[5];
-          if (lastY !== null && Math.abs(y - lastY) > 2.5) {
-            lineChunks.push(currentLine.join(''));
-            currentLine = [];
-          }
-          lastY = y;
-          currentLine.push(str);
-        }
-        if (currentLine.length) lineChunks.push(currentLine.join(''));
-        const pageText = lineChunks.join('\n').trim();
+        const pageText = extractPageText(content);
         if (pageText) parts.push(pageText);
       }
       return parts.join('\n\n');
