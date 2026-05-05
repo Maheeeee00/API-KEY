@@ -279,7 +279,20 @@
       align-items: center;
       margin-top: 0.35rem;
     }
-    .extract-toolbar label {
+    .extract-toolbar a.external-tool-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--border);
+      color: var(--text);
+      text-decoration: none;
+    }
+    .extract-toolbar a.external-tool-link:hover {
+      filter: brightness(1.08);
+    }
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
@@ -417,11 +430,22 @@
         <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
           <strong>Visual:</strong> Use <strong>All pages (visual)</strong> to see every page exactly as printed (best when Extract shows garbage). Extract/Scan still work from the current page number in single-page view.
           In-browser OCR is weaker than <strong>desktop OCR</strong> (Adobe Acrobat, ABBYY, or upload PDF to Google Drive → open with Google Docs).
-          Try OCR langs <strong>Arabic + Urdu + English</strong> if Urdu scan is poor.
+          <strong>External:</strong>
+          <a href="https://iconictoolshub.com/pdf-to-text" target="_blank" rel="noopener noreferrer">Iconic Tools Hub PDF→text</a>
+          (new tab) — upload the PDF there, copy the result, paste into the box below. We cannot embed their tool; privacy is between you and that site.
         </p>
         <div class="extract-toolbar">
           <label><input type="checkbox" id="extractRtl" /> Force RTL (Urdu)</label>
           <button type="button" class="secondary small" id="exportWord" title="Download .docx for Microsoft Word">Download Word (.docx)</button>
+          <a
+            id="externalPdfToText"
+            class="external-tool-link"
+            href="https://iconictoolshub.com/pdf-to-text"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Opens in a new tab — upload your PDF there, then copy text back here"
+            >External PDF → text</a
+          >
         </div>
         <div class="scan-progress" id="scanProgress" aria-live="polite">
           <span id="scanProgressText"></span>
