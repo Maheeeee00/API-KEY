@@ -175,7 +175,7 @@
       line-height: 1.4;
     }
     .extract-box {
-      max-height: 220px;
+      max-height: 280px;
       overflow: auto;
       white-space: pre-wrap;
       word-break: break-word;
@@ -244,6 +244,31 @@
       font-family: ui-monospace, monospace;
       word-break: break-all;
     }
+    .scan-progress {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+      padding: 0.4rem 0.5rem;
+      background: var(--bg);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .scan-progress.visible { display: block; }
+    .scan-progress .bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 0.35rem;
+      overflow: hidden;
+    }
+    .scan-progress .bar > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.2s ease;
+    }
     .syllabus-tree { list-style: none; margin: 0; padding-left: 0; }
     .syllabus-tree ul { list-style: none; margin: 0.25rem 0 0 0; padding-left: 1rem; border-left: 1px solid var(--border); }
     .syllabus-node {
@@ -295,22 +320,30 @@
         <button type="button" class="secondary small" id="nextPage">Next</button>
         <span>Page <span id="pageNum">0</span> / <span id="pageCount">0</span></span>
         <button type="button" class="small" id="extractPage">Extract text (this page)</button>
+        <button type="button" class="small" id="scanPage" title="OCR — read text from the page image (Urdu + English)">Scan page (OCR)</button>
+        <button type="button" class="secondary small" id="scanAll" title="OCR every page — slow for large books">Scan all pages</button>
         <button type="button" class="secondary small" id="zoomOut">−</button>
         <button type="button" class="secondary small" id="zoomIn">+</button>
       </div>
       <div class="pdf-scroll" id="pdfScroll">
         <p id="pdfPlaceholder" style="color:var(--muted);text-align:center;margin-top:2rem;">Select a book or open a PDF.</p>
-        <canvas id="pdfCanvas" class="hidden"></canvas>
+        <canvas id="ocrCanvas" class="hidden" aria-hidden="true"></canvas>
       </div>
-      <div class="panel-body" style="border-top:1px solid var(--border);max-height:260px;">
-        <strong style="font-size:0.8rem;">Extracted text</strong>
+      <div class="panel-body" style="border-top:1px solid var(--border);max-height:420px;">
+        <strong style="font-size:0.8rem;">Extracted / scanned text</strong>
         <p style="font-size:0.72rem;color:var(--muted);margin:0.25rem 0 0;line-height:1.35;">
-          Text direction is set <strong>automatically</strong> after extract (Urdu → RTL, English → LTR). Use the checkbox to override.
-          Urdu uses Nastaliq fonts for clearer shaping; English uses a plain sans font.
+          <strong>Extract</strong> reads the PDF text layer (fast). <strong>Scan (OCR)</strong> reads pixels — use for scanned books; loads Tesseract once, uses <strong>Urdu + English</strong>. Direction is auto-set after text appears.
         </p>
         <div class="extract-toolbar">
           <label><input type="checkbox" id="extractRtl" /> Force RTL (Urdu)</label>
           <button type="button" class="secondary small" id="exportWord" title="Download .docx for Microsoft Word">Download Word (.docx)</button>
+        </div>
+        <div class="scan-progress" id="scanProgress" aria-live="polite">
+          <span id="scanProgressText"></span>
+          <div class="row" style="margin-top:0.35rem;margin-bottom:0;">
+            <button type="button" class="secondary small hidden" id="scanCancel">Cancel scan</button>
+          </div>
+          <div class="bar"><i id="scanProgressBar"></i></div>
         </div>
         <div class="extract-encoding-warn" id="extractEncodingWarn"></div>
         <div class="extract-box ltr" id="extractOutput" lang="en" dir="ltr">—</div>
@@ -348,6 +381,7 @@
       fileInput: document.getElementById("fileInput"),
       bookList: document.getElementById("bookList"),
       pdfCanvas: document.getElementById("pdfCanvas"),
+      ocrCanvas: document.getElementById("ocrCanvas"),
       pdfPlaceholder: document.getElementById("pdfPlaceholder"),
       pdfScroll: document.getElementById("pdfScroll"),
       pageNum: document.getElementById("pageNum"),
@@ -355,6 +389,12 @@
       prevPage: document.getElementById("prevPage"),
       nextPage: document.getElementById("nextPage"),
       extractPage: document.getElementById("extractPage"),
+      scanPage: document.getElementById("scanPage"),
+      scanAll: document.getElementById("scanAll"),
+      scanProgress: document.getElementById("scanProgress"),
+      scanProgressText: document.getElementById("scanProgressText"),
+      scanProgressBar: document.getElementById("scanProgressBar"),
+      scanCancel: document.getElementById("scanCancel"),
       extractOutput: document.getElementById("extractOutput"),
       extractRtl: document.getElementById("extractRtl"),
       extractEncodingWarn: document.getElementById("extractEncodingWarn"),
@@ -378,6 +418,11 @@
     let lastExtractedPlain = "";
     /** Until the user toggles “Force RTL”, direction follows each extraction automatically. */
     let extractRtlFollowAuto = true;
+
+    /** Lazy Tesseract worker (Urdu + English). */
+    let ocrWorkerPromise = null;
+    let scanInProgress = false;
+    let scanCancelled = false;
 
     function loadJson(key, fallback) {
       try {
@@ -589,6 +634,171 @@
       els.pageNum.textContent = String(currentPage);
     }
 
+    function setScanUiVisible(visible, showCancel = false) {
+      els.scanProgress?.classList.toggle("visible", visible);
+      els.scanCancel?.classList.toggle("hidden", !showCancel);
+      if (!visible) {
+        if (els.scanProgressText) els.scanProgressText.textContent = "";
+        if (els.scanProgressBar) els.scanProgressBar.style.width = "0%";
+      }
+    }
+
+    function setScanProgressLabel(text, fraction) {
+      if (els.scanProgressText) els.scanProgressText.textContent = text;
+      if (els.scanProgressBar && typeof fraction === "number")
+        els.scanProgressBar.style.width = `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%`;
+    }
+
+    function setToolbarBusy(busy) {
+      [els.extractPage, els.scanPage, els.scanAll, els.prevPage, els.nextPage].forEach((el) => {
+        if (el) el.disabled = busy;
+      });
+    }
+
+    async function getOcrRenderScale(pageIndex1) {
+      const page = await pdfDoc.getPage(pageIndex1);
+      const vp = page.getViewport({ scale: 1 });
+      const maxDim = Math.max(vp.width, vp.height);
+      const target = 2000;
+      return Math.min(3, Math.max(1.15, target / maxDim));
+    }
+
+    async function renderPdfPageToOcrCanvas(pageIndex1) {
+      const ocrScale = await getOcrRenderScale(pageIndex1);
+      const page = await pdfDoc.getPage(pageIndex1);
+      const viewport = page.getViewport({ scale: ocrScale });
+      const canvas = els.ocrCanvas;
+      const ctx = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      return canvas;
+    }
+
+    async function getOcrWorker() {
+      if (!ocrWorkerPromise) {
+        ocrWorkerPromise = (async () => {
+          const { createWorker } = await import(
+            "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.esm.min.js"
+          );
+          const worker = await createWorker("urd+eng", 1, {
+            workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/worker.min.js",
+            corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0",
+            langPath: "https://tessdata.projectnaptha.com/4.0.0",
+            logger: (m) => {
+              if (!scanInProgress || scanCancelled) return;
+              const prog =
+                typeof m.progress === "number"
+                  ? m.progress
+                  : m.status === "loading tesseract core"
+                    ? 0.05
+                    : null;
+              if (prog != null)
+                setScanProgressLabel(m.status || "Working…", prog);
+            },
+          });
+          return worker;
+        })();
+      }
+      return ocrWorkerPromise;
+    }
+
+      if (!pdfDoc) {
+        setExtractContent("Open a PDF first, then scan.", { isPlaceholder: true });
+        return;
+      }
+      if (scanInProgress) return;
+      scanInProgress = true;
+      scanCancelled = false;
+      setToolbarBusy(true);
+      setScanUiVisible(true, true);
+      setScanProgressLabel("Preparing OCR (first run downloads Urdu + English data)…", 0.02);
+      try {
+        const worker = await getOcrWorker();
+        if (scanCancelled) return;
+        setScanProgressLabel(`Rendering page ${currentPage}…`, 0.15);
+        await renderPdfPageToOcrCanvas(currentPage);
+        if (scanCancelled) return;
+        setScanProgressLabel("Recognizing text…", 0.35);
+        const {
+          data: { text },
+        } = await worker.recognize(els.ocrCanvas);
+        if (scanCancelled) return;
+        const raw = (text || "").trim();
+        if (!raw)
+          setExtractContent("(OCR returned no text — try zooming the PDF or a clearer scan.)", {
+            isPlaceholder: true,
+          });
+        else setExtractContent(raw);
+      } catch (e) {
+        console.error(e);
+        if (!scanCancelled)
+          setExtractContent("OCR failed: " + String(e.message || e), { isPlaceholder: true });
+      } finally {
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      }
+    }
+
+    async function scanAllPagesOcr() {
+      if (!pdfDoc) {
+        setExtractContent("Open a PDF first, then scan.", { isPlaceholder: true });
+        return;
+      }
+      const total = pdfDoc.numPages;
+      if (total > 80) {
+        const ok = confirm(
+          `This PDF has ${total} pages. Scanning all may take a long time and use heavy CPU. Continue?`
+        );
+        if (!ok) return;
+      }
+      if (scanInProgress) return;
+      scanInProgress = true;
+      scanCancelled = false;
+      setToolbarBusy(true);
+      setScanUiVisible(true, true);
+      const chunks = [];
+      try {
+        const worker = await getOcrWorker();
+        for (let p = 1; p <= total; p++) {
+          if (scanCancelled) break;
+          const frac = (p - 1) / total;
+          setScanProgressLabel(`Page ${p} / ${total} — rendering…`, 0.1 + frac * 0.85);
+          await renderPdfPageToOcrCanvas(p);
+          if (scanCancelled) break;
+          setScanProgressLabel(`Page ${p} / ${total} — recognizing…`, 0.1 + frac * 0.85 + 0.02);
+          const {
+            data: { text },
+          } = await worker.recognize(els.ocrCanvas);
+          const t = (text || "").trim();
+          if (t) chunks.push(`--- Page ${p} ---\n\n${t}`);
+        }
+        if (scanCancelled) {
+          const partial = chunks.join("\n\n");
+          setExtractContent(
+            partial
+              ? `${partial}\n\n[Scan cancelled — partial text above.]`
+              : "Scan cancelled.",
+            { isPlaceholder: !partial }
+          );
+        } else if (!chunks.length)
+          setExtractContent("(OCR found no text on any page.)", { isPlaceholder: true });
+        else setExtractContent(chunks.join("\n\n"));
+      } catch (e) {
+        console.error(e);
+        if (!scanCancelled)
+          setExtractContent("OCR failed: " + String(e.message || e), { isPlaceholder: true });
+      } finally {
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+        await renderPage();
+      }
+    }
+
     async function extractCurrentPageText() {
       if (!pdfDoc) {
         setExtractContent("Open a PDF first (URL or local file), then extract.", { isPlaceholder: true });
@@ -622,7 +832,7 @@
     async function exportExtractToWord() {
       const body = lastExtractedPlain.trim();
       if (!body) {
-        alert("Nothing to export — extract text from a PDF page first.");
+        alert("Nothing to export — extract or scan text first.");
         return;
       }
       const rtl = els.extractRtl.checked;
@@ -793,6 +1003,28 @@
       await renderPage();
     });
     els.extractPage.addEventListener("click", extractCurrentPageText);
+    els.scanPage.addEventListener("click", () => {
+      scanCurrentPageOcr().catch((err) => {
+        console.error(err);
+        setExtractContent("OCR error: " + String(err.message || err), { isPlaceholder: true });
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      });
+    });
+    els.scanAll.addEventListener("click", () => {
+      scanAllPagesOcr().catch((err) => {
+        console.error(err);
+        setExtractContent("OCR error: " + String(err.message || err), { isPlaceholder: true });
+        scanInProgress = false;
+        setToolbarBusy(false);
+        setScanUiVisible(false);
+      });
+    });
+    els.scanCancel?.addEventListener("click", () => {
+      scanCancelled = true;
+      setScanProgressLabel("Cancelling…", null);
+    });
     els.extractRtl.addEventListener("change", () => {
       extractRtlFollowAuto = false;
       syncExtractDirection();
