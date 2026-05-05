@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF → Text (Noori & Times New Roman)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --fg: #1a1a1a;
+      --border: #cfd4dc;
+      --accent: #2563eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121418;
+        --fg: #e8eaed;
+        --border: #3d4450;
+        --accent: #60a5fa;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      padding: 1.25rem;
+      max-width: 56rem;
+      margin-inline: auto;
+    }
+    h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 1rem; }
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      background: color-mix(in srgb, var(--bg) 92%, white);
+    }
+    @media (prefers-color-scheme: dark) {
+      .panel { background: color-mix(in srgb, var(--bg) 85%, black); }
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      align-items: center;
+      margin-bottom: 0.85rem;
+    }
+    label { font-size: 0.875rem; font-weight: 500; }
+    input[type="file"] { font-size: 0.85rem; max-width: 100%; }
+    select, button {
+      font: inherit;
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+    }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+      font-weight: 500;
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    button.secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    textarea {
+      width: 100%;
+      min-height: 280px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      line-height: 1.65;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+      resize: vertical;
+    }
+    /* Noori: load from ./fonts/ if present; otherwise Noto Nastaliq Urdu as Urdu/Nastaliq fallback */
+    @font-face {
+      font-family: 'Noori';
+      src:
+        local('Noori Nastaleeq'),
+        url('fonts/noori.woff2') format('woff2'),
+        url('fonts/noori.ttf') format('truetype'),
+        url('fonts/Noori.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    textarea.font-noori {
+      font-family: 'Noori', 'Noto Nastaliq Urdu', serif;
+      direction: rtl;
+      text-align: right;
+    }
+    textarea.font-times {
+      font-family: 'Times New Roman', Times, serif;
+      direction: ltr;
+      text-align: left;
+    }
+    .hint { font-size: 0.8rem; opacity: 0.85; margin-top: 0.5rem; }
+    .status { font-size: 0.85rem; margin-top: 0.35rem; min-height: 1.25em; }
+    .status.error { color: #dc2626; }
+    @media (prefers-color-scheme: dark) {
+      .status.error { color: #f87171; }
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF text extractor</h1>
+  <div class="panel">
+    <div class="row">
+      <label for="pdf-input">PDF file</label>
+      <input id="pdf-input" type="file" accept="application/pdf,.pdf" />
+      <button type="button" id="extract-btn" disabled>Extract text</button>
+      <button type="button" id="copy-btn" class="secondary" disabled>Copy</button>
+    </div>
+    <div class="row">
+      <label for="font-select">Preview font</label>
+      <select id="font-select">
+        <option value="noori">Noori (Urdu / Nastaliq)</option>
+        <option value="times">Times New Roman</option>
+      </select>
+    </div>
+    <textarea id="output" class="font-noori" placeholder="Choose a PDF and click Extract text…" spellcheck="false" readonly></textarea>
+    <p class="hint">
+      Put your Noori font files as <code>fonts/noori.woff2</code> or <code>fonts/noori.ttf</code> next to this HTML for authentic Noori shaping.
+      Without them, Urdu still uses Noto Nastaliq Urdu from Google Fonts. Text is extracted as plain Unicode; PDF layout may differ from the preview.
+    </p>
+    <div id="status" class="status" aria-live="polite"></div>
+  </div>
+
+  <script type="module">
+    import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+
+    const pdfInput = document.getElementById('pdf-input');
+    const extractBtn = document.getElementById('extract-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const fontSelect = document.getElementById('font-select');
+    const output = document.getElementById('output');
+    const statusEl = document.getElementById('status');
+
+    let currentBuffer = null;
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg || '';
+      statusEl.classList.toggle('error', Boolean(isError && msg));
+    }
+
+    pdfInput.addEventListener('change', () => {
+      const f = pdfInput.files?.[0];
+      extractBtn.disabled = !f;
+      copyBtn.disabled = true;
+      output.value = '';
+      setStatus('');
+      if (!f) {
+        currentBuffer = null;
+        return;
+      }
+      f.arrayBuffer().then((buf) => {
+        currentBuffer = buf.slice(0);
+      });
+    });
+
+    fontSelect.addEventListener('change', () => {
+      output.classList.remove('font-noori', 'font-times');
+      if (fontSelect.value === 'times') {
+        output.classList.add('font-times');
+      } else {
+        output.classList.add('font-noori');
+      }
+    });
+
+    async function extractTextFromPdf(data) {
+      const pdf = await pdfjsLib.getDocument({ data }).promise;
+      const parts = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        let lastY = null;
+        const lineChunks = [];
+        let currentLine = [];
+        for (const item of content.items) {
+          const str = item.str;
+          if (!str) continue;
+          const tr = item.transform;
+          const y = tr[5];
+          if (lastY !== null && Math.abs(y - lastY) > 2.5) {
+            lineChunks.push(currentLine.join(''));
+            currentLine = [];
+          }
+          lastY = y;
+          currentLine.push(str);
+        }
+        if (currentLine.length) lineChunks.push(currentLine.join(''));
+        const pageText = lineChunks.join('\n').trim();
+        if (pageText) parts.push(pageText);
+      }
+      return parts.join('\n\n');
+    }
+
+    extractBtn.addEventListener('click', async () => {
+      if (!currentBuffer) {
+        setStatus('Select a PDF file first.', true);
+        return;
+      }
+      extractBtn.disabled = true;
+      setStatus('Extracting…');
+      try {
+        const text = await extractTextFromPdf(currentBuffer);
+        output.value = text || '(No text layer found in this PDF.)';
+        output.readOnly = false;
+        copyBtn.disabled = !text;
+        setStatus(`Done${text ? '.' : ' — empty text layer.'}`);
+      } catch (e) {
+        console.error(e);
+        setStatus(e?.message || 'Failed to read PDF.', true);
+        copyBtn.disabled = true;
+      } finally {
+        extractBtn.disabled = false;
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+        setStatus('Copied to clipboard.');
+      } catch {
+        setStatus('Could not copy (clipboard permission).', true);
+      }
+    });
+  </script>
+</body>
+</html>
