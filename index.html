@@ -327,6 +327,7 @@
       </div>
       <div class="pdf-scroll" id="pdfScroll">
         <p id="pdfPlaceholder" style="color:var(--muted);text-align:center;margin-top:2rem;">Select a book or open a PDF.</p>
+        <canvas id="pdfCanvas" class="hidden"></canvas>
         <canvas id="ocrCanvas" class="hidden" aria-hidden="true"></canvas>
       </div>
       <div class="panel-body" style="border-top:1px solid var(--border);max-height:420px;">
@@ -623,7 +624,7 @@
     }
 
     async function renderPage() {
-      if (!pdfDoc) return;
+      if (!pdfDoc || !els.pdfCanvas) return;
       const page = await pdfDoc.getPage(currentPage);
       const viewport = page.getViewport({ scale });
       const canvas = els.pdfCanvas;
@@ -969,7 +970,10 @@
       }
     });
 
-    els.pickFile.addEventListener("click", () => els.fileInput.click());
+    els.pickFile.addEventListener("click", () => {
+      if (!els.fileInput) return;
+      els.fileInput.click();
+    });
     els.fileInput.addEventListener("change", async (ev) => {
       const file = ev.target.files?.[0];
       if (!file) return;
