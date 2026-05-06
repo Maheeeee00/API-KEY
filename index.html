@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PDF Text Extractor — English & Urdu</title>
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+      src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
@@ -307,8 +307,9 @@
       <header class="header">
         <h1>PDF text extractor</h1>
         <p class="subtitle">
-          Upload a PDF to extract text. Content is split into Latin (English) and
-          Arabic block script (Urdu) using Unicode ranges.
+          Upload a PDF to extract text. Latin letters go to the English column; Arabic script (including
+          common Urdu presentation forms) goes to the Urdu column. Garbled text is often fixed by loading
+          CMaps and standard fonts (this app does that automatically when online).
         </p>
       </header>
 
@@ -364,14 +365,23 @@
         "use strict";
 
         const PDFJS_VERSION = "3.11.174";
-        const WORKER_SRC = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`;
+        /** Same package as CMaps / standard fonts (fixes garbled “mojibake” text for many PDFs). */
+        const PDFJS_DIST = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/`;
 
         if (typeof pdfjsLib !== "undefined") {
-          pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_SRC;
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_DIST}build/pdf.worker.min.js`;
         }
 
-        const ARABIC_BLOCK_START = 0x0600;
-        const ARABIC_BLOCK_END = 0x06ff;
+        /** Urdu / Arabic script buckets (beyond U+0600–06FF for real-world text). */
+        function isUrduArabicScriptChar(char) {
+          const cp = char.codePointAt(0);
+          if (cp >= 0x0600 && cp <= 0x06ff) return true;
+          if (cp >= 0x0750 && cp <= 0x077f) return true;
+          if (cp >= 0x08a0 && cp <= 0x08ff) return true;
+          if (cp >= 0xfb50 && cp <= 0xfdff) return true;
+          if (cp >= 0xfe70 && cp <= 0xfeff) return true;
+          return false;
+        }
 
         const fileInput = document.getElementById("file-input");
         const dropZone = document.getElementById("drop-zone");
@@ -405,11 +415,6 @@
           if (type === "ok") statusEl.classList.add("status--ok");
         }
 
-        function isInArabicUrduBlock(char) {
-          const cp = char.codePointAt(0);
-          return cp >= ARABIC_BLOCK_START && cp <= ARABIC_BLOCK_END;
-        }
-
         function isLatinScriptChar(char) {
           return /\p{Script=Latin}/u.test(char);
         }
@@ -419,7 +424,7 @@
           let urdu = "";
           let last = "english";
           for (const char of text) {
-            if (isInArabicUrduBlock(char)) {
+            if (isUrduArabicScriptChar(char)) {
               urdu += char;
               last = "urdu";
               continue;
@@ -435,18 +440,32 @@
           return { english, urdu };
         }
 
+        function textContentItemsToString(textContent) {
+          let out = "";
+          for (const item of textContent.items) {
+            if (!("str" in item)) continue;
+            out += item.str;
+            if (item.hasEOL) out += "\n";
+          }
+          return out;
+        }
+
         async function extractTextFromPdf(arrayBuffer) {
           if (typeof pdfjsLib === "undefined") {
             throw new Error("PDF.js failed to load. Check your network connection.");
           }
-          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const loadingTask = pdfjsLib.getDocument({
+            data: arrayBuffer,
+            cMapUrl: `${PDFJS_DIST}cmaps/`,
+            cMapPacked: true,
+            standardFontDataUrl: `${PDFJS_DIST}standard_fonts/`,
+          });
           const pdf = await loadingTask.promise;
           const parts = [];
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items.map((item) => ("str" in item ? item.str : "")).join(" ");
-            parts.push(pageText);
+            const textContent = await page.getTextContent({ normalizeWhitespace: true });
+            parts.push(textContentItemsToString(textContent));
           }
           return parts.join("\n\n");
         }
