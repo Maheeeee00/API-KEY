@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Text Extractor — English & Urdu</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <style>
+      /* Noori Nastaleeq (Jameel Noori) — place woff2/ttf in fonts/ (either Noori* or Jameel* names) */
+      @font-face {
+        font-family: "Noori Nastaleeq";
+        src:
+          local("Jameel Noori Nastaleeq"),
+          local("Noori Nastaleeq"),
+          url("fonts/NooriNastaleeq.woff2") format("woff2"),
+          url("fonts/JameelNooriNastaleeq.woff2") format("woff2"),
+          url("fonts/NooriNastaleeq.ttf") format("truetype"),
+          url("fonts/JameelNooriNastaleeq.ttf") format("truetype");
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      :root {
+        --font-english: "Times New Roman", Times, serif;
+        --font-urdu: "Noori Nastaleeq", serif;
+        --bg: #0f1419;
+        --surface: #1a222d;
+        --surface-hover: #232d3b;
+        --border: #2d3a4d;
+        --text: #e8eef4;
+        --text-muted: #8b9cb0;
+        --accent: #5b9fd4;
+        --radius: 12px;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font-english);
+        background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%);
+        color: var(--text);
+        line-height: 1.5;
+      }
+
+      .app {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: clamp(1.25rem, 4vw, 2.5rem);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .header h1 {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 0 auto;
+        max-width: 36rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      .upload-section {
+        margin-bottom: 2rem;
+      }
+
+      .file-input:focus + .drop-zone,
+      .drop-zone:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .drop-zone {
+        width: 100%;
+        min-height: 200px;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        color: var(--text);
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s,
+          box-shadow 0.2s;
+        box-shadow: var(--shadow);
+      }
+
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: var(--accent);
+        background: var(--surface-hover);
+      }
+
+      .drop-zone__icon {
+        color: var(--accent);
+        opacity: 0.9;
+      }
+
+      .drop-zone__title {
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
+      .drop-zone__hint {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .status {
+        margin: 1rem 0 0;
+        min-height: 1.5rem;
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      .status--error {
+        color: #f08080;
+      }
+
+      .status--ok {
+        color: #7dcea0;
+      }
+
+      .outputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        align-items: stretch;
+      }
+
+      @media (max-width: 768px) {
+        .outputs {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .output-panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 280px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .output-panel__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.65rem 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .output-panel--english .output-panel__head {
+        border-left: 3px solid var(--accent);
+      }
+
+      .output-panel--urdu .output-panel__head {
+        border-right: 3px solid var(--accent);
+        direction: rtl;
+      }
+
+      .output-panel__label {
+        margin: 0;
+        padding: 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        flex: 1;
+        min-width: 8rem;
+      }
+
+      .output-panel--english .output-panel__label {
+        font-family: var(--font-english);
+      }
+
+      .output-panel--urdu .output-panel__label {
+        text-align: right;
+        font-family: var(--font-urdu);
+      }
+
+      .output-panel__actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        align-items: center;
+      }
+
+      .output-panel--urdu .output-panel__actions {
+        direction: rtl;
+      }
+
+      .output-panel--urdu .panel-btn,
+      .output-panel--urdu .panel-link {
+        font-family: var(--font-urdu);
+      }
+
+      .panel-btn,
+      .panel-link {
+        font-family: var(--font-english);
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.4rem 0.85rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface-hover);
+        color: var(--text);
+        cursor: pointer;
+        text-decoration: none;
+        line-height: 1.2;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+
+      .panel-btn:hover,
+      .panel-link:hover {
+        border-color: var(--accent);
+        background: rgba(91, 159, 212, 0.12);
+      }
+
+      .panel-btn:focus-visible,
+      .panel-link:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .output-panel__box {
+        flex: 1;
+        margin: 0;
+        padding: 1rem 1.1rem;
+        font-size: 1rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-y: auto;
+        max-height: min(55vh, 480px);
+        min-height: 200px;
+      }
+
+      .output-panel--english .output-panel__box {
+        font-family: var(--font-english);
+        direction: ltr;
+        text-align: left;
+      }
+
+      .output-panel--urdu .output-panel__box {
+        font-family: var(--font-urdu);
+        direction: rtl;
+        text-align: right;
+        font-size: 1.15rem;
+        line-height: 1.85;
+      }
+
+      .output-panel--english .output-panel__box:empty::before {
+        content: "No text in this category.";
+        color: var(--text-muted);
+        font-style: italic;
+        font-family: var(--font-english);
+        font-size: 0.9rem;
+      }
+
+      .output-panel--urdu .output-panel__box:empty::before {
+        content: "No text in this category.";
+        color: var(--text-muted);
+        font-style: italic;
+        font-family: var(--font-urdu);
+        font-size: 0.9rem;
+      }
+
+      .encoding-notice {
+        margin-top: 1.25rem;
+        padding: 1rem 1.15rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: rgba(200, 170, 80, 0.08);
+        color: var(--text);
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+
+      .encoding-notice code {
+        font-size: 0.82em;
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.25);
+      }
+
+      .encoding-notice ol {
+        margin: 0.5rem 0 0.75rem;
+        padding-left: 1.25rem;
+      }
+
+      .encoding-notice li {
+        margin: 0.35rem 0;
+      }
+
+      .encoding-notice strong {
+        color: #e8d4a8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <h1>PDF text extractor</h1>
+        <p class="subtitle">
+          Latin text is shown in Times New Roman; Arabic script in Noori Nastaleeq. The app loads PDF.js
+          character maps from the network. If letters are wrong symbols, that is usually the PDF file—not
+          the font choice (see the note below after you extract).
+        </p>
+      </header>
+
+      <section class="upload-section" aria-label="PDF upload">
+        <input
+          type="file"
+          id="file-input"
+          class="file-input"
+          accept="application/pdf,.pdf"
+          hidden
+        />
+        <button type="button" class="drop-zone" id="drop-zone" aria-describedby="drop-hint">
+          <span class="drop-zone__icon" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="18" x2="12" y2="12" />
+              <line x1="9" y1="15" x2="15" y2="15" />
+            </svg>
+          </span>
+          <span class="drop-zone__title">Drop a PDF here or click to browse</span>
+          <span class="drop-zone__hint" id="drop-hint">Only PDF files are accepted</span>
+        </button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="outputs" id="outputs" hidden aria-label="Extracted text">
+        <div class="output-panel output-panel--english">
+          <div class="output-panel__head">
+            <h2 class="output-panel__label">English · Times New Roman</h2>
+            <div class="output-panel__actions">
+              <button type="button" class="panel-btn" id="english-copy">Copy</button>
+              <a class="panel-link" id="english-download" href="#" download="extracted-english.txt">Download</a>
+            </div>
+          </div>
+          <div class="output-panel__box" id="english-output"></div>
+        </div>
+        <div class="output-panel output-panel--urdu">
+          <div class="output-panel__head">
+            <h2 class="output-panel__label">Urdu · Noori Nastaleeq</h2>
+            <div class="output-panel__actions">
+              <button type="button" class="panel-btn" id="urdu-copy">Copy</button>
+              <a class="panel-link" id="urdu-download" href="#" download="extracted-urdu.txt">Download</a>
+            </div>
+          </div>
+          <div class="output-panel__box" id="urdu-output" dir="rtl" lang="ur"></div>
+        </div>
+      </section>
+
+      <aside class="encoding-notice" id="encoding-notice" hidden>
+        <p><strong>Why you can still see random symbols</strong></p>
+        <ol>
+          <li>
+            <strong>Broken or missing Unicode in the PDF</strong> is the usual cause on cheap scans and
+            keybooks. The page only stores drawing instructions, not reliable letter codes for copy/paste.
+            Times New Roman and Noori only change how <em>correct</em> codes look—they cannot decode junk
+            data. If you open the same PDF in Chrome, select text, and copy, and it is still garbage, the
+            file itself is the problem.
+          </li>
+          <li>
+            <strong>Blocked map files</strong>: extraction needs small files from
+            <code>cdn.jsdelivr.net</code> (<code>cmaps/</code> and <code>standard_fonts/</code>). Ad blockers,
+            strict firewalls, or offline use can block them. Open DevTools → Network, reload, and look for
+            red (failed) requests to those paths.
+          </li>
+        </ol>
+        <p>
+          What helps: re-export the PDF from Word/InDesign, get a different edition of the book, or run
+          proper OCR on a scan.
+        </p>
+      </aside>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        const PDFJS_VERSION = "3.11.174";
+        /** Same package as CMaps / standard fonts (fixes garbled “mojibake” text for many PDFs). */
+        const PDFJS_DIST = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/`;
+
+        if (typeof pdfjsLib !== "undefined") {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_DIST}build/pdf.worker.min.js`;
+        }
+
+        /** Urdu / Arabic script buckets (beyond U+0600–06FF for real-world text). */
+        function isUrduArabicScriptChar(char) {
+          const cp = char.codePointAt(0);
+          if (cp >= 0x0600 && cp <= 0x06ff) return true;
+          if (cp >= 0x0750 && cp <= 0x077f) return true;
+          if (cp >= 0x08a0 && cp <= 0x08ff) return true;
+          if (cp >= 0xfb50 && cp <= 0xfdff) return true;
+          if (cp >= 0xfe70 && cp <= 0xfeff) return true;
+          return false;
+        }
+
+        const fileInput = document.getElementById("file-input");
+        const dropZone = document.getElementById("drop-zone");
+        const statusEl = document.getElementById("status");
+        const outputsSection = document.getElementById("outputs");
+        const englishOut = document.getElementById("english-output");
+        const urduOut = document.getElementById("urdu-output");
+        const englishCopyBtn = document.getElementById("english-copy");
+        const urduCopyBtn = document.getElementById("urdu-copy");
+        const englishDownloadLink = document.getElementById("english-download");
+        const urduDownloadLink = document.getElementById("urdu-download");
+        const encodingNotice = document.getElementById("encoding-notice");
+
+        let englishBlobUrl = null;
+        let urduBlobUrl = null;
+
+        function revokeOutputBlobUrls() {
+          if (englishBlobUrl) {
+            URL.revokeObjectURL(englishBlobUrl);
+            englishBlobUrl = null;
+          }
+          if (urduBlobUrl) {
+            URL.revokeObjectURL(urduBlobUrl);
+            urduBlobUrl = null;
+          }
+        }
+
+        function setStatus(message, type) {
+          statusEl.textContent = message || "";
+          statusEl.classList.remove("status--error", "status--ok");
+          if (type === "error") statusEl.classList.add("status--error");
+          if (type === "ok") statusEl.classList.add("status--ok");
+        }
+
+        function isLatinScriptChar(char) {
+          return /\p{Script=Latin}/u.test(char);
+        }
+
+        function splitEnglishUrdu(text) {
+          let english = "";
+          let urdu = "";
+          let last = "english";
+          for (const char of text) {
+            if (isUrduArabicScriptChar(char)) {
+              urdu += char;
+              last = "urdu";
+              continue;
+            }
+            if (isLatinScriptChar(char)) {
+              english += char;
+              last = "english";
+              continue;
+            }
+            if (last === "urdu") urdu += char;
+            else english += char;
+          }
+          return { english, urdu };
+        }
+
+        function textContentItemsToString(textContent) {
+          let out = "";
+          for (const item of textContent.items) {
+            if (!("str" in item)) continue;
+            out += item.str;
+            if (item.hasEOL) out += "\n";
+          }
+          return out;
+        }
+
+        async function extractTextFromPdf(arrayBuffer) {
+          if (typeof pdfjsLib === "undefined") {
+            throw new Error("PDF.js failed to load. Check your network connection.");
+          }
+          const loadingTask = pdfjsLib.getDocument({
+            data: arrayBuffer,
+            cMapUrl: `${PDFJS_DIST}cmaps/`,
+            cMapPacked: true,
+            standardFontDataUrl: `${PDFJS_DIST}standard_fonts/`,
+          });
+          const pdf = await loadingTask.promise;
+          const parts = [];
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent({ disableCombineTextItems: true });
+            parts.push(textContentItemsToString(textContent));
+          }
+          return parts.join("\n\n");
+        }
+
+        async function copyToClipboard(text, doneLabel) {
+          try {
+            await navigator.clipboard.writeText(text);
+            setStatus(`Copied ${doneLabel} to clipboard.`, "ok");
+          } catch {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+              document.execCommand("copy");
+              setStatus(`Copied ${doneLabel} to clipboard.`, "ok");
+            } catch {
+              setStatus("Copy failed — select text manually or use Download.", "error");
+            }
+            document.body.removeChild(ta);
+          }
+        }
+
+        function showOutputs(english, urdu, baseName) {
+          revokeOutputBlobUrls();
+          englishOut.textContent = english;
+          urduOut.textContent = urdu;
+
+          const safeBase =
+            (baseName && baseName.replace(/[^\w\-]+/g, "_").replace(/_+/g, "_").slice(0, 80)) || "extracted";
+          const enBlob = new Blob([english], { type: "text/plain;charset=utf-8" });
+          const urBlob = new Blob([urdu], { type: "text/plain;charset=utf-8" });
+          englishBlobUrl = URL.createObjectURL(enBlob);
+          urduBlobUrl = URL.createObjectURL(urBlob);
+          englishDownloadLink.href = englishBlobUrl;
+          urduDownloadLink.href = urduBlobUrl;
+          englishDownloadLink.download = `${safeBase}-english.txt`;
+          urduDownloadLink.download = `${safeBase}-urdu.txt`;
+
+          outputsSection.hidden = false;
+          encodingNotice.hidden = false;
+        }
+
+        async function handleFile(file) {
+          if (!file || file.type !== "application/pdf") {
+            setStatus("Please choose a PDF file.", "error");
+            return;
+          }
+          setStatus("Processing PDF…", null);
+          outputsSection.hidden = true;
+          encodingNotice.hidden = true;
+          try {
+            const buf = await file.arrayBuffer();
+            const raw = await extractTextFromPdf(buf);
+            const { english, urdu } = splitEnglishUrdu(raw);
+            const base = file.name.replace(/\.pdf$/i, "") || "extracted";
+            showOutputs(english, urdu, base);
+            setStatus(`Done — extracted from "${file.name}".`, "ok");
+          } catch (err) {
+            console.error(err);
+            let msg = err.message || "Could not read this PDF.";
+            if (/cmap|CMap|standardFont|fetch|network|Failed to fetch/i.test(String(err && err.message))) {
+              msg +=
+                " Font maps may be blocked—allow cdn.jsdelivr.net or try another network.";
+            }
+            setStatus(msg, "error");
+          }
+        }
+
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        fileInput.addEventListener("change", () => {
+          const file = fileInput.files && fileInput.files[0];
+          if (file) handleFile(file);
+          fileInput.value = "";
+        });
+
+        ["dragenter", "dragover", "dragleave", "drop"].forEach((ev) => {
+          dropZone.addEventListener(ev, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          });
+        });
+
+        dropZone.addEventListener("dragenter", () => dropZone.classList.add("dragover"));
+        dropZone.addEventListener("dragover", () => dropZone.classList.add("dragover"));
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+        dropZone.addEventListener("drop", (e) => {
+          dropZone.classList.remove("dragover");
+          const file = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (file) handleFile(file);
+        });
+
+        englishCopyBtn.addEventListener("click", () => {
+          copyToClipboard(englishOut.textContent, "English text");
+        });
+        urduCopyBtn.addEventListener("click", () => {
+          copyToClipboard(urduOut.textContent, "Urdu text");
+        });
+
+        englishDownloadLink.addEventListener("click", (e) => {
+          if (!englishBlobUrl) e.preventDefault();
+        });
+        urduDownloadLink.addEventListener("click", (e) => {
+          if (!urduBlobUrl) e.preventDefault();
+        });
+      })();
+    </script>
+  </body>
+</html>
