@@ -10,12 +10,15 @@
       referrerpolicy="no-referrer"
     ></script>
     <style>
-      /* Jameel Noori Nastaleeq — add fonts/JameelNooriNastaleeq.woff2 next to this file, or change src */
+      /* Noori Nastaleeq (Jameel Noori) — place woff2/ttf in fonts/ (either Noori* or Jameel* names) */
       @font-face {
-        font-family: "Jameel Noori Nastaleeq";
+        font-family: "Noori Nastaleeq";
         src:
           local("Jameel Noori Nastaleeq"),
+          local("Noori Nastaleeq"),
+          url("fonts/NooriNastaleeq.woff2") format("woff2"),
           url("fonts/JameelNooriNastaleeq.woff2") format("woff2"),
+          url("fonts/NooriNastaleeq.ttf") format("truetype"),
           url("fonts/JameelNooriNastaleeq.ttf") format("truetype");
         font-weight: normal;
         font-style: normal;
@@ -23,6 +26,8 @@
       }
 
       :root {
+        --font-english: "Times New Roman", Times, serif;
+        --font-urdu: "Noori Nastaleeq", serif;
         --bg: #0f1419;
         --surface: #1a222d;
         --surface-hover: #232d3b;
@@ -43,7 +48,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Times New Roman", Times, serif;
+        font-family: var(--font-english);
         background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%);
         color: var(--text);
         line-height: 1.5;
@@ -198,9 +203,13 @@
         min-width: 8rem;
       }
 
+      .output-panel--english .output-panel__label {
+        font-family: var(--font-english);
+      }
+
       .output-panel--urdu .output-panel__label {
         text-align: right;
-        font-family: "Jameel Noori Nastaleeq", serif;
+        font-family: var(--font-urdu);
       }
 
       .output-panel__actions {
@@ -216,12 +225,12 @@
 
       .output-panel--urdu .panel-btn,
       .output-panel--urdu .panel-link {
-        font-family: "Jameel Noori Nastaleeq", serif;
+        font-family: var(--font-urdu);
       }
 
       .panel-btn,
       .panel-link {
-        font-family: "Times New Roman", Times, serif;
+        font-family: var(--font-english);
         font-size: 0.8rem;
         font-weight: 600;
         padding: 0.4rem 0.85rem;
@@ -263,13 +272,13 @@
       }
 
       .output-panel--english .output-panel__box {
-        font-family: "Times New Roman", Times, serif;
+        font-family: var(--font-english);
         direction: ltr;
         text-align: left;
       }
 
       .output-panel--urdu .output-panel__box {
-        font-family: "Jameel Noori Nastaleeq", serif;
+        font-family: var(--font-urdu);
         direction: rtl;
         text-align: right;
         font-size: 1.15rem;
@@ -280,7 +289,7 @@
         content: "No text in this category.";
         color: var(--text-muted);
         font-style: italic;
-        font-family: "Times New Roman", Times, serif;
+        font-family: var(--font-english);
         font-size: 0.9rem;
       }
 
@@ -288,7 +297,7 @@
         content: "No text in this category.";
         color: var(--text-muted);
         font-style: italic;
-        font-family: "Jameel Noori Nastaleeq", serif;
+        font-family: var(--font-urdu);
         font-size: 0.9rem;
       }
     </style>
@@ -329,7 +338,7 @@
       <section class="outputs" id="outputs" hidden aria-label="Extracted text">
         <div class="output-panel output-panel--english">
           <div class="output-panel__head">
-            <h2 class="output-panel__label">English (Latin)</h2>
+            <h2 class="output-panel__label">English · Times New Roman</h2>
             <div class="output-panel__actions">
               <button type="button" class="panel-btn" id="english-copy">Copy</button>
               <a class="panel-link" id="english-download" href="#" download="extracted-english.txt">Download</a>
@@ -339,7 +348,7 @@
         </div>
         <div class="output-panel output-panel--urdu">
           <div class="output-panel__head">
-            <h2 class="output-panel__label">Urdu (Arabic block)</h2>
+            <h2 class="output-panel__label">Urdu · Noori Nastaleeq</h2>
             <div class="output-panel__actions">
               <button type="button" class="panel-btn" id="urdu-copy">Copy</button>
               <a class="panel-link" id="urdu-download" href="#" download="extracted-urdu.txt">Download</a>
