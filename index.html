@@ -300,6 +300,37 @@
         font-family: var(--font-urdu);
         font-size: 0.9rem;
       }
+
+      .encoding-notice {
+        margin-top: 1.25rem;
+        padding: 1rem 1.15rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: rgba(200, 170, 80, 0.08);
+        color: var(--text);
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+
+      .encoding-notice code {
+        font-size: 0.82em;
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.25);
+      }
+
+      .encoding-notice ol {
+        margin: 0.5rem 0 0.75rem;
+        padding-left: 1.25rem;
+      }
+
+      .encoding-notice li {
+        margin: 0.35rem 0;
+      }
+
+      .encoding-notice strong {
+        color: #e8d4a8;
+      }
     </style>
   </head>
   <body>
@@ -307,9 +338,9 @@
       <header class="header">
         <h1>PDF text extractor</h1>
         <p class="subtitle">
-          Upload a PDF to extract text. Latin letters go to the English column; Arabic script (including
-          common Urdu presentation forms) goes to the Urdu column. Garbled text is often fixed by loading
-          CMaps and standard fonts (this app does that automatically when online).
+          Latin text is shown in Times New Roman; Arabic script in Noori Nastaleeq. The app loads PDF.js
+          character maps from the network. If letters are wrong symbols, that is usually the PDF file—not
+          the font choice (see the note below after you extract).
         </p>
       </header>
 
@@ -358,6 +389,29 @@
           <div class="output-panel__box" id="urdu-output" dir="rtl" lang="ur"></div>
         </div>
       </section>
+
+      <aside class="encoding-notice" id="encoding-notice" hidden>
+        <p><strong>Why you can still see random symbols</strong></p>
+        <ol>
+          <li>
+            <strong>Broken or missing Unicode in the PDF</strong> is the usual cause on cheap scans and
+            keybooks. The page only stores drawing instructions, not reliable letter codes for copy/paste.
+            Times New Roman and Noori only change how <em>correct</em> codes look—they cannot decode junk
+            data. If you open the same PDF in Chrome, select text, and copy, and it is still garbage, the
+            file itself is the problem.
+          </li>
+          <li>
+            <strong>Blocked map files</strong>: extraction needs small files from
+            <code>cdn.jsdelivr.net</code> (<code>cmaps/</code> and <code>standard_fonts/</code>). Ad blockers,
+            strict firewalls, or offline use can block them. Open DevTools → Network, reload, and look for
+            red (failed) requests to those paths.
+          </li>
+        </ol>
+        <p>
+          What helps: re-export the PDF from Word/InDesign, get a different edition of the book, or run
+          proper OCR on a scan.
+        </p>
+      </aside>
     </div>
 
     <script>
@@ -393,6 +447,7 @@
         const urduCopyBtn = document.getElementById("urdu-copy");
         const englishDownloadLink = document.getElementById("english-download");
         const urduDownloadLink = document.getElementById("urdu-download");
+        const encodingNotice = document.getElementById("encoding-notice");
 
         let englishBlobUrl = null;
         let urduBlobUrl = null;
@@ -464,7 +519,7 @@
           const parts = [];
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent({ normalizeWhitespace: true });
+            const textContent = await page.getTextContent({ disableCombineTextItems: true });
             parts.push(textContentItemsToString(textContent));
           }
           return parts.join("\n\n");
@@ -509,6 +564,7 @@
           urduDownloadLink.download = `${safeBase}-urdu.txt`;
 
           outputsSection.hidden = false;
+          encodingNotice.hidden = false;
         }
 
         async function handleFile(file) {
@@ -518,6 +574,7 @@
           }
           setStatus("Processing PDF…", null);
           outputsSection.hidden = true;
+          encodingNotice.hidden = true;
           try {
             const buf = await file.arrayBuffer();
             const raw = await extractTextFromPdf(buf);
@@ -527,7 +584,12 @@
             setStatus(`Done — extracted from "${file.name}".`, "ok");
           } catch (err) {
             console.error(err);
-            setStatus(err.message || "Could not read this PDF.", "error");
+            let msg = err.message || "Could not read this PDF.";
+            if (/cmap|CMap|standardFont|fetch|network|Failed to fetch/i.test(String(err && err.message))) {
+              msg +=
+                " Font maps may be blocked—allow cdn.jsdelivr.net or try another network.";
+            }
+            setStatus(msg, "error");
           }
         }
 
