@@ -4,12 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PDF Text Extractor — English & Urdu</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;1,9..40,400&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
       crossorigin="anonymous"
@@ -49,8 +43,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "DM Sans", system-ui, sans-serif;
-        font-optical-sizing: auto;
+        font-family: "Times New Roman", Times, serif;
         background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%);
         color: var(--text);
         line-height: 1.5;
@@ -207,6 +200,7 @@
 
       .output-panel--urdu .output-panel__label {
         text-align: right;
+        font-family: "Jameel Noori Nastaleeq", serif;
       }
 
       .output-panel__actions {
@@ -220,9 +214,14 @@
         direction: rtl;
       }
 
+      .output-panel--urdu .panel-btn,
+      .output-panel--urdu .panel-link {
+        font-family: "Jameel Noori Nastaleeq", serif;
+      }
+
       .panel-btn,
       .panel-link {
-        font-family: inherit;
+        font-family: "Times New Roman", Times, serif;
         font-size: 0.8rem;
         font-weight: 600;
         padding: 0.4rem 0.85rem;
@@ -270,18 +269,26 @@
       }
 
       .output-panel--urdu .output-panel__box {
-        font-family: "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", serif;
+        font-family: "Jameel Noori Nastaleeq", serif;
         direction: rtl;
         text-align: right;
         font-size: 1.15rem;
         line-height: 1.85;
       }
 
-      .output-panel__box:empty::before {
+      .output-panel--english .output-panel__box:empty::before {
         content: "No text in this category.";
         color: var(--text-muted);
         font-style: italic;
-        font-family: "DM Sans", system-ui, sans-serif;
+        font-family: "Times New Roman", Times, serif;
+        font-size: 0.9rem;
+      }
+
+      .output-panel--urdu .output-panel__box:empty::before {
+        content: "No text in this category.";
+        color: var(--text-muted);
+        font-style: italic;
+        font-family: "Jameel Noori Nastaleeq", serif;
         font-size: 0.9rem;
       }
     </style>
