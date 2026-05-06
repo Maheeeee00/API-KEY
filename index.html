@@ -173,25 +173,81 @@
         box-shadow: var(--shadow);
       }
 
+      .output-panel__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.65rem 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .output-panel--english .output-panel__head {
+        border-left: 3px solid var(--accent);
+      }
+
+      .output-panel--urdu .output-panel__head {
+        border-right: 3px solid var(--accent);
+        direction: rtl;
+      }
+
       .output-panel__label {
         margin: 0;
-        padding: 0.65rem 1rem;
+        padding: 0;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         color: var(--text-muted);
-        background: rgba(0, 0, 0, 0.2);
-        border-bottom: 1px solid var(--border);
-      }
-
-      .output-panel--english .output-panel__label {
-        border-left: 3px solid var(--accent);
+        flex: 1;
+        min-width: 8rem;
       }
 
       .output-panel--urdu .output-panel__label {
-        border-right: 3px solid var(--accent);
         text-align: right;
+      }
+
+      .output-panel__actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        align-items: center;
+      }
+
+      .output-panel--urdu .output-panel__actions {
+        direction: rtl;
+      }
+
+      .panel-btn,
+      .panel-link {
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.4rem 0.85rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface-hover);
+        color: var(--text);
+        cursor: pointer;
+        text-decoration: none;
+        line-height: 1.2;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+
+      .panel-btn:hover,
+      .panel-link:hover {
+        border-color: var(--accent);
+        background: rgba(91, 159, 212, 0.12);
+      }
+
+      .panel-btn:focus-visible,
+      .panel-link:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .output-panel__box {
@@ -265,11 +321,23 @@
 
       <section class="outputs" id="outputs" hidden aria-label="Extracted text">
         <div class="output-panel output-panel--english">
-          <h2 class="output-panel__label">English (Latin)</h2>
+          <div class="output-panel__head">
+            <h2 class="output-panel__label">English (Latin)</h2>
+            <div class="output-panel__actions">
+              <button type="button" class="panel-btn" id="english-copy">Copy</button>
+              <a class="panel-link" id="english-download" href="#" download="extracted-english.txt">Download</a>
+            </div>
+          </div>
           <div class="output-panel__box" id="english-output"></div>
         </div>
         <div class="output-panel output-panel--urdu">
-          <h2 class="output-panel__label">Urdu (Arabic block)</h2>
+          <div class="output-panel__head">
+            <h2 class="output-panel__label">Urdu (Arabic block)</h2>
+            <div class="output-panel__actions">
+              <button type="button" class="panel-btn" id="urdu-copy">Copy</button>
+              <a class="panel-link" id="urdu-download" href="#" download="extracted-urdu.txt">Download</a>
+            </div>
+          </div>
           <div class="output-panel__box" id="urdu-output" dir="rtl" lang="ur"></div>
         </div>
       </section>
@@ -295,6 +363,24 @@
         const outputsSection = document.getElementById("outputs");
         const englishOut = document.getElementById("english-output");
         const urduOut = document.getElementById("urdu-output");
+        const englishCopyBtn = document.getElementById("english-copy");
+        const urduCopyBtn = document.getElementById("urdu-copy");
+        const englishDownloadLink = document.getElementById("english-download");
+        const urduDownloadLink = document.getElementById("urdu-download");
+
+        let englishBlobUrl = null;
+        let urduBlobUrl = null;
+
+        function revokeOutputBlobUrls() {
+          if (englishBlobUrl) {
+            URL.revokeObjectURL(englishBlobUrl);
+            englishBlobUrl = null;
+          }
+          if (urduBlobUrl) {
+            URL.revokeObjectURL(urduBlobUrl);
+            urduBlobUrl = null;
+          }
+        }
 
         function setStatus(message, type) {
           statusEl.textContent = message || "";
@@ -349,9 +435,44 @@
           return parts.join("\n\n");
         }
 
-        function showOutputs(english, urdu) {
+        async function copyToClipboard(text, doneLabel) {
+          try {
+            await navigator.clipboard.writeText(text);
+            setStatus(`Copied ${doneLabel} to clipboard.`, "ok");
+          } catch {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+              document.execCommand("copy");
+              setStatus(`Copied ${doneLabel} to clipboard.`, "ok");
+            } catch {
+              setStatus("Copy failed — select text manually or use Download.", "error");
+            }
+            document.body.removeChild(ta);
+          }
+        }
+
+        function showOutputs(english, urdu, baseName) {
+          revokeOutputBlobUrls();
           englishOut.textContent = english;
           urduOut.textContent = urdu;
+
+          const safeBase =
+            (baseName && baseName.replace(/[^\w\-]+/g, "_").replace(/_+/g, "_").slice(0, 80)) || "extracted";
+          const enBlob = new Blob([english], { type: "text/plain;charset=utf-8" });
+          const urBlob = new Blob([urdu], { type: "text/plain;charset=utf-8" });
+          englishBlobUrl = URL.createObjectURL(enBlob);
+          urduBlobUrl = URL.createObjectURL(urBlob);
+          englishDownloadLink.href = englishBlobUrl;
+          urduDownloadLink.href = urduBlobUrl;
+          englishDownloadLink.download = `${safeBase}-english.txt`;
+          urduDownloadLink.download = `${safeBase}-urdu.txt`;
+
           outputsSection.hidden = false;
         }
 
@@ -366,7 +487,8 @@
             const buf = await file.arrayBuffer();
             const raw = await extractTextFromPdf(buf);
             const { english, urdu } = splitEnglishUrdu(raw);
-            showOutputs(english, urdu);
+            const base = file.name.replace(/\.pdf$/i, "") || "extracted";
+            showOutputs(english, urdu, base);
             setStatus(`Done — extracted from "${file.name}".`, "ok");
           } catch (err) {
             console.error(err);
@@ -396,6 +518,20 @@
           dropZone.classList.remove("dragover");
           const file = e.dataTransfer.files && e.dataTransfer.files[0];
           if (file) handleFile(file);
+        });
+
+        englishCopyBtn.addEventListener("click", () => {
+          copyToClipboard(englishOut.textContent, "English text");
+        });
+        urduCopyBtn.addEventListener("click", () => {
+          copyToClipboard(urduOut.textContent, "Urdu text");
+        });
+
+        englishDownloadLink.addEventListener("click", (e) => {
+          if (!englishBlobUrl) e.preventDefault();
+        });
+        urduDownloadLink.addEventListener("click", (e) => {
+          if (!urduBlobUrl) e.preventDefault();
         });
       })();
     </script>
