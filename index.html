@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Text Extractor — English & Urdu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;1,9..40,400&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <h1>PDF text extractor</h1>
+        <p class="subtitle">
+          Upload a PDF to extract text. Content is split into Latin (English) and
+          Arabic block script (Urdu) using Unicode ranges.
+        </p>
+      </header>
+
+      <section class="upload-section" aria-label="PDF upload">
+        <input
+          type="file"
+          id="file-input"
+          class="file-input"
+          accept="application/pdf,.pdf"
+          hidden
+        />
+        <button type="button" class="drop-zone" id="drop-zone" aria-describedby="drop-hint">
+          <span class="drop-zone__icon" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="18" x2="12" y2="12" />
+              <line x1="9" y1="15" x2="15" y2="15" />
+            </svg>
+          </span>
+          <span class="drop-zone__title">Drop a PDF here or click to browse</span>
+          <span class="drop-zone__hint" id="drop-hint">Only PDF files are accepted</span>
+        </button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="outputs" id="outputs" hidden aria-label="Extracted text">
+        <div class="output-panel output-panel--english">
+          <h2 class="output-panel__label">English (Latin)</h2>
+          <div class="output-panel__box" id="english-output"></div>
+        </div>
+        <div class="output-panel output-panel--urdu">
+          <h2 class="output-panel__label">Urdu (Arabic block)</h2>
+          <div class="output-panel__box" id="urdu-output" dir="rtl" lang="ur"></div>
+        </div>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
