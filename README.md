@@ -4,9 +4,7 @@ Static landing page for a **Wellness Coins** loyalty program, modeled after the 
 
 ## Files
 
-- `index.html` — main page with sections and the sign-in / sign-up modal
-- `styles.css` — layout and theme
-- `app.js` — opens/closes the modal and handles demo form submissions (no backend)
+- `index.html` — **single file** containing HTML, embedded CSS, and embedded JavaScript (landing page plus sign-in / sign-up modal)
 
 ## Run locally
 
