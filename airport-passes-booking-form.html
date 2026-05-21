@@ -511,6 +511,10 @@ body #apMegaWrap .phone-row input[type="tel"]{
     </button>
   </div>
   <form id="apMegaForm">
+    <div style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+      <label for="ap_website_hp">Leave blank</label>
+      <input type="text" id="ap_website_hp" name="website" value="" tabindex="-1" autocomplete="off">
+    </div>
     <div class="section active">
       <h2 class="ap-sec-heading">Select Service</h2>
       <div class="ap-sec-scroll" id="ap-sec1-scroll">
@@ -1088,15 +1092,28 @@ window.apClosePopup = function() {
     return { subject:subject, body:bodyLines.join("\n"), confirmSubject:"Your Booking Enquiry - Airport Passes", confirmBody:confirmBodyLines.join("\n"), senderEmail:senderEmail };
   }
 
-  function showSuccess(method){
+  function showSuccess(method, em, data){
     var el=document.getElementById("apSuccessMessage");
-    if(el){
-      var msg = method==="Email"
-        ? "Booking sent! Two compose windows should open: one to our team and one confirmation to you. Send both from your mail app (desktop and mobile)."
-        : "Booking sent via WhatsApp! We will be in touch shortly.";
-      el.textContent=msg;
-      el.style.display="block";
+    if(!el) return;
+    var msg;
+    if(method==="EmailAjax"){
+      var sentC=data&&data.sent_customer, sentB=data&&data.sent_business;
+      if(sentB&&sentC){
+        msg="Your enquiry was sent to our team. A confirmation email was also sent automatically to "+(em&&em.senderEmail?em.senderEmail:"your address")+".";
+      } else if(sentB&&!sentC){
+        msg="Your enquiry was sent to our team, but the automatic confirmation email could not be sent. Please verify your email address or message us on WhatsApp.";
+      } else if(!sentB&&sentC){
+        msg="A confirmation was sent to your inbox, but we could not email our booking team automatically. Please contact us on WhatsApp.";
+      } else {
+        msg="Your request was processed.";
+      }
+    } else if(method==="Email"){
+      msg="Your mail app should open. Send the message to our team. For automatic confirmation to you as well, install the Airport Passes Booking Email WordPress plugin on this site.";
+    } else {
+      msg="Booking sent via WhatsApp! We will be in touch shortly.";
     }
+    el.textContent=msg;
+    el.style.display="block";
   }
 
   function openMailto(to, subject, body){
@@ -1117,6 +1134,38 @@ window.apClosePopup = function() {
       return;
     }
     var em = buildEmail();
+    if(window.AP_MEGA_BOOKING_AJAX && AP_MEGA_BOOKING_AJAX.url){
+      var fd=new FormData();
+      fd.append("action", AP_MEGA_BOOKING_AJAX.action);
+      fd.append("nonce", AP_MEGA_BOOKING_AJAX.nonce);
+      fd.append("customer_email", em.senderEmail);
+      fd.append("email_subject", em.subject);
+      fd.append("email_body_business", em.body);
+      fd.append("email_subject_confirm", em.confirmSubject);
+      fd.append("email_body_confirm", em.confirmBody);
+      var hp=document.getElementById("ap_website_hp");
+      if(hp) fd.append("website", hp.value||"");
+      fetch(AP_MEGA_BOOKING_AJAX.url,{method:"POST",body:fd,credentials:"same-origin"})
+        .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+        .then(function(x){
+          if(x.ok && x.j && x.j.success){
+            showSuccess("EmailAjax", em, x.j.data||{});
+          } else {
+            var msg=(x.j&&x.j.data&&x.j.data.message)||(x.j&&x.j.message)||"Could not send email.";
+            showErr("err-sec4", msg+" Opening your mail app as a backup.");
+            openMailto(EMAIL_TO, em.subject, em.body);
+            setTimeout(function(){ if(em.senderEmail) openMailto(em.senderEmail, em.confirmSubject, em.confirmBody); }, 900);
+            showSuccess("Email");
+          }
+        })
+        .catch(function(){
+          showErr("err-sec4","Network error. Opening your mail app instead.");
+          openMailto(EMAIL_TO, em.subject, em.body);
+          setTimeout(function(){ if(em.senderEmail) openMailto(em.senderEmail, em.confirmSubject, em.confirmBody); }, 900);
+          showSuccess("Email");
+        });
+      return;
+    }
     openMailto(EMAIL_TO, em.subject, em.body);
     setTimeout(function(){
       if(em.senderEmail) openMailto(em.senderEmail, em.confirmSubject, em.confirmBody);
@@ -1132,7 +1181,7 @@ window.apClosePopup = function() {
       return;
     }
     window.open("https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(buildWA()),"_blank","noopener,noreferrer");
-    showSuccess("WhatsApp");
+    showSuccess("WhatsApp", null, null);
   });
 
   (function(){

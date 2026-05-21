@@ -2,8 +2,10 @@
 
 ## Airport Passes booking form
 
-The updated multi-step popup HTML (Section 3 validation, Section 2 scroll behavior, dual `mailto` for team + sender) lives in:
+| Artifact | Purpose |
+|----------|---------|
+| `airport-passes-booking-form.html` | Full Elementor-ready HTML/CSS/JS multi-step form. |
+| `wordpress/airport-passes-booking/` | WordPress plugin: **automatic** team + customer emails via `wp_mail` (required for auto-confirmation). |
+| `WORDPRESS-BOOKING-EMAIL.md` | How to install the plugin and why `mailto` alone cannot auto-email. |
 
-**`/workspace/airport-passes-booking-form.html`**
-
-Copy its contents into your WordPress Elementor HTML widget (or enqueue as a template) and adjust `EMAIL_TO`, `WA_NUMBER`, and Elementor popup IDs if needed.
+Paste the HTML into an Elementor HTML widget, install and activate the plugin on the same site, and configure SMTP if needed so `wp_mail` delivers reliably.
