@@ -118,15 +118,27 @@ add_action('wp_ajax_ap_mega_booking_email', 'ap_mega_handle_booking_email');
  * Exposes AJAX URL + nonce for the booking form (Elementor HTML widget, etc.).
  * Printed in the footer so it is defined before the user taps Send.
  */
-add_action(
-    'wp_footer',
-    static function (): void {
-        $payload = [
-            'url' => admin_url('admin-ajax.php'),
-            'action' => 'ap_mega_booking_email',
-            'nonce' => wp_create_nonce('ap_mega_booking'),
-        ];
-        echo '<script>window.AP_MEGA_BOOKING_AJAX=' . wp_json_encode($payload) . ";</script>\n";
-    },
-    20
-);
+/**
+ * Print once so Elementor popups and themes that omit wp_footer still get the object early.
+ */
+function ap_mega_print_booking_ajax_bootstrap(): void
+{
+    static $printed = false;
+    if ($printed) {
+        return;
+    }
+    // Skip normal wp-admin screens; Elementor live preview loads the front-end with query args.
+    if (is_admin() && empty($_GET['elementor-preview'])) {
+        return;
+    }
+    $printed = true;
+    $payload = [
+        'url' => admin_url('admin-ajax.php'),
+        'action' => 'ap_mega_booking_email',
+        'nonce' => wp_create_nonce('ap_mega_booking'),
+    ];
+    echo '<script>window.AP_MEGA_BOOKING_AJAX=' . wp_json_encode($payload) . ";</script>\n";
+}
+
+add_action('wp_head', 'ap_mega_print_booking_ajax_bootstrap', 99);
+add_action('wp_footer', 'ap_mega_print_booking_ajax_bootstrap', 20);
