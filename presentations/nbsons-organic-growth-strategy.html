@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NB SONS — Organic Growth Strategy 2026</title>
+  <style>
+    :root {
+      --green-dark: #1a5c3a;
+      --green-mid: #2d8a5e;
+      --green-light: #e8f5ee;
+      --gold: #c9a227;
+      --text: #1a1a1a;
+      --muted: #5a5a5a;
+      --white: #ffffff;
+      --slide-w: 1280px;
+      --slide-h: 720px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: #0f1410;
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .slide {
+      display: none;
+      width: min(96vw, var(--slide-w));
+      height: min(90vh, var(--slide-h));
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+      overflow: hidden;
+      flex-direction: column;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .slide.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-header {
+      background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+      color: var(--white);
+      padding: 28px 48px 22px;
+      flex-shrink: 0;
+    }
+
+    .slide-header h1 { font-size: 1.85rem; font-weight: 700; line-height: 1.2; }
+    .slide-header p { margin-top: 6px; opacity: 0.88; font-size: 0.95rem; }
+
+    .slide-body {
+      flex: 1;
+      padding: 32px 48px 28px;
+      overflow-y: auto;
+    }
+
+    .slide-body h2 { color: var(--green-dark); font-size: 1.35rem; margin-bottom: 16px; }
+    .slide-body h3 { color: var(--green-mid); font-size: 1.05rem; margin: 18px 0 8px; }
+    .slide-body p, .slide-body li { font-size: 0.92rem; line-height: 1.55; color: var(--text); }
+    .slide-body ul, .slide-body ol { padding-left: 1.4rem; margin: 8px 0; }
+    .slide-body li { margin-bottom: 6px; }
+
+    .cover {
+      background: linear-gradient(145deg, #0d2818 0%, var(--green-dark) 40%, var(--green-mid) 100%);
+      color: var(--white);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .cover .logo-text {
+      font-size: 3.2rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .cover .tagline {
+      font-size: 1.15rem;
+      opacity: 0.9;
+      margin-bottom: 40px;
+    }
+
+    .cover h1 { font-size: 2rem; font-weight: 600; margin-bottom: 12px; }
+    .cover .subtitle { font-size: 1.05rem; opacity: 0.85; max-width: 680px; margin: 0 auto 32px; }
+    .cover .meta { font-size: 0.9rem; opacity: 0.7; }
+
+    .gold-line {
+      width: 80px;
+      height: 4px;
+      background: var(--gold);
+      margin: 20px auto;
+      border-radius: 2px;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+    .card {
+      background: var(--green-light);
+      border-left: 4px solid var(--green-mid);
+      padding: 16px 18px;
+      border-radius: 8px;
+    }
+
+    .card h4 { color: var(--green-dark); font-size: 0.95rem; margin-bottom: 6px; }
+    .card p, .card li { font-size: 0.85rem; color: var(--muted); }
+
+    .stat-box {
+      text-align: center;
+      background: var(--green-light);
+      padding: 20px 14px;
+      border-radius: 10px;
+    }
+
+    .stat-box .num {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--green-dark);
+      line-height: 1;
+    }
+
+    .stat-box .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .highlight {
+      background: #fff8e1;
+      border-left: 4px solid var(--gold);
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin: 14px 0;
+      font-size: 0.9rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+
+    th {
+      background: var(--green-dark);
+      color: var(--white);
+      padding: 10px 12px;
+      text-align: left;
+    }
+
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    tr:nth-child(even) td { background: #f9fbf9; }
+
+    .phase {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+
+    .phase-num {
+      background: var(--green-mid);
+      color: var(--white);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+
+    .phase-content h4 { color: var(--green-dark); font-size: 0.95rem; margin-bottom: 4px; }
+    .phase-content p { font-size: 0.85rem; color: var(--muted); }
+
+    .timeline {
+      display: flex;
+      gap: 0;
+      margin-top: 16px;
+    }
+
+    .timeline-item {
+      flex: 1;
+      text-align: center;
+      padding: 16px 10px;
+      background: var(--green-light);
+      border-top: 4px solid var(--green-mid);
+      position: relative;
+    }
+
+    .timeline-item:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--green-mid);
+      font-weight: bold;
+      z-index: 2;
+    }
+
+    .timeline-item h4 { font-size: 0.85rem; color: var(--green-dark); margin-bottom: 6px; }
+    .timeline-item p { font-size: 0.75rem; color: var(--muted); }
+
+    .pill {
+      display: inline-block;
+      background: var(--green-mid);
+      color: white;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin: 2px 3px 2px 0;
+    }
+
+    .nav {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: rgba(255,255,255,0.95);
+      padding: 10px 20px;
+      border-radius: 40px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      z-index: 100;
+    }
+
+    .nav button {
+      background: var(--green-dark);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .nav button:hover { background: var(--green-mid); }
+    .nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .nav .counter {
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--gold);
+      transition: width 0.3s;
+      z-index: 101;
+    }
+
+    .check { color: var(--green-mid); font-weight: bold; }
+    .warn { color: #c0392b; font-weight: bold; }
+
+    @media print {
+      body { overflow: visible; background: white; }
+      .deck { display: block; height: auto; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        width: 100%;
+        height: auto;
+        min-height: 700px;
+        box-shadow: none;
+        margin-bottom: 20px;
+      }
+      .nav, .progress-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: COVER -->
+  <div class="slide cover active">
+    <div class="logo-text">NB SONS</div>
+    <div class="tagline">Pakistan's Best Nutritional Supplement Brand</div>
+    <div class="gold-line"></div>
+    <h1>Organic Growth Strategy</h1>
+    <p class="subtitle">A complete, zero-paid-ads roadmap to grow monthly revenue from Rs. 70,000+ to Rs. 200,000–350,000 within 6–12 months</p>
+    <p class="meta">Prepared for NB SONS Pvt Ltd · June 2026<br>
+    nbsons.com · Facebook · Instagram @nb.sons</p>
+  </div>
+
+  <!-- SLIDE 2: EXECUTIVE SUMMARY -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Executive Summary</h1>
+      <p>Where you are today and where you can go — without spending on ads</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-4" style="margin-bottom: 24px;">
+        <div class="stat-box"><div class="num">70K+</div><div class="label">Current Monthly Revenue (PKR)</div></div>
+        <div class="stat-box"><div class="num">80</div><div class="label">Products on Shopify</div></div>
+        <div class="stat-box"><div class="num">25+</div><div class="label">Years in Business (Since 2000)</div></div>
+        <div class="stat-box"><div class="num">0</div><div class="label">Paid Ad Budget Required</div></div>
+      </div>
+      <div class="highlight">
+        <strong>Core insight:</strong> NB SONS already has strong foundations — manufacturing credibility, 80 SKUs, an active wellness blog, and nationwide distribution. The gap is not product quality; it is <em>traffic, conversion, and repeat purchase</em>. This strategy focuses on 8 organic growth engines that compound over time.
+      </div>
+      <h3>Revenue Growth Targets (Conservative → Aggressive)</h3>
+      <table>
+        <tr><th>Timeline</th><th>Monthly Revenue Target</th><th>Primary Drivers</th></tr>
+        <tr><td>Month 1–3</td><td>Rs. 100,000 – 130,000</td><td>Social content, WhatsApp, CRO fixes, reviews</td></tr>
+        <tr><td>Month 4–6</td><td>Rs. 150,000 – 220,000</td><td>SEO traffic, email automation, referrals, bundles</td></tr>
+        <tr><td>Month 7–12</td><td>Rs. 200,000 – 350,000</td><td>Marketplace, B2B, micro-influencers, community</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: CURRENT STATE -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Current Business Snapshot</h1>
+      <p>Strengths to leverage and gaps to close</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-2">
+        <div>
+          <h2><span class="check">✓</span> Strengths</h2>
+          <ul>
+            <li><strong>Established brand</strong> — Founded 2000, Pvt Ltd since 2005, Lahore HQ + Sundar Industrial Estate manufacturing</li>
+            <li><strong>Wide catalog</strong> — 80 products: men's vitality, women's health, maternal, digestive, iron, joint, brain, veterinary</li>
+            <li><strong>Price range</strong> — Rs. 220 to Rs. 4,700 (accessible entry + premium tiers)</li>
+            <li><strong>Content engine started</strong> — Active wellness blog with SEO-focused articles (digestive health, male fertility, PCOS, iron deficiency)</li>
+            <li><strong>Free delivery</strong> — Orders above Rs. 1,999 (good AOV incentive)</li>
+            <li><strong>cGMP manufacturing</strong> — Strong trust signal for health-conscious buyers</li>
+            <li><strong>Social presence</strong> — Facebook (nbsonspvtltd) + Instagram (@nb.sons) active</li>
+          </ul>
+        </div>
+        <div>
+          <h2><span class="warn">!</span> Growth Gaps</h2>
+          <ul>
+            <li><strong>Low product reviews</strong> — Most bestsellers have 0–2 reviews (hurts conversion by 15–30%)</li>
+            <li><strong>Social → store funnel weak</strong> — Content not systematically driving Shopify traffic</li>
+            <li><strong>No visible referral/loyalty program</strong> — Missing repeat purchase engine</li>
+            <li><strong>WhatsApp commerce underused</strong> — Pakistan's #1 sales channel for D2C health brands</li>
+            <li><strong>Email list not monetized</strong> — Popup exists but no visible nurture sequence</li>
+            <li><strong>Seasonal sales only</strong> — Eid/Mother's Day sales exist but no evergreen offer stack</li>
+            <li><strong>Marketplace absence</strong> — Not on Daraz/Health stores where Pakistan searches supplements</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: GROWTH FRAMEWORK -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>The 8-Engine Organic Growth Framework</h1>
+      <p>Each engine works independently and compounds with the others</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-4">
+        <div class="card"><h4>1. Social Media Organic</h4><p>Reels, carousels, UGC — FB + IG daily content driving link-in-bio traffic</p></div>
+        <div class="card"><h4>2. WhatsApp Commerce</h4><p>Catalog, broadcast lists, order tracking — Pakistan's highest-converting channel</p></div>
+        <div class="card"><h4>3. SEO & Blog</h4><p>Rank for "supplement in Pakistan" keywords — blog already started, needs scale</p></div>
+        <div class="card"><h4>4. Email & SMS</h4><p>Welcome series, abandoned cart, post-purchase upsell — zero ad cost</p></div>
+        <div class="card"><h4>5. Reviews & Trust</h4><p>Systematic review collection + before/after stories for sensitive categories</p></div>
+        <div class="card"><h4>6. Bundles & AOV</h4><p>Increase average order from ~Rs. 900 to Rs. 1,500+ with smart bundles</p></div>
+        <div class="card"><h4>7. Referral & Loyalty</h4><p>"Give Rs. 100, Get Rs. 100" — turn customers into salespeople</p></div>
+        <div class="card"><h4>8. B2B & Marketplace</h4><p>Pharmacies, clinics, Daraz — leverage existing nationwide distribution</p></div>
+      </div>
+      <div class="highlight" style="margin-top: 20px;">
+        <strong>Formula:</strong> Monthly Revenue = (Traffic × Conversion Rate × Average Order Value) + (Repeat Customers × Purchase Frequency)<br>
+        At Rs. 70K/month with ~80 orders, your AOV is ~Rs. 875. This strategy targets 3× traffic, 1.5× conversion, and 1.7× AOV = <strong>~7.6× revenue potential</strong> over 12 months.
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: SOCIAL MEDIA -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Engine 1: Social Media Organic Strategy</h1>
+      <p>Facebook (nbsonspvtltd) + Instagram (@nb.sons) — your free traffic machine</p>
+    </div>
+    <div class="slide-body">
+      <h2>Content Pillars (Post 1–2× Daily on Each Platform)</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h4>🎓 Educate (40%)</h4>
+          <ul>
+            <li>"3 signs of iron deficiency in Pakistani women"</li>
+            <li>"PCOS aur Myo-Inositol — kya kaam karta hai?"</li>
+            <li>Carousel: ingredient breakdown of X-FIT, Repro-M</li>
+            <li>Myth vs Fact reels about male vitality supplements</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>💬 Relate (30%)</h4>
+          <ul>
+            <li>Customer testimonial videos (even text-on-screen)</li>
+            <li>"Day in the life" of a new mother using Greelac/Movin</li>
+            <li>Doctor/pharmacist endorsement clips</li>
+            <li>Behind-the-scenes: Sundar factory, quality lab</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>🛒 Convert (30%)</h4>
+          <ul>
+            <li>Product spotlight with "Link in bio" CTA</li>
+            <li>Limited-time bundle offers (no paid boost needed)</li>
+            <li>"Add to cart" sticker on IG Stories</li>
+            <li>Flash sale countdown in Stories (24hr urgency)</li>
+          </ul>
+        </div>
+      </div>
+      <h3>Weekly Content Calendar</h3>
+      <table>
+        <tr><th>Day</th><th>Instagram</th><th>Facebook</th></tr>
+        <tr><td>Mon</td><td>Reel — health tip + product mention</td><td>Blog article share + discussion question</td></tr>
+        <tr><td>Tue</td><td>Carousel — product benefits (Urdu + English)</td><td>Customer review screenshot</td></tr>
+        <tr><td>Wed</td><td>Story poll — "Which supplement do you need?"</td><td>Live Q&A (15 min, no equipment needed)</td></tr>
+        <tr><td>Thu</td><td>Reel — factory/quality BTS</td><td>Bundle offer post</td></tr>
+        <tr><td>Fri</td><td>UGC repost + thank you</td><td>Wellness blog link</td></tr>
+        <tr><td>Sat</td><td>Story — "Shop now" with product tags</td><td>Community question / engagement post</td></tr>
+        <tr><td>Sun</td><td>Reel — weekly recap / bestseller spotlight</td><td>Testimonial video</td></tr>
+      </table>
+      <div class="highlight"><strong>Goal:</strong> Grow from current followers to 10K+ IG / 15K+ FB in 6 months → drive 500–1,000 monthly store visits organically.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: WHATSAPP -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Engine 2: WhatsApp Business Commerce</h1>
+      <p>The highest-converting sales channel in Pakistan — most competitors underuse it</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-2">
+        <div>
+          <h2>Setup Checklist</h2>
+          <ol>
+            <li><strong>WhatsApp Business App</strong> — dedicated NB SONS number (not personal)</li>
+            <li><strong>Product Catalog</strong> — upload top 20 bestsellers with prices + images</li>
+            <li><strong>Quick Replies</strong> — pre-set answers for price, delivery, dosage, COD</li>
+            <li><strong>Labels</strong> — New Lead, Ordered, Repeat Customer, VIP</li>
+            <li><strong>Link on Shopify</strong> — floating WhatsApp button on every page</li>
+            <li><strong>Link in bio</strong> — wa.me link on Instagram + Facebook</li>
+          </ol>
+          <h3>Broadcast Strategy (Weekly)</h3>
+          <ul>
+            <li><strong>Monday:</strong> New blog article + product link</li>
+            <li><strong>Wednesday:</strong> Flash offer (24-hour only)</li>
+            <li><strong>Friday:</strong> Customer success story</li>
+          </ul>
+        </div>
+        <div>
+          <h2>WhatsApp Sales Funnel</h2>
+          <div class="phase"><div class="phase-num">1</div><div class="phase-content"><h4>Attract</h4><p>Social media → "DM us on WhatsApp for free health consultation"</p></div></div>
+          <div class="phase"><div class="phase-num">2</div><div class="phase-content"><h4>Engage</h4><p>Ask 2–3 questions about their health concern → recommend specific product</p></div></div>
+          <div class="phase"><div class="phase-num">3</div><div class="phase-content"><h4>Convert</h4><p>Send product catalog link + COD confirmation → place order manually or via Shopify draft order</p></div></div>
+          <div class="phase"><div class="phase-num">4</div><div class="phase-content"><h4>Retain</h4><p>Follow up Day 7 ("How's it going?") → Day 30 reorder reminder with 10% loyalty discount</p></div></div>
+          <div class="highlight"><strong>Expected impact:</strong> 30–50 WhatsApp orders/month at Rs. 1,200 AOV = Rs. 36,000–60,000 additional monthly revenue within 3 months.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: SEO -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Engine 3: SEO & Content Marketing</h1>
+      <p>Your blog is already live — now scale it to rank on Google</p>
+    </div>
+    <div class="slide-body">
+      <h2>High-Value Keywords to Target (Pakistan)</h2>
+      <p>
+        <span class="pill">iron supplement Pakistan</span>
+        <span class="pill">PCOS supplement Pakistan</span>
+        <span class="pill">male fertility supplement</span>
+        <span class="pill">breast milk increase naturally</span>
+        <span class="pill">fiber supplement Pakistan</span>
+        <span class="pill">magnesium glycinate Pakistan</span>
+        <span class="pill">digestive syrup Pakistan</span>
+        <span class="pill">best multivitamin Pakistan</span>
+        <span class="pill">calcium vitamin D3 tablets</span>
+        <span class="pill">joint pain supplement</span>
+      </p>
+      <div class="grid-2" style="margin-top: 18px;">
+        <div>
+          <h3>Content Plan: 2 Articles/Week</h3>
+          <ul>
+            <li>Week 1: "Best Iron Supplement for Women in Pakistan 2026" → link to Ferosim</li>
+            <li>Week 2: "Myo-Inositol for PCOS: Complete Guide" → link to PCOS product</li>
+            <li>Week 3: "How to Increase Sperm Count Naturally" → link to Repro-M</li>
+            <li>Week 4: "Magnesium for Sleep: Calco Fit Review" → link to Calco Fit</li>
+          </ul>
+          <h3>On-Page SEO Fixes (Shopify)</h3>
+          <ul>
+            <li>Add meta titles with "Pakistan" keyword on all 80 products</li>
+            <li>Write unique product descriptions (many are thin)</li>
+            <li>Add FAQ schema on product pages</li>
+            <li>Internal link blog posts → product pages</li>
+          </ul>
+        </div>
+        <div>
+          <h3>YouTube (Free Long-Term Asset)</h3>
+          <ul>
+            <li>Create "NB SONS Official" channel</li>
+            <li>Repurpose blog articles as 3–5 min Urdu/English videos</li>
+            <li>Product unboxing + "how to use" demos</li>
+            <li>Doctor interview snippets (builds massive trust)</li>
+          </ul>
+          <div class="highlight"><strong>Expected impact:</strong> SEO traffic grows slowly but permanently. By month 6, expect 2,000–5,000 organic monthly visitors → 60–150 orders at 3% conversion = Rs. 54,000–135,000/month from Google alone.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: EMAIL -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Engine 4: Email & SMS Marketing</h1>
+      <p>Turn your existing subscriber list into a revenue machine</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-2">
+        <div>
+          <h2>Automated Email Flows (Set Once, Earn Forever)</h2>
+          <div class="phase"><div class="phase-num">1</div><div class="phase-content"><h4>Welcome Series (3 emails)</h4><p>Email 1: Brand story + 10% off first order<br>Email 2: Top 5 bestsellers guide<br>Email 3: Customer testimonials + urgency ("Offer expires in 48hrs")</p></div></div>
+          <div class="phase"><div class="phase-num">2</div><div class="phase-content"><h4>Abandoned Cart (3 emails)</h4><p>1hr: "You left something behind"<br>24hr: "Still thinking? Here's why customers love [product]"<br>72hr: "Last chance — free delivery on this order"</p></div></div>
+          <div class="phase"><div class="phase-num">3</div><div class="phase-content"><h4>Post-Purchase (2 emails)</h4><p>Day 3: "How to use your supplement" + dosage guide<br>Day 21: "Running low? Reorder with 10% loyalty code"</p></div></div>
+        </div>
+        <div>
+          <h2>Weekly Broadcast Email</h2>
+          <ul>
+            <li><strong>Tuesday:</strong> New blog article + featured product</li>
+            <li><strong>Friday:</strong> Weekend flash sale (24–48 hours)</li>
+          </ul>
+          <h3>SMS/WhatsApp for Repeat Buyers</h3>
+          <ul>
+            <li>Reorder reminder at Day 25 (supplements are consumable = natural repeat)</li>
+            <li>Birthday/anniversary discount</li>
+            <li>New product launch alerts</li>
+          </ul>
+          <div class="highlight">
+            <strong>Tools (Free/Low Cost):</strong> Shopify Email (free up to 10K emails/month), Klaviyo free tier, or Mailchimp.<br>
+            <strong>Expected impact:</strong> Email can recover 10–15% of abandoned carts and generate 15–20% of total revenue once flows are live.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: CONVERSION -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Engine 5 & 6: Trust + Bundles (Conversion & AOV)</h1>
+      <p>Fix what's losing sales on nbsons.com today</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-2">
+        <div>
+          <h2>Review Generation System</h2>
+          <ol>
+            <li><strong>Post-delivery SMS/WhatsApp:</strong> "Rate your experience → get Rs. 50 off next order"</li>
+            <li><strong>Include review card</strong> in every package with QR code</li>
+            <li><strong>Target 50+ reviews</strong> on top 5 products within 60 days</li>
+            <li><strong>Video testimonials</strong> — offer 15% discount for 30-sec video review</li>
+            <li><strong>Display reviews prominently</strong> on homepage + product pages</li>
+          </ol>
+          <h3>Trust Signals to Add</h3>
+          <ul>
+            <li>"Manufactured in cGMP facility, Lahore" badge on every page</li>
+            <li>"25+ Years Trusted" counter</li>
+            <li>COD available + free delivery above Rs. 1,999</li>
+            <li>WhatsApp support number visible in header</li>
+          </ul>
+        </div>
+        <div>
+          <h2>Smart Bundle Strategy (Raise AOV to Rs. 1,500+)</h2>
+          <table>
+            <tr><th>Bundle Name</th><th>Products</th><th>Price</th></tr>
+            <tr><td>Men's Vitality Pack</td><td>X-FIT + Repro-M</td><td>Rs. 1,999 (save Rs. 191)</td></tr>
+            <tr><td>New Mom Care</td><td>Greelac + Movin + Ferosim</td><td>Rs. 1,799 (save Rs. 221)</td></tr>
+            <tr><td>PCOS Wellness Kit</td><td>Myo-Inositol + FEMEEZ + Iron</td><td>Rs. 2,499 (save Rs. 290)</td></tr>
+            <tr><td>Digestive Relief Combo</td><td>Fybosim + Eletcid + NB CAL</td><td>Rs. 799 (save Rs. 136)</td></tr>
+            <tr><td>Family Health Starter</td><td>Asco-C + Calin-G + F.LIUM</td><td>Rs. 899 (save Rs. 116)</td></tr>
+          </table>
+          <div class="highlight" style="margin-top: 14px;">
+            <strong>Free delivery threshold hack:</strong> Show "Add Rs. X more for FREE delivery" progress bar at checkout. Most customers add one more item to cross Rs. 1,999.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: REFERRAL & B2B -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Engine 7 & 8: Referral Program + B2B/Marketplace</h1>
+      <p>Turn customers into advocates and expand distribution channels</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-2">
+        <div>
+          <h2>Referral & Loyalty Program</h2>
+          <div class="card" style="margin-bottom: 14px;">
+            <h4>"NB SONS Wellness Circle"</h4>
+            <p><strong>Refer a friend:</strong> Both get Rs. 100 off next order<br>
+            <strong>Repeat purchase:</strong> 10% off on 2nd order, 15% on 3rd+<br>
+            <strong>Points system:</strong> Rs. 10 spent = 1 point, 100 points = Rs. 100 off</p>
+          </div>
+          <h3>Implementation</h3>
+          <ul>
+            <li>Use Shopify app: "Smile.io" or "LoyaltyLion" (free tiers available)</li>
+            <li>Share referral link via WhatsApp (Pakistan's natural sharing behavior)</li>
+            <li>Feature top referrers monthly on social media</li>
+          </ul>
+          <div class="highlight"><strong>Expected:</strong> 15–20% of new customers from referrals by month 6 = 25–40 free orders/month.</div>
+        </div>
+        <div>
+          <h2>B2B & Marketplace Expansion</h2>
+          <h3>Phase 1: Daraz Store (Month 3–4)</h3>
+          <ul>
+            <li>List top 15 bestsellers on Daraz.pk</li>
+            <li>Use existing product photography</li>
+            <li>Competitive pricing + Daraz campaigns (organic ranking)</li>
+          </ul>
+          <h3>Phase 2: Pharmacy & Clinic Partnerships</h3>
+          <ul>
+            <li>Leverage existing nationwide branch offices</li>
+            <li>Offer 20–25% margin to pharmacies for stocking NB SONS</li>
+            <li>Provide gynecologists/urologists with sample packs + patient leaflets</li>
+            <li>Create "Recommended by Doctors" landing page</li>
+          </ul>
+          <h3>Phase 3: Corporate Wellness</h3>
+          <ul>
+            <li>Pitch employee wellness packages to Lahore/Karachi companies</li>
+            <li>Bulk orders of multivitamins, iron, digestive supplements</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: 90 DAY PLAN -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>90-Day Action Plan</h1>
+      <p>Week-by-week execution roadmap — start this Monday</p>
+    </div>
+    <div class="slide-body">
+      <div class="timeline">
+        <div class="timeline-item"><h4>Days 1–30</h4><p>Foundation</p></div>
+        <div class="timeline-item"><h4>Days 31–60</h4><p>Acceleration</p></div>
+        <div class="timeline-item"><h4>Days 61–90</h4><p>Scale</p></div>
+      </div>
+      <div class="grid-3" style="margin-top: 20px;">
+        <div>
+          <h3>Month 1: Foundation</h3>
+          <ul>
+            <li>Set up WhatsApp Business + catalog</li>
+            <li>Add WhatsApp button to Shopify</li>
+            <li>Launch daily IG/FB posting schedule</li>
+            <li>Install email automation (welcome + abandoned cart)</li>
+            <li>Create 5 product bundles</li>
+            <li>Start review collection campaign</li>
+            <li>Fix product meta titles (SEO)</li>
+            <li>Add trust badges to homepage</li>
+          </ul>
+          <p><strong>Target:</strong> Rs. 95,000–110,000/month</p>
+        </div>
+        <div>
+          <h3>Month 2: Acceleration</h3>
+          <ul>
+            <li>Publish 8 new blog articles</li>
+            <li>Launch referral program</li>
+            <li>Start weekly WhatsApp broadcasts</li>
+            <li>First Instagram Live Q&A</li>
+            <li>Reach out to 10 micro-influencers (barter: free product for post)</li>
+            <li>Create YouTube channel + 4 videos</li>
+            <li>Post-purchase email flow live</li>
+            <li>Analyze top traffic sources in Shopify analytics</li>
+          </ul>
+          <p><strong>Target:</strong> Rs. 120,000–150,000/month</p>
+        </div>
+        <div>
+          <h3>Month 3: Scale</h3>
+          <ul>
+            <li>Open Daraz store (top 15 SKUs)</li>
+            <li>Contact 20 pharmacies in Lahore/Karachi/Islamabad</li>
+            <li>Launch "NB SONS Wellness Circle" loyalty program</li>
+            <li>Run first user-generated content contest</li>
+            <li>Optimize bundles based on sales data</li>
+            <li>Create Urdu-language Reels series</li>
+            <li>Partner with 2–3 health bloggers (guest posts)</li>
+            <li>Monthly performance review + adjust strategy</li>
+          </ul>
+          <p><strong>Target:</strong> Rs. 150,000–180,000/month</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: REVENUE PROJECTION -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>Revenue Projection Model</h1>
+      <p>Conservative estimates based on industry benchmarks for Pakistani D2C health brands</p>
+    </div>
+    <div class="slide-body">
+      <table>
+        <tr>
+          <th>Month</th><th>Orders/Mo</th><th>Avg Order (PKR)</th><th>Revenue (PKR)</th><th>Growth vs Today</th><th>Key Action</th>
+        </tr>
+        <tr><td>Current</td><td>~80</td><td>~875</td><td>70,000</td><td>—</td><td>Baseline</td></tr>
+        <tr><td>Month 1</td><td>~100</td><td>~950</td><td>95,000</td><td>+36%</td><td>WhatsApp + social + bundles</td></tr>
+        <tr><td>Month 2</td><td>~130</td><td>~1,000</td><td>130,000</td><td>+86%</td><td>Email flows + reviews + content</td></tr>
+        <tr><td>Month 3</td><td>~160</td><td>~1,050</td><td>168,000</td><td>+140%</td><td>Referrals + Daraz launch</td></tr>
+        <tr><td>Month 6</td><td>~200</td><td>~1,100</td><td>220,000</td><td>+214%</td><td>SEO traffic + B2B pharmacy</td></tr>
+        <tr><td>Month 12</td><td>~280</td><td>~1,250</td><td>350,000</td><td>+400%</td><td>Full ecosystem compounding</td></tr>
+      </table>
+      <div class="grid-3" style="margin-top: 20px;">
+        <div class="stat-box"><div class="num">3.5×</div><div class="label">Orders Growth (12 mo)</div></div>
+        <div class="stat-box"><div class="num">1.4×</div><div class="label">AOV Growth (12 mo)</div></div>
+        <div class="stat-box"><div class="num">5×</div><div class="label">Total Revenue Growth (12 mo)</div></div>
+      </div>
+      <div class="highlight" style="margin-top: 16px;">
+        <strong>Important:</strong> These are conservative projections assuming consistent execution of the 90-day plan. NB SONS's 25-year manufacturing reputation and 80-product catalog give you advantages most D2C startups don't have. The biggest risk is not competition — it's <em>inconsistent execution</em> of content and follow-up.
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: KPIs -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>KPIs to Track Weekly</h1>
+      <p>What gets measured gets grown — use Shopify Analytics + free tools</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-2">
+        <div>
+          <h2>Revenue KPIs</h2>
+          <table>
+            <tr><th>Metric</th><th>Current (Est.)</th><th>90-Day Target</th></tr>
+            <tr><td>Monthly Revenue</td><td>Rs. 70,000</td><td>Rs. 150,000+</td></tr>
+            <tr><td>Orders/Month</td><td>~80</td><td>160+</td></tr>
+            <tr><td>Average Order Value</td><td>~Rs. 875</td><td>Rs. 1,050+</td></tr>
+            <tr><td>Conversion Rate</td><td>~1.5%</td><td>2.5%+</td></tr>
+            <tr><td>Repeat Purchase Rate</td><td>~10%</td><td>25%+</td></tr>
+          </table>
+        </div>
+        <div>
+          <h2>Marketing KPIs</h2>
+          <table>
+            <tr><th>Metric</th><th>Track Via</th><th>90-Day Target</th></tr>
+            <tr><td>Instagram Followers</td><td>IG Insights</td><td>+2,000</td></tr>
+            <tr><td>Facebook Page Likes</td><td>FB Insights</td><td>+3,000</td></tr>
+            <tr><td>Website Sessions</td><td>Shopify Analytics</td><td>5,000/month</td></tr>
+            <tr><td>Email Subscribers</td><td>Shopify Email</td><td>500+</td></tr>
+            <tr><td>WhatsApp Inquiries</td><td>WA Business</td><td>200+/month</td></tr>
+            <tr><td>Product Reviews (Top 5)</td><td>Shopify/Judge.me</td><td>50+ each</td></tr>
+            <tr><td>Blog Organic Traffic</td><td>Google Search Console</td><td>1,000+/month</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="highlight" style="margin-top: 16px;">
+        <strong>Free tools to install today:</strong> Google Search Console, Google Analytics 4, Meta Business Suite (schedule posts), Canva (free design), Judge.me or Loox (reviews app with free tier).
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: QUICK WINS -->
+  <div class="slide">
+    <div class="slide-header">
+      <h1>10 Quick Wins — Do These This Week</h1>
+      <p>Immediate actions that cost Rs. 0 and can boost revenue within 7 days</p>
+    </div>
+    <div class="slide-body">
+      <div class="grid-2">
+        <ol style="font-size: 0.92rem; line-height: 2;">
+          <li><strong>Add WhatsApp chat button</strong> to every page on nbsons.com (Shopify app: "WhatsApp Chat")</li>
+          <li><strong>Update Instagram bio</strong> — clear CTA: "🌿 Pakistan's #1 Supplements | Free Delivery Rs.1999+ | Order ↓"</li>
+          <li><strong>Pin your top 3 bestsellers</strong> as Instagram/Facebook posts with shop links</li>
+          <li><strong>Enable abandoned cart emails</strong> in Shopify (Settings → Checkout → Abandoned checkout)</li>
+          <li><strong>Create "Men's Vitality Pack" bundle</strong> — X-FIT + Repro-M at Rs. 1,999</li>
+        </ol>
+        <ol start="6" style="font-size: 0.92rem; line-height: 2;">
+          <li><strong>Send WhatsApp to last 50 customers</strong> — "How's your supplement working? Leave a review for 10% off"</li>
+          <li><strong>Add "Free Delivery on Rs. 1,999+"</strong> banner at top of homepage (already in ticker — make it a clickable banner)</li>
+          <li><strong>Post 1 Reel today</strong> — film product on phone, add text overlay with benefits</li>
+          <li><strong>Link all blog articles</strong> to relevant product pages (internal linking)</li>
+          <li><strong>Set up Google Search Console</strong> — submit sitemap, start tracking keyword rankings</li>
+        </ol>
+      </div>
+      <div class="highlight" style="margin-top: 20px; text-align: center; font-size: 1rem;">
+        <strong>Estimated combined impact of these 10 actions: +Rs. 15,000–25,000/month within 30 days</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: CLOSING -->
+  <div class="slide cover">
+    <div class="logo-text">NB SONS</div>
+    <div class="gold-line"></div>
+    <h1>Your Path Forward</h1>
+    <p class="subtitle" style="margin-top: 20px;">
+      You don't need ads. You need <strong>systems</strong>.<br><br>
+      WhatsApp + Social Content + Email + Reviews + Bundles + SEO<br>
+      = A compounding growth engine that builds on your 25-year legacy.
+    </p>
+    <div class="grid-3" style="margin-top: 32px; max-width: 700px; text-align: center;">
+      <div><div style="font-size: 1.5rem; font-weight: 700;">Rs. 70K</div><div style="opacity: 0.7; font-size: 0.85rem;">Today</div></div>
+      <div><div style="font-size: 1.5rem; font-weight: 700; color: var(--gold);">Rs. 170K</div><div style="opacity: 0.7; font-size: 0.85rem;">90 Days</div></div>
+      <div><div style="font-size: 1.5rem; font-weight: 700; color: var(--gold);">Rs. 350K</div><div style="opacity: 0.7; font-size: 0.85rem;">12 Months</div></div>
+    </div>
+    <p class="meta" style="margin-top: 40px;">
+      nbsons.com · @nb.sons · facebook.com/nbsonspvtltd<br>
+      "Wellness for Life" — NB SENSE
+    </p>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+  <span class="counter" id="counter">1 / 15</span>
+  <button id="nextBtn" onclick="changeSlide(1)">Next →</button>
+</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, total - 1));
+    slides[current].classList.add('active');
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+    if (e.key === 'ArrowLeft') { changeSlide(-1); }
+  });
+</script>
+
+</body>
+</html>
