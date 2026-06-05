@@ -6,10 +6,11 @@
  * 2. Open Extensions → Apps Script
  * 3. Paste this entire file, save
  * 4. Run setupSheet() once (authorize when prompted)
- * 5. Deploy → New deployment → Web app
- *    - Execute as: Me
- *    - Who has access: Anyone
- * 6. Copy the /exec URL into your WordPress form fetch() call
+ * 5. Add appsscript.json (Project Settings → "Show appsscript.json manifest file")
+ * 6. Deploy → New deployment → Web app
+ *    - Execute as: Me (USER_DEPLOYING)
+ *    - Who has access: Anyone (ANYONE_ANONYMOUS)
+ * 7. Copy the /exec URL into your WordPress form fetch() call
  */
 
 const CONFIG = {
