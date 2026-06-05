@@ -14,6 +14,8 @@ const CONFIG = {
   BACKUP_EMAIL: 'hassanofficial@gmail.com',
   SPREADSHEET_ID: '167qMEH8KXxv_LGE5UzFzVwVp_QSN6bJsCz520aE3t18',
   SHEET_NAME: 'Submissions',
+  COMPANY_NAME: 'Airport Passes',
+  SEND_CONFIRMATION: true,
 };
 
 const HEADERS = [
@@ -41,7 +43,9 @@ function doPost(e) {
 
     const row = saveToSheet(name, email, phone, subject, message, 'Pending');
     const mailResult = sendNotificationEmail(name, email, phone, subject, message);
-    updateEmailStatus(row, mailResult.status);
+    const confirmResult = sendConfirmationEmail(name, email, subject, message);
+    const statusText = buildEmailStatus(mailResult, confirmResult);
+    updateEmailStatus(row, statusText);
 
     if (!mailResult.ok) {
       return jsonResponse({
@@ -127,12 +131,28 @@ function testMailSimple() {
 }
 
 function testEmail() {
-  const result = sendNotificationEmail(
+  const adminResult = sendNotificationEmail(
     'Test User',
     'test@example.com',
     '03001234567',
     'Email Test',
     'Contact form email test.'
+  );
+  const confirmResult = sendConfirmationEmail(
+    'Test User',
+    'test@example.com',
+    'Email Test',
+    'Contact form email test.'
+  );
+  Logger.log(JSON.stringify({ admin: adminResult, confirmation: confirmResult }));
+}
+
+function testConfirmation() {
+  const result = sendConfirmationEmail(
+    'Test User',
+    'hassanofficial@gmail.com',
+    'Confirmation Test',
+    'This is a test confirmation email.'
   );
   Logger.log(JSON.stringify(result));
 }
@@ -195,6 +215,57 @@ function saveToSheet(name, email, phone, subject, message, emailStatus) {
 
 function updateEmailStatus(row, status) {
   getOrCreateSheet().getRange(row, HEADERS.length).setValue(status);
+}
+
+function sendConfirmationEmail(name, email, subject, message) {
+  if (!CONFIG.SEND_CONFIRMATION) {
+    return { ok: true, status: 'Confirmation disabled' };
+  }
+
+  if (!isValidEmail(email)) {
+    return { ok: false, status: 'Invalid visitor email' };
+  }
+
+  const confirmSubject = 'We received your message - ' + CONFIG.COMPANY_NAME;
+  const body = [
+    'Dear ' + name + ',',
+    '',
+    'Thank you for contacting ' + CONFIG.COMPANY_NAME + '.',
+    'We have received your message and our team will get back to you shortly.',
+    '',
+    'Here is a copy of your submission:',
+    '',
+    'Subject: ' + (subject || 'Not provided'),
+    'Message:',
+    message || 'No message provided',
+    '',
+    'Submitted: ' + formatNow(),
+    '',
+    'Best regards,',
+    CONFIG.COMPANY_NAME,
+    '',
+    'Please do not reply to this automated email.',
+  ].join('\n');
+
+  var error = trySendMail(email, confirmSubject, body);
+  if (!error) {
+    return { ok: true, status: 'Confirmation sent to ' + email };
+  }
+
+  Logger.log('Confirmation email failed: ' + error);
+  return { ok: false, status: 'Confirmation failed: ' + error };
+}
+
+function buildEmailStatus(adminResult, confirmResult) {
+  var parts = ['Admin: ' + adminResult.status];
+  if (CONFIG.SEND_CONFIRMATION) {
+    parts.push('Visitor: ' + confirmResult.status);
+  }
+  return parts.join(' | ');
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
 }
 
 function sendNotificationEmail(name, email, phone, subject, message) {
