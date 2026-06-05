@@ -13,7 +13,7 @@
  */
 
 const CONFIG = {
-  RECIPIENT_EMAIL: 'hassanofficial@gmail.com',
+  RECIPIENT_EMAIL: 'maas@airportpasses.com',
   SPREADSHEET_ID: '167qMEH8KXxv_LGE5UzFzVwVp_QSN6bJsCz520aE3t18',
   SHEET_NAME: 'Submissions',
 };
