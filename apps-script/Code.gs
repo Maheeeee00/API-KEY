@@ -127,33 +127,48 @@ function updateEmailStatus(row, status) {
 }
 
 function sendNotificationEmail(name, email, phone, subject, message) {
-  const emailSubject = '[Website Contact] ' + (subject || 'New Submission');
+  const emailSubject = 'Contact Form: ' + (subject || 'New Submission');
   const plainBody = buildPlainEmailBody(name, email, phone, subject, message);
   const htmlBody = buildHtmlEmailBody(name, email, phone, subject, message);
-  const options = {
-    htmlBody: htmlBody,
-    name: 'Website Contact Form',
-  };
+  const errors = [];
 
-  if (isValidEmail(email)) {
-    options.replyTo = email;
+  // Try simplest send first — complex options often cause "unknown error" in Apps Script.
+  const attempts = [
+    function() {
+      MailApp.sendEmail(CONFIG.RECIPIENT_EMAIL, emailSubject, plainBody);
+    },
+    function() {
+      GmailApp.sendEmail(CONFIG.RECIPIENT_EMAIL, emailSubject, plainBody);
+    },
+    function() {
+      MailApp.sendEmail({
+        to: CONFIG.RECIPIENT_EMAIL,
+        subject: emailSubject,
+        body: plainBody,
+        htmlBody: htmlBody,
+      });
+    },
+    function() {
+      const options = { htmlBody: htmlBody, name: 'Website Contact Form' };
+      if (isValidEmail(email)) {
+        options.replyTo = email;
+      }
+      GmailApp.sendEmail(CONFIG.RECIPIENT_EMAIL, emailSubject, plainBody, options);
+    },
+  ];
+
+  for (var i = 0; i < attempts.length; i++) {
+    try {
+      attempts[i]();
+      return 'Sent to ' + CONFIG.RECIPIENT_EMAIL;
+    } catch (err) {
+      var msg = 'Attempt ' + (i + 1) + ': ' + err;
+      errors.push(msg);
+      Logger.log(msg);
+    }
   }
 
-  try {
-    GmailApp.sendEmail(CONFIG.RECIPIENT_EMAIL, emailSubject, plainBody, options);
-    return 'Sent to ' + CONFIG.RECIPIENT_EMAIL;
-  } catch (gmailErr) {
-    Logger.log('GmailApp failed, trying MailApp: ' + gmailErr);
-    MailApp.sendEmail({
-      to: CONFIG.RECIPIENT_EMAIL,
-      subject: emailSubject,
-      body: plainBody,
-      htmlBody: htmlBody,
-      replyTo: isValidEmail(email) ? email : undefined,
-      name: 'Website Contact Form',
-    });
-    return 'Sent via MailApp to ' + CONFIG.RECIPIENT_EMAIL;
-  }
+  throw new Error(errors.join(' | '));
 }
 
 function buildPlainEmailBody(name, email, phone, subject, message) {
@@ -269,17 +284,37 @@ function jsonResponse(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/** Run from Apps Script editor to test email only. */
+/** Run first — sends the simplest possible email to test delivery. */
+function testMailSimple() {
+  try {
+    MailApp.sendEmail(
+      CONFIG.RECIPIENT_EMAIL,
+      'Simple Test Email',
+      'If you receive this, basic mail delivery works for ' + CONFIG.RECIPIENT_EMAIL
+    );
+    Logger.log('Simple test sent to ' + CONFIG.RECIPIENT_EMAIL);
+  } catch (err) {
+    Logger.log('Simple test FAILED: ' + err);
+    throw err;
+  }
+}
+
+/** Run from Apps Script editor to test full email template. */
 function testEmail() {
-  const status = sendNotificationEmail(
-    'Test User',
-    'test@example.com',
-    '03001234567',
-    'Email Test',
-    'If you receive this email, the contact form mail is working.'
-  );
-  Logger.log(status);
-  Logger.log('Check inbox and spam for: ' + CONFIG.RECIPIENT_EMAIL);
+  try {
+    const status = sendNotificationEmail(
+      'Test User',
+      'test@example.com',
+      '03001234567',
+      'Email Test',
+      'If you receive this email, the contact form mail is working.'
+    );
+    Logger.log(status);
+    Logger.log('Check inbox and spam for: ' + CONFIG.RECIPIENT_EMAIL);
+  } catch (err) {
+    Logger.log('testEmail FAILED: ' + err);
+    throw err;
+  }
 }
 
 /** Run from Apps Script editor to test full form flow. */
