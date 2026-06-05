@@ -11,7 +11,6 @@
 
 const CONFIG = {
   RECIPIENT_EMAIL: 'maas@airportpasses.com',
-  BACKUP_EMAIL: 'hassanofficial@gmail.com',
   SPREADSHEET_ID: '167qMEH8KXxv_LGE5UzFzVwVp_QSN6bJsCz520aE3t18',
   SHEET_NAME: 'Submissions',
   COMPANY_NAME: 'Airport Passes',
@@ -66,7 +65,6 @@ function doGet() {
     status: 'ok',
     message: 'Contact form endpoint is active',
     recipient: CONFIG.RECIPIENT_EMAIL,
-    backup: CONFIG.BACKUP_EMAIL,
     sender: getSenderEmail(),
     spreadsheetId: CONFIG.SPREADSHEET_ID,
   });
@@ -82,10 +80,8 @@ function diagnose() {
   const report = {
     sender: getSenderEmail(),
     recipient: CONFIG.RECIPIENT_EMAIL,
-    backup: CONFIG.BACKUP_EMAIL,
     sheet: 'unknown',
-    backupMail: 'unknown',
-    primaryMail: 'unknown',
+    mail: 'unknown',
   };
 
   try {
@@ -97,24 +93,13 @@ function diagnose() {
 
   try {
     MailApp.sendEmail(
-      CONFIG.BACKUP_EMAIL,
-      'Diagnose Test',
-      'Backup email test at ' + new Date()
-    );
-    report.backupMail = 'OK - sent to ' + CONFIG.BACKUP_EMAIL;
-  } catch (err) {
-    report.backupMail = 'FAILED: ' + err;
-  }
-
-  try {
-    MailApp.sendEmail(
       CONFIG.RECIPIENT_EMAIL,
       'Diagnose Test',
-      'Primary email test at ' + new Date()
+      'Email test at ' + new Date()
     );
-    report.primaryMail = 'OK - sent to ' + CONFIG.RECIPIENT_EMAIL;
+    report.mail = 'OK - sent to ' + CONFIG.RECIPIENT_EMAIL;
   } catch (err) {
-    report.primaryMail = 'FAILED: ' + err;
+    report.mail = 'FAILED: ' + err;
   }
 
   Logger.log(JSON.stringify(report, null, 2));
@@ -123,11 +108,11 @@ function diagnose() {
 
 function testMailSimple() {
   MailApp.sendEmail(
-    CONFIG.BACKUP_EMAIL,
+    CONFIG.RECIPIENT_EMAIL,
     'Simple Test',
-    'Basic MailApp test to backup Gmail.'
+    'Basic MailApp test to ' + CONFIG.RECIPIENT_EMAIL
   );
-  Logger.log('Sent simple test to ' + CONFIG.BACKUP_EMAIL);
+  Logger.log('Sent simple test to ' + CONFIG.RECIPIENT_EMAIL);
 }
 
 function testEmail() {
@@ -150,7 +135,7 @@ function testEmail() {
 function testConfirmation() {
   const result = sendConfirmationEmail(
     'Test User',
-    'hassanofficial@gmail.com',
+    'test@example.com',
     'Confirmation Test',
     'This is a test confirmation email.'
   );
@@ -271,26 +256,14 @@ function isValidEmail(email) {
 function sendNotificationEmail(name, email, phone, subject, message) {
   const emailSubject = 'Contact Form: ' + (subject || 'New Submission');
   const body = buildPlainEmailBody(name, email, phone, subject, message);
+  const error = trySendMail(CONFIG.RECIPIENT_EMAIL, emailSubject, body);
 
-  var primaryError = trySendMail(CONFIG.RECIPIENT_EMAIL, emailSubject, body);
-  if (!primaryError) {
+  if (!error) {
     return { ok: true, status: 'Sent to ' + CONFIG.RECIPIENT_EMAIL };
   }
 
-  Logger.log('Primary email failed: ' + primaryError);
-
-  var backupError = trySendMail(CONFIG.BACKUP_EMAIL, emailSubject, body);
-  if (!backupError) {
-    return {
-      ok: true,
-      status: 'Primary failed, sent to backup ' + CONFIG.BACKUP_EMAIL,
-    };
-  }
-
-  return {
-    ok: false,
-    status: 'Primary: ' + primaryError + ' | Backup: ' + backupError,
-  };
+  Logger.log('Admin email failed: ' + error);
+  return { ok: false, status: error };
 }
 
 function trySendMail(to, subject, body) {
@@ -304,7 +277,7 @@ function trySendMail(to, subject, body) {
 
 function buildPlainEmailBody(name, email, phone, subject, message) {
   return [
-    'New website contact form submission',
+    'Airport Passes website form submission',
     '',
     'Name: ' + name,
     'Email: ' + email,
