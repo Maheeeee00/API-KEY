@@ -5,13 +5,11 @@
  * 1. Open your Google Sheet → Extensions → Apps Script
  * 2. Paste this entire file + appsscript.json, save
  * 3. Run setupSheet() once (authorize when prompted)
- * 4. Deploy → New deployment → Web app
+ * 4. Run testEmail() to verify email delivery
+ * 5. Deploy → New deployment → Web app
  *    - Execute as: Me (USER_DEPLOYING)
  *    - Who has access: Anyone (ANYONE_ANONYMOUS)
- * 5. Copy the NEW /exec URL into your WordPress form (SCRIPT_URL)
- *
- * If the form shows "Something went wrong", redeploy a new version —
- * an old deployment URL without doPost will always fail.
+ * 6. Copy the NEW /exec URL into your WordPress form (SCRIPT_URL)
  */
 
 const CONFIG = {
@@ -19,6 +17,16 @@ const CONFIG = {
   SPREADSHEET_ID: '167qMEH8KXxv_LGE5UzFzVwVp_QSN6bJsCz520aE3t18',
   SHEET_NAME: 'Submissions',
 };
+
+const HEADERS = [
+  'Timestamp',
+  'Name',
+  'Email',
+  'Phone',
+  'Subject',
+  'Message',
+  'Email Status',
+];
 
 function doPost(e) {
   try {
@@ -33,15 +41,18 @@ function doPost(e) {
       return jsonResponse({ status: 'error', message: 'Name and email are required' });
     }
 
-    saveToSheet(name, email, phone, subject, message);
+    const row = saveToSheet(name, email, phone, subject, message, 'Pending');
 
     try {
-      sendNotificationEmail(name, email, phone, subject, message);
+      const status = sendNotificationEmail(name, email, phone, subject, message);
+      updateEmailStatus(row, status);
     } catch (mailErr) {
-      Logger.log('Email error: ' + mailErr);
+      const errorText = String(mailErr);
+      updateEmailStatus(row, 'Failed: ' + errorText);
+      Logger.log('Email error: ' + errorText);
       return jsonResponse({
         status: 'error',
-        message: 'Saved to sheet but email failed: ' + mailErr,
+        message: 'Saved to sheet but email failed: ' + errorText,
       });
     }
 
@@ -57,21 +68,15 @@ function doGet() {
     status: 'ok',
     message: 'Contact form endpoint is active',
     recipient: CONFIG.RECIPIENT_EMAIL,
+    sender: getSenderEmail(),
     spreadsheetId: CONFIG.SPREADSHEET_ID,
   });
 }
 
 function setupSheet() {
   const sheet = getOrCreateSheet();
-  const headers = ['Timestamp', 'Name', 'Email', 'Phone', 'Subject', 'Message'];
-
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-    sheet.autoResizeColumns(1, headers.length);
-  }
-
+  ensureHeaders(sheet);
+  sheet.autoResizeColumns(1, HEADERS.length);
   Logger.log('Sheet ready: ' + sheet.getName());
 }
 
@@ -81,9 +86,8 @@ function parseRequestData(e) {
   }
 
   if (e.postData && e.postData.contents) {
-    const contents = e.postData.contents;
     try {
-      return JSON.parse(contents);
+      return JSON.parse(e.postData.contents);
     } catch (parseErr) {
       throw new Error('Invalid JSON body: ' + parseErr);
     }
@@ -102,18 +106,59 @@ function parseRequestData(e) {
   throw new Error('No form data received');
 }
 
-function saveToSheet(name, email, phone, subject, message) {
+function saveToSheet(name, email, phone, subject, message, emailStatus) {
   const sheet = getOrCreateSheet();
-  sheet.appendRow([new Date(), name, email, phone, subject, message]);
+  ensureHeaders(sheet);
+  sheet.appendRow([
+    new Date(),
+    name,
+    email,
+    phone,
+    subject,
+    message,
+    emailStatus || 'Pending',
+  ]);
+  return sheet.getLastRow();
+}
+
+function updateEmailStatus(row, status) {
+  const sheet = getOrCreateSheet();
+  sheet.getRange(row, HEADERS.length).setValue(status);
 }
 
 function sendNotificationEmail(name, email, phone, subject, message) {
-  const emailSubject = subject
-    ? 'Contact Form: ' + subject
-    : 'New Contact Form Submission';
+  const emailSubject = '[Website Contact] ' + (subject || 'New Submission');
+  const plainBody = buildPlainEmailBody(name, email, phone, subject, message);
+  const htmlBody = buildHtmlEmailBody(name, email, phone, subject, message);
+  const options = {
+    htmlBody: htmlBody,
+    name: 'Website Contact Form',
+  };
 
-  const body = [
-    'You received a new message from your website contact form.',
+  if (isValidEmail(email)) {
+    options.replyTo = email;
+  }
+
+  try {
+    GmailApp.sendEmail(CONFIG.RECIPIENT_EMAIL, emailSubject, plainBody, options);
+    return 'Sent to ' + CONFIG.RECIPIENT_EMAIL;
+  } catch (gmailErr) {
+    Logger.log('GmailApp failed, trying MailApp: ' + gmailErr);
+    MailApp.sendEmail({
+      to: CONFIG.RECIPIENT_EMAIL,
+      subject: emailSubject,
+      body: plainBody,
+      htmlBody: htmlBody,
+      replyTo: isValidEmail(email) ? email : undefined,
+      name: 'Website Contact Form',
+    });
+    return 'Sent via MailApp to ' + CONFIG.RECIPIENT_EMAIL;
+  }
+}
+
+function buildPlainEmailBody(name, email, phone, subject, message) {
+  return [
+    'New website contact form submission',
     '',
     'Name:    ' + name,
     'Email:   ' + email,
@@ -121,30 +166,63 @@ function sendNotificationEmail(name, email, phone, subject, message) {
     'Subject: ' + (subject || 'Not provided'),
     '',
     'Message:',
-    '──────────────────────────────',
     message || 'No message provided',
-    '──────────────────────────────',
     '',
-    'Submitted: ' + Utilities.formatDate(
-      new Date(),
-      Session.getScriptTimeZone() || 'Asia/Karachi',
-      'yyyy-MM-dd HH:mm:ss'
-    ),
-    '',
-    'Reply directly to this email to respond to the sender.',
+    'Submitted: ' + formatNow(),
+    'Sent by Google account: ' + getSenderEmail(),
   ].join('\n');
+}
 
-  const options = {
-    to: CONFIG.RECIPIENT_EMAIL,
-    subject: emailSubject,
-    body: body,
-  };
+function buildHtmlEmailBody(name, email, phone, subject, message) {
+  return [
+    '<div style="font-family:Arial,sans-serif;color:#333;max-width:600px;">',
+    '<h2 style="color:#1794CC;">New Contact Form Submission</h2>',
+    '<table style="width:100%;border-collapse:collapse;">',
+    rowHtml('Name', name),
+    rowHtml('Email', email),
+    rowHtml('Phone', phone || 'Not provided'),
+    rowHtml('Subject', subject || 'Not provided'),
+    '</table>',
+    '<p><strong>Message:</strong></p>',
+    '<div style="background:#f5f5f5;padding:15px;border-radius:8px;white-space:pre-wrap;">',
+    escapeHtml(message || 'No message provided'),
+    '</div>',
+    '<p style="color:#777;font-size:12px;">Submitted: ' + formatNow() + '</p>',
+    '</div>',
+  ].join('');
+}
 
-  if (email && email.indexOf('@') > 0) {
-    options.replyTo = email;
+function rowHtml(label, value) {
+  return '<tr><td style="padding:8px 0;font-weight:bold;width:100px;">'
+    + label + ':</td><td style="padding:8px 0;">' + escapeHtml(value) + '</td></tr>';
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatNow() {
+  return Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone() || 'Asia/Karachi',
+    'yyyy-MM-dd HH:mm:ss'
+  );
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function getSenderEmail() {
+  try {
+    return Session.getActiveUser().getEmail() || GmailApp.getUserEmail();
+  } catch (err) {
+    return 'unknown';
   }
-
-  MailApp.sendEmail(options);
 }
 
 function getSpreadsheet() {
@@ -157,13 +235,32 @@ function getOrCreateSheet() {
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
-    const headers = ['Timestamp', 'Name', 'Email', 'Phone', 'Subject', 'Message'];
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    sheet.setFrozenRows(1);
+    ensureHeaders(sheet);
   }
 
   return sheet;
+}
+
+function ensureHeaders(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(HEADERS);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    return;
+  }
+
+  const existing = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  if (existing[0] !== 'Timestamp') {
+    sheet.insertRowBefore(1);
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    return;
+  }
+
+  if (existing.length < HEADERS.length || existing[HEADERS.length - 1] !== 'Email Status') {
+    sheet.getRange(1, HEADERS.length).setValue('Email Status').setFontWeight('bold');
+  }
 }
 
 function jsonResponse(obj) {
@@ -172,8 +269,22 @@ function jsonResponse(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/** Run from Apps Script editor to test email only. */
+function testEmail() {
+  const status = sendNotificationEmail(
+    'Test User',
+    'test@example.com',
+    '03001234567',
+    'Email Test',
+    'If you receive this email, the contact form mail is working.'
+  );
+  Logger.log(status);
+  Logger.log('Check inbox and spam for: ' + CONFIG.RECIPIENT_EMAIL);
+}
+
+/** Run from Apps Script editor to test full form flow. */
 function testSubmission() {
-  const mockEvent = {
+  const result = doPost({
     postData: {
       contents: JSON.stringify({
         name: 'Test User',
@@ -183,8 +294,7 @@ function testSubmission() {
         message: 'This is a test from Apps Script editor.',
       }),
     },
-  };
+  }).getContent();
 
-  const result = doPost(mockEvent).getContent();
   Logger.log(result);
 }
