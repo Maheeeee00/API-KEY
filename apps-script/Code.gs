@@ -3,13 +3,15 @@
  *
  * SETUP (one-time):
  * 1. Open your Google Sheet → Extensions → Apps Script
- * 2. Paste this entire file, save
+ * 2. Paste this entire file + appsscript.json, save
  * 3. Run setupSheet() once (authorize when prompted)
- * 4. Add appsscript.json (Project Settings → "Show appsscript.json manifest file")
- * 5. Deploy → New deployment → Web app
+ * 4. Deploy → New deployment → Web app
  *    - Execute as: Me (USER_DEPLOYING)
  *    - Who has access: Anyone (ANYONE_ANONYMOUS)
- * 6. Copy the /exec URL into your WordPress form fetch() call
+ * 5. Copy the NEW /exec URL into your WordPress form (SCRIPT_URL)
+ *
+ * If the form shows "Something went wrong", redeploy a new version —
+ * an old deployment URL without doPost will always fail.
  */
 
 const CONFIG = {
@@ -18,16 +20,9 @@ const CONFIG = {
   SHEET_NAME: 'Submissions',
 };
 
-/**
- * Handles POST requests from the WordPress contact form.
- */
 function doPost(e) {
   try {
-    if (!e || !e.postData || !e.postData.contents) {
-      return jsonResponse({ status: 'error', message: 'No data received' });
-    }
-
-    const data = JSON.parse(e.postData.contents);
+    const data = parseRequestData(e);
     const name = (data.name || '').trim();
     const email = (data.email || '').trim();
     const phone = (data.phone || '').trim();
@@ -39,7 +34,16 @@ function doPost(e) {
     }
 
     saveToSheet(name, email, phone, subject, message);
-    sendNotificationEmail(name, email, phone, subject, message);
+
+    try {
+      sendNotificationEmail(name, email, phone, subject, message);
+    } catch (mailErr) {
+      Logger.log('Email error: ' + mailErr);
+      return jsonResponse({
+        status: 'error',
+        message: 'Saved to sheet but email failed: ' + mailErr,
+      });
+    }
 
     return jsonResponse({ status: 'success' });
   } catch (err) {
@@ -48,9 +52,6 @@ function doPost(e) {
   }
 }
 
-/**
- * Health check — open the /exec URL in a browser to verify deployment.
- */
 function doGet() {
   return jsonResponse({
     status: 'ok',
@@ -60,9 +61,6 @@ function doGet() {
   });
 }
 
-/**
- * Run once from the Apps Script editor to create headers.
- */
 function setupSheet() {
   const sheet = getOrCreateSheet();
   const headers = ['Timestamp', 'Name', 'Email', 'Phone', 'Subject', 'Message'];
@@ -75,6 +73,33 @@ function setupSheet() {
   }
 
   Logger.log('Sheet ready: ' + sheet.getName());
+}
+
+function parseRequestData(e) {
+  if (!e) {
+    throw new Error('No request data received');
+  }
+
+  if (e.postData && e.postData.contents) {
+    const contents = e.postData.contents;
+    try {
+      return JSON.parse(contents);
+    } catch (parseErr) {
+      throw new Error('Invalid JSON body: ' + parseErr);
+    }
+  }
+
+  if (e.parameter) {
+    return {
+      name: e.parameter.name,
+      email: e.parameter.email,
+      phone: e.parameter.phone,
+      subject: e.parameter.subject,
+      message: e.parameter.message,
+    };
+  }
+
+  throw new Error('No form data received');
 }
 
 function saveToSheet(name, email, phone, subject, message) {
@@ -102,20 +127,24 @@ function sendNotificationEmail(name, email, phone, subject, message) {
     '',
     'Submitted: ' + Utilities.formatDate(
       new Date(),
-      Session.getScriptTimeZone(),
+      Session.getScriptTimeZone() || 'Asia/Karachi',
       'yyyy-MM-dd HH:mm:ss'
     ),
     '',
     'Reply directly to this email to respond to the sender.',
   ].join('\n');
 
-  MailApp.sendEmail({
+  const options = {
     to: CONFIG.RECIPIENT_EMAIL,
     subject: emailSubject,
     body: body,
-    replyTo: email,
-    name: name + ' (via Contact Form)',
-  });
+  };
+
+  if (email && email.indexOf('@') > 0) {
+    options.replyTo = email;
+  }
+
+  MailApp.sendEmail(options);
 }
 
 function getSpreadsheet() {
@@ -128,7 +157,10 @@ function getOrCreateSheet() {
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
-    setupSheet();
+    const headers = ['Timestamp', 'Name', 'Email', 'Phone', 'Subject', 'Message'];
+    sheet.appendRow(headers);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
   }
 
   return sheet;
@@ -138,4 +170,21 @@ function jsonResponse(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function testSubmission() {
+  const mockEvent = {
+    postData: {
+      contents: JSON.stringify({
+        name: 'Test User',
+        email: 'test@example.com',
+        phone: '03001234567',
+        subject: 'Test',
+        message: 'This is a test from Apps Script editor.',
+      }),
+    },
+  };
+
+  const result = doPost(mockEvent).getContent();
+  Logger.log(result);
 }
