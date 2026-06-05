@@ -2,19 +2,19 @@
  * WordPress Contact Form Handler
  *
  * SETUP (one-time):
- * 1. Create a new Google Sheet (e.g. "Contact Form Submissions")
- * 2. Open Extensions → Apps Script
- * 3. Paste this entire file, save
- * 4. Run setupSheet() once (authorize when prompted)
- * 5. Add appsscript.json (Project Settings → "Show appsscript.json manifest file")
- * 6. Deploy → New deployment → Web app
+ * 1. Open your Google Sheet → Extensions → Apps Script
+ * 2. Paste this entire file, save
+ * 3. Run setupSheet() once (authorize when prompted)
+ * 4. Add appsscript.json (Project Settings → "Show appsscript.json manifest file")
+ * 5. Deploy → New deployment → Web app
  *    - Execute as: Me (USER_DEPLOYING)
  *    - Who has access: Anyone (ANYONE_ANONYMOUS)
- * 7. Copy the /exec URL into your WordPress form fetch() call
+ * 6. Copy the /exec URL into your WordPress form fetch() call
  */
 
 const CONFIG = {
   RECIPIENT_EMAIL: 'hassanofficial@gmail.com',
+  SPREADSHEET_ID: '167qMEH8KXxv_LGE5UzFzVwVp_QSN6bJsCz520aE3t18',
   SHEET_NAME: 'Submissions',
 };
 
@@ -56,6 +56,7 @@ function doGet() {
     status: 'ok',
     message: 'Contact form endpoint is active',
     recipient: CONFIG.RECIPIENT_EMAIL,
+    spreadsheetId: CONFIG.SPREADSHEET_ID,
   });
 }
 
@@ -117,8 +118,12 @@ function sendNotificationEmail(name, email, phone, subject, message) {
   });
 }
 
+function getSpreadsheet() {
+  return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+}
+
 function getOrCreateSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
 
   if (!sheet) {
