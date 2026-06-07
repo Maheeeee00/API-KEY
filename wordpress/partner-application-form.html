@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airport Passes – Partner Application</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── OVERLAY ── */
+.ap-overlay {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ── MODAL ── */
+#apf {
+  --g: #1A6FD4;
+  --g2: #2580E8;
+  --g3: #7BBCF7;
+  --dk: #0B1829;
+  --dk2: #0D2040;
+  --off: #F4F8FE;
+  --ib: #C8DAEF;
+  --er: #e05252;
+  --mu: #5A7A9E;
+  --r: 8px;
+  width: 100%;
+  max-width: 740px;
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.12);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ── HEADER ── */
+.hd {
+  background: linear-gradient(135deg, #0B1829 0%, #0D2040 100%);
+  padding: 20px 24px;
+  position: relative;
+  flex-shrink: 0;
+}
+.hd::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 85% 50%, rgba(26,111,212,.22) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hd-inner {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 14px;
+}
+.hd-ico {
+  width: 44px; height: 44px; flex-shrink: 0;
+  background: rgba(26,111,212,.18);
+  border: 1.5px solid rgba(26,111,212,.38);
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.hd-sup {
+  font-size: 9px; font-weight: 700; letter-spacing: 2.8px;
+  text-transform: uppercase; color: #7BBCF7; margin-bottom: 3px;
+}
+.hd h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-weight: 600; color: #fff; line-height: 1.1;
+}
+.hd h2 em { color: #A8D4F8; font-style: italic; }
+.hd p { font-size: 11px; color: rgba(255,255,255,.46); margin-top: 4px; line-height: 1.5; }
+.hd-bar { width: 28px; height: 2px; background: linear-gradient(90deg, #1A6FD4, #7BBCF7); border-radius: 2px; margin-top: 6px; }
+
+/* ── FORM HEAD ── */
+.fhd {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 22px; border-bottom: 1px solid #E4EFF9;
+  flex-shrink: 0;
+  background: #fff;
+}
+.fhd-ico {
+  width: 32px; height: 32px;
+  background: #F4F8FE; border: 1px solid rgba(26,111,212,.2);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.fhd h3 { font-size: 9.5px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #0B1829; }
+.fhd p { font-size: 10.5px; color: #5A7A9E; margin-top: 1px; }
+
+/* ── SCROLLABLE FORM BODY ── */
+.fb {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 22px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26,111,212,.25) transparent;
+}
+.fb::-webkit-scrollbar { width: 4px; }
+.fb::-webkit-scrollbar-thumb { background: rgba(26,111,212,.25); border-radius: 4px; }
+
+.fg { display: flex; flex-direction: column; gap: 11px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.fw { display: flex; flex-direction: column; gap: 4px; }
+
+.sl {
+  font-size: 9px; font-weight: 700; letter-spacing: 2.2px;
+  text-transform: uppercase; color: #1A6FD4;
+  padding-bottom: 6px; border-bottom: 1px solid #E4EFF9; margin-top: 3px;
+}
+
+label.lb {
+  font-size: 10.5px; font-weight: 500; color: #0B1829;
+  display: flex; align-items: center; gap: 3px; float: none; clear: none; width: auto;
+}
+label.lb .rq { color: #1A6FD4; font-size: 10px; }
+label.lb .opt { color: #5A7A9E; font-size: 9px; font-weight: 400; }
+
+input[type=text],
+input[type=email],
+input[type=tel],
+input[type=url],
+select,
+textarea {
+  width: 100% !important;
+  background: #F4F8FE !important;
+  border: 1.5px solid #C8DAEF !important;
+  border-radius: var(--r) !important;
+  padding: 7px 10px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 12px !important;
+  color: #0B1829 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: 1.4 !important;
+  transition: border-color .18s, box-shadow .18s, background .18s;
+  display: block !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+input::placeholder, textarea::placeholder { color: #bbb !important; font-weight: 300; font-size: 11.5px; }
+input:focus, select:focus, textarea:focus {
+  border-color: #1A6FD4 !important;
+  background: #EEF6FF !important;
+  box-shadow: 0 0 0 3px rgba(26,111,212,.1) !important;
+}
+input.er, select.er, textarea.er {
+  border-color: var(--er) !important;
+  box-shadow: 0 0 0 3px rgba(224,82,82,.08) !important;
+}
+.em { font-size: 9.5px; color: var(--er); display: none; }
+.em.on { display: block; }
+
+.sw { position: relative; }
+.sw select { padding-right: 28px !important; cursor: pointer; }
+.sw::after {
+  content: '▾'; position: absolute; right: 9px; top: 50%;
+  transform: translateY(-50%); color: #1A6FD4; pointer-events: none; font-size: 11px;
+}
+textarea { resize: vertical; min-height: 62px; line-height: 1.6 !important; }
+
+/* ── COUNTRY SEARCH ── */
+.cs-wrap { position: relative; }
+.cs-inp input { cursor: pointer !important; }
+.cs-dd {
+  position: absolute; top: calc(100% + 3px); left: 0; right: 0;
+  background: #fff;
+  border: 1.5px solid #1A6FD4;
+  border-radius: var(--r);
+  z-index: 300;
+  box-shadow: 0 10px 30px rgba(0,0,0,.13);
+  display: none; overflow: hidden;
+}
+.cs-dd.open { display: block; }
+.cs-search { padding: 7px 8px; border-bottom: 1px solid #C8DAEF; }
+.cs-search input {
+  background: #fff !important; border: 1px solid #C8DAEF !important;
+  padding: 5px 8px !important; font-size: 11.5px !important;
+  border-radius: 6px !important; box-shadow: none !important;
+  cursor: text !important;
+}
+.cs-list {
+  max-height: 155px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(26,111,212,.25) transparent;
+}
+.cs-list::-webkit-scrollbar { width: 4px; }
+.cs-list::-webkit-scrollbar-thumb { background: rgba(26,111,212,.25); border-radius: 4px; }
+.cs-opt {
+  padding: 7px 10px; font-size: 11.5px; color: #0B1829;
+  cursor: pointer; transition: background .12s;
+  font-family: 'Outfit', sans-serif;
+}
+.cs-opt:hover { background: rgba(26,111,212,.08); }
+.cs-opt.sel { color: #1A6FD4; font-weight: 500; }
+
+/* ── CHECKBOXES ── */
+.cbg { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.cbi {
+  display: flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 7px 9px; border-radius: 8px; border: 1.5px solid #C8DAEF;
+  background: #F4F8FE; transition: all .15s;
+}
+.cbi:hover { border-color: #1A6FD4; background: #EEF6FF; }
+.cbi input[type=checkbox] {
+  width: 13px !important; height: 13px !important; accent-color: #1A6FD4;
+  cursor: pointer; flex-shrink: 0;
+  border: none !important; box-shadow: none !important;
+  padding: 0 !important; margin: 0 !important; display: inline-block !important;
+}
+.cbi span { font-size: 11.5px; color: #333; font-weight: 400; }
+.cbi:has(input:checked) { border-color: #1A6FD4; background: rgba(26,111,212,.07); }
+
+/* ── AGREE ROW ── */
+.agr {
+  display: flex; align-items: flex-start; gap: 9px;
+  background: rgba(26,111,212,.05); border: 1.5px solid rgba(26,111,212,.2);
+  border-radius: var(--r); padding: 10px 12px; cursor: pointer; transition: background .15s;
+}
+.agr:hover { background: rgba(26,111,212,.1); }
+.agr input[type=checkbox] {
+  width: 14px !important; height: 14px !important; accent-color: #1A6FD4;
+  cursor: pointer; flex-shrink: 0; margin-top: 2px;
+  border: none !important; box-shadow: none !important;
+  padding: 0 !important; display: inline-block !important;
+}
+.agr span { font-size: 11.5px; color: #444; line-height: 1.55; }
+
+/* ── SUBMIT BUTTON ── */
+.btn {
+  width: 100%;
+  background: linear-gradient(135deg, #1A6FD4, #2580E8) !important;
+  color: #fff !important; border: none !important;
+  border-radius: var(--r) !important; padding: 12px 20px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 11px !important; font-weight: 700 !important;
+  letter-spacing: 2.5px; text-transform: uppercase; cursor: pointer;
+  display: flex !important; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 2px;
+  transition: transform .2s, box-shadow .2s, opacity .2s;
+  box-shadow: 0 4px 18px rgba(26,111,212,.35);
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(26,111,212,.45) !important; opacity: .93; }
+.btn:disabled { opacity: .6 !important; cursor: not-allowed !important; transform: none !important; }
+.btn svg {
+  width: 13px; height: 13px; fill: none;
+  stroke: #fff; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+}
+
+/* ── SUCCESS STATE ── */
+.succ {
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 13px; text-align: center; padding: 50px 36px;
+}
+.succ.on { display: flex; }
+.fg.hide { display: none; }
+.sr {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, #1A6FD4, #7BBCF7);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; box-shadow: 0 10px 36px rgba(26,111,212,.38);
+}
+.sline { width: 40px; height: 2px; background: #1A6FD4; border-radius: 2px; }
+.succ h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-weight: 600; color: #0B1829;
+}
+.succ p { font-size: 12.5px; color: #5A7A9E; line-height: 1.7; max-width: 290px; }
+.succ .sn { font-size: 10.5px; color: #1A6FD4; font-weight: 600; letter-spacing: .8px; }
+
+/* ── GLOBAL ERROR ── */
+.gerr {
+  background: rgba(224,82,82,.08); border: 1.5px solid rgba(224,82,82,.3);
+  border-radius: var(--r); padding: 9px 12px;
+  font-size: 11px; color: #c0392b; display: none;
+}
+.gerr.on { display: block; }
+
+/* ── OPTIONAL COLLAPSE ── */
+.sl-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 3px;
+  padding: 10px 12px;
+  border: 1.5px solid #C8DAEF;
+  border-radius: var(--r);
+  background: #F4F8FE;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  text-align: left;
+  transition: background .18s, border-color .18s;
+}
+.sl-toggle:hover {
+  background: #EEF6FF;
+  border-color: #1A6FD4;
+}
+.sl-toggle .sl-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: #1A6FD4;
+}
+.sl-toggle .sl-hint {
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #5A7A9E;
+  margin-left: 6px;
+}
+.sl-toggle .sl-arrow {
+  font-size: 12px;
+  color: #1A6FD4;
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.sl-toggle.open .sl-arrow { transform: rotate(180deg); }
+.optional-panel {
+  display: none;
+  flex-direction: column;
+  gap: 11px;
+  margin-top: 11px;
+  padding-top: 4px;
+}
+.optional-panel.open { display: flex; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .ap-overlay { padding: 0; align-items: flex-end; }
+  #apf { max-width: 100%; max-height: 95vh; border-radius: 16px 16px 0 0; }
+  .hd { padding: 18px 16px 16px; }
+  .hd h2 { font-size: 20px; }
+  .hd p { font-size: 10.5px; }
+  .fb { padding: 14px 14px 22px; }
+  .fhd { padding: 11px 14px; }
+  .row2, .row3 { grid-template-columns: 1fr; }
+  .cbg { grid-template-columns: 1fr 1fr; }
+  .btn { font-size: 10px !important; padding: 11px 16px !important; }
+}
+@media (max-width: 380px) {
+  .cbg { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- MODAL OVERLAY -->
+<div class="ap-overlay" id="apOverlay">
+
+  <div id="apf" onclick="event.stopPropagation()">
+
+    <!-- HEADER -->
+    <div class="hd">
+      <div class="hd-inner">
+        <div class="hd-ico">🏢</div>
+        <div>
+          <div class="hd-sup">Official Partner Program</div>
+          <h2>Partner <em>With Us</em></h2>
+          <div class="hd-bar"></div>
+          <p>Become an official travel partner and offer premium airport concierge &amp; VIP services to your clients worldwide.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM SUBHEADER -->
+    <div class="fhd">
+      <div class="fhd-ico">📋</div>
+      <div>
+        <h3>Agency Information</h3>
+        <p>Complete all required fields to submit your application</p>
+      </div>
+    </div>
+
+    <!-- SCROLLABLE FORM BODY -->
+    <div class="fb">
+      <form class="fg" id="apForm" novalidate>
+
+        <!-- ① CONTACT DETAILS -->
+        <div class="sl">① Contact Details</div>
+        <div class="row2">
+          <div class="fw">
+            <label class="lb" for="f1">Agency / Company Name <span class="rq">*</span></label>
+            <input type="text" id="f1" placeholder="Agency or company name">
+            <div class="em" id="e1">Required</div>
+          </div>
+          <div class="fw">
+            <label class="lb" for="f2">Contact Person Name <span class="rq">*</span></label>
+            <input type="text" id="f2" placeholder="Full name">
+            <div class="em" id="e2">Required</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="fw">
+            <label class="lb" for="f3">Business Email <span class="rq">*</span></label>
+            <input type="email" id="f3" placeholder="business@example.com">
+            <div class="em" id="e3">Enter a valid email address</div>
+          </div>
+          <div class="fw">
+            <label class="lb" for="f4">Phone / WhatsApp Number <span class="rq">*</span></label>
+            <input type="tel" id="f4" placeholder="+1 234 567 8900">
+            <div class="em" id="e4">Required</div>
+          </div>
+        </div>
+
+        <!-- ② LOCATION & ONLINE PRESENCE -->
+        <div class="sl">② Location &amp; Online Presence</div>
+        <div class="row2">
+          <div class="fw">
+            <label class="lb">Country of Operation <span class="rq">*</span></label>
+            <div class="cs-wrap">
+              <div class="cs-inp">
+                <input type="text" id="f5disp" placeholder="Select country" readonly autocomplete="off">
+                <input type="hidden" id="f5">
+              </div>
+              <div class="cs-dd" id="csDd">
+                <div class="cs-search">
+                  <input type="text" id="csQ" placeholder="🔍  Search country..." autocomplete="off">
+                </div>
+                <div class="cs-list" id="csList"></div>
+              </div>
+            </div>
+            <div class="em" id="e5">Required</div>
+          </div>
+          <div class="fw">
+            <label class="lb" for="f6">City / Region <span class="rq">*</span></label>
+            <input type="text" id="f6" placeholder="Your city or region">
+            <div class="em" id="e6">Required</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="fw">
+            <label class="lb" for="f7">Company Website <span class="rq">*</span></label>
+            <input type="url" id="f7" placeholder="https://yourcompany.com">
+            <div class="em" id="e7">Enter a valid URL (https://...)</div>
+          </div>
+          <div class="fw">
+            <label class="lb" for="f8">Social Media Link <span class="rq">*</span></label>
+            <input type="url" id="f8" placeholder="https://instagram.com/yourpage">
+            <div class="em" id="e8">Enter a valid URL (https://...)</div>
+          </div>
+        </div>
+
+        <!-- ③ BUSINESS PROFILE -->
+        <div class="sl">③ Business Profile</div>
+        <div class="row3">
+          <div class="fw">
+            <label class="lb" for="f9">Type of Business <span class="rq">*</span></label>
+            <div class="sw">
+              <select id="f9">
+                <option value="" disabled selected>Select type</option>
+                <option>Travel Agency</option>
+                <option>Tour Operator</option>
+                <option>Corporate Travel Management</option>
+                <option>Luxury Concierge Service</option>
+                <option>Hotel / Hospitality</option>
+                <option>Airlines / Aviation</option>
+                <option>Event Management</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="em" id="e9">Required</div>
+          </div>
+          <div class="fw">
+            <label class="lb" for="f10">Years in Operation <span class="rq">*</span></label>
+            <div class="sw">
+              <select id="f10">
+                <option value="" disabled selected>Select range</option>
+                <option>Less than 1 year</option>
+                <option>1 – 3 years</option>
+                <option>4 – 7 years</option>
+                <option>8 – 15 years</option>
+                <option>15+ years</option>
+              </select>
+            </div>
+            <div class="em" id="e10">Required</div>
+          </div>
+          <div class="fw">
+            <label class="lb" for="f11">Est. Monthly Requests <span class="rq">*</span></label>
+            <div class="sw">
+              <select id="f11">
+                <option value="" disabled selected>Select range</option>
+                <option>1 – 10</option>
+                <option>11 – 50</option>
+                <option>51 – 100</option>
+                <option>101 – 300</option>
+                <option>300+</option>
+              </select>
+            </div>
+            <div class="em" id="e11">Required</div>
+          </div>
+        </div>
+
+        <!-- ④ SERVICES -->
+        <div class="sl">④ Services Interested In <span style="font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:#5A7A9E">(select all that apply)</span></div>
+        <div class="fw">
+          <div class="cbg" id="svcGrid">
+            <label class="cbi"><input type="checkbox" value="Meet & Greet"><span>✈ Meet &amp; Greet</span></label>
+            <label class="cbi"><input type="checkbox" value="Chauffeur Service"><span>🚗 Chauffeur Service</span></label>
+            <label class="cbi"><input type="checkbox" value="Fast Track"><span>⚡ Fast Track</span></label>
+            <label class="cbi"><input type="checkbox" value="Airport Assistance"><span>🤝 Airport Assistance</span></label>
+            <label class="cbi"><input type="checkbox" value="Lounge Access"><span>🛋 Lounge Access</span></label>
+            <label class="cbi"><input type="checkbox" value="Global Airport Services"><span>🌐 Global Airport Services</span></label>
+            <label class="cbi"><input type="checkbox" value="VIP Terminal"><span>💎 VIP Terminal</span></label>
+            <label class="cbi"><input type="checkbox" value="Baggage Handling"><span>🧳 Baggage Handling</span></label>
+          </div>
+          <div class="em" id="eSvc">Please select at least one service</div>
+        </div>
+
+        <!-- ⑤ ADDITIONAL INFORMATION (optional – click to expand) -->
+        <button type="button" class="sl-toggle" id="optionalToggle" aria-expanded="false" aria-controls="optionalPanel">
+          <span>
+            <span class="sl-title">⑤ Additional Information</span>
+            <span class="sl-hint">(optional – click to show)</span>
+          </span>
+          <span class="sl-arrow">▾</span>
+        </button>
+        <div class="optional-panel" id="optionalPanel">
+          <div class="row2">
+            <div class="fw">
+              <label class="lb" for="f12">Team Size <span class="opt">(optional)</span></label>
+              <div class="sw">
+                <select id="f12">
+                  <option value="" selected>Select size</option>
+                  <option>1 – 5</option>
+                  <option>6 – 20</option>
+                  <option>21 – 50</option>
+                  <option>51 – 100</option>
+                  <option>100+</option>
+                </select>
+              </div>
+            </div>
+            <div class="fw">
+              <label class="lb" for="f13">How did you hear about us? <span class="opt">(optional)</span></label>
+              <div class="sw">
+                <select id="f13">
+                  <option value="" selected>Select option</option>
+                  <option>Google Search</option>
+                  <option>Social Media</option>
+                  <option>Word of Mouth / Referral</option>
+                  <option>Industry Event / Conference</option>
+                  <option>Email Marketing</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="fw">
+            <label class="lb" for="f14">Additional Notes <span class="opt">(optional)</span></label>
+            <textarea id="f14" placeholder="Tell us about your business goals, current clients, or any questions for our partnership team..."></textarea>
+          </div>
+        </div>
+
+        <label class="agr">
+          <input type="checkbox" id="f15">
+          <span>I agree to the partnership terms and privacy policy, and confirm all information provided is accurate and truthful.</span>
+        </label>
+        <div class="em" id="e15">You must agree to the terms to continue</div>
+
+        <!-- Global submission error -->
+        <div class="gerr" id="gErr"></div>
+
+        <button type="submit" class="btn" id="submitBtn">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span id="btnText">Submit Partnership Application</span>
+        </button>
+      </form>
+
+      <!-- SUCCESS STATE -->
+      <div class="succ" id="succPanel">
+        <div class="sr">✓</div>
+        <div class="sline"></div>
+        <h2>Application Submitted!</h2>
+        <p>Thank you for your interest in partnering with Airport Passes. Our B2B team will review your application and get in touch shortly.</p>
+        <div class="sn">✅ Submission received — we'll be in touch soon</div>
+      </div>
+    </div><!-- /fb -->
+
+  </div><!-- /#apf -->
+</div><!-- /.ap-overlay -->
+
+<script>
+(function () {
+
+  var W3F_KEY = 'YOUR_ACCESS_KEY_HERE';
+
+  var countries = [
+    "Afghanistan","Albania","Algeria","Argentina","Australia","Austria",
+    "Bahrain","Bangladesh","Belgium","Brazil","Canada","Chile","China",
+    "Colombia","Croatia","Czech Republic","Denmark","Egypt","Ethiopia",
+    "Finland","France","Germany","Ghana","Greece","Hong Kong","Hungary",
+    "India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan",
+    "Jordan","Kenya","Kuwait","Lebanon","Malaysia","Mexico","Morocco",
+    "Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan",
+    "Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia",
+    "Saudi Arabia","Singapore","South Africa","South Korea","Spain",
+    "Sri Lanka","Sweden","Switzerland","Taiwan","Thailand","Tunisia",
+    "Turkey","Ukraine","United Arab Emirates","United Kingdom",
+    "United States","Vietnam","Zimbabwe"
+  ];
+
+  var disp = document.getElementById('f5disp');
+  var hid  = document.getElementById('f5');
+  var dd   = document.getElementById('csDd');
+  var qInp = document.getElementById('csQ');
+  var list = document.getElementById('csList');
+
+  function renderList(filter) {
+    list.innerHTML = '';
+    var filtered = filter
+      ? countries.filter(function (c) { return c.toLowerCase().includes(filter.toLowerCase()); })
+      : countries;
+    filtered.forEach(function (c) {
+      var d = document.createElement('div');
+      d.className = 'cs-opt' + (hid.value === c ? ' sel' : '');
+      d.textContent = c;
+      d.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        hid.value = c;
+        disp.value = c;
+        dd.classList.remove('open');
+        document.getElementById('e5').classList.remove('on');
+        disp.classList.remove('er');
+      });
+      list.appendChild(d);
+    });
+  }
+
+  disp.addEventListener('click', function () {
+    dd.classList.toggle('open');
+    if (dd.classList.contains('open')) { qInp.value = ''; renderList(''); qInp.focus(); }
+  });
+  qInp.addEventListener('input', function () { renderList(qInp.value); });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.cs-wrap')) dd.classList.remove('open');
+  });
+  renderList('');
+
+  document.querySelectorAll('#apf .sw select').forEach(function (sel) {
+    function upd() { sel.style.color = sel.value ? '#0B1829' : '#bbbbbb'; }
+    upd();
+    sel.addEventListener('change', upd);
+  });
+
+  var optionalToggle = document.getElementById('optionalToggle');
+  var optionalPanel = document.getElementById('optionalPanel');
+  if (optionalToggle && optionalPanel) {
+    optionalToggle.addEventListener('click', function () {
+      var isOpen = optionalPanel.classList.toggle('open');
+      optionalToggle.classList.toggle('open', isOpen);
+      optionalToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      optionalToggle.querySelector('.sl-hint').textContent = isOpen
+        ? '(optional – click to hide)'
+        : '(optional – click to show)';
+      if (isOpen) {
+        setTimeout(function () {
+          optionalPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 80);
+      }
+    });
+  }
+
+  function vField(fid, type) {
+    var el = document.getElementById('f' + fid);
+    var em = document.getElementById('e' + fid);
+    var ok = true;
+    if (type === 'email') { ok = !!el.value.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()); }
+    else if (type === 'url') { var x = el.value.trim(); ok = !!x && (x.startsWith('http://') || x.startsWith('https://')); }
+    else if (type === 'sel') { ok = !!el.value; }
+    else { ok = !!el.value.trim(); }
+    el.classList.toggle('er', !ok);
+    if (em) em.classList.toggle('on', !ok);
+    return ok;
+  }
+
+  function vCountry() {
+    var ok = !!hid.value;
+    disp.classList.toggle('er', !ok);
+    document.getElementById('e5').classList.toggle('on', !ok);
+    return ok;
+  }
+
+  function gv(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+  document.getElementById('apForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    var ok = true;
+    ok = vField(1,'text') && ok; ok = vField(2,'text') && ok;
+    ok = vField(3,'email') && ok; ok = vField(4,'text') && ok;
+    ok = vCountry() && ok;
+    ok = vField(6,'text') && ok; ok = vField(7,'url') && ok; ok = vField(8,'url') && ok;
+    ok = vField(9,'sel') && ok; ok = vField(10,'sel') && ok; ok = vField(11,'sel') && ok;
+
+    var svcs = [];
+    document.querySelectorAll('#svcGrid input:checked').forEach(function (c) { svcs.push(c.value); });
+    var hasSvc = svcs.length > 0;
+    document.getElementById('eSvc').classList.toggle('on', !hasSvc);
+    if (!hasSvc) ok = false;
+
+    var agreed = document.getElementById('f15').checked;
+    document.getElementById('e15').classList.toggle('on', !agreed);
+    if (!agreed) ok = false;
+
+    if (!ok) {
+      var first = document.querySelector('#apf .er');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    if (!W3F_KEY || W3F_KEY === 'YOUR_ACCESS_KEY_HERE') {
+      var ge = document.getElementById('gErr');
+      ge.textContent = '⚠ Form not configured — please add your Web3Forms Access Key.';
+      ge.classList.add('on');
+      return;
+    }
+
+    var messageBody =
+      '=== AIRPORT PASSES – PARTNERSHIP APPLICATION ===\n\n' +
+      '--- CONTACT DETAILS ---\n' +
+      'Agency / Company Name : ' + gv('f1') + '\n' +
+      'Contact Person        : ' + gv('f2') + '\n' +
+      'Business Email        : ' + gv('f3') + '\n' +
+      'Phone / WhatsApp      : ' + gv('f4') + '\n\n' +
+      '--- LOCATION & ONLINE PRESENCE ---\n' +
+      'Country of Operation  : ' + hid.value + '\n' +
+      'City / Region         : ' + gv('f6') + '\n' +
+      'Company Website       : ' + gv('f7') + '\n' +
+      'Social Media Link     : ' + gv('f8') + '\n\n' +
+      '--- BUSINESS PROFILE ---\n' +
+      'Type of Business      : ' + gv('f9') + '\n' +
+      'Years in Operation    : ' + gv('f10') + '\n' +
+      'Est. Monthly Requests : ' + gv('f11') + '\n\n' +
+      '--- SERVICES INTERESTED IN ---\n' +
+      svcs.join(', ') + '\n\n' +
+      '--- ADDITIONAL INFORMATION (optional) ---\n' +
+      'Team Size             : ' + (gv('f12') || 'Not provided') + '\n' +
+      'How They Heard of Us  : ' + (gv('f13') || 'Not provided') + '\n\n' +
+      'Additional Notes:\n' + (gv('f14') || 'Not provided');
+
+    var payload = {
+      access_key: W3F_KEY,
+      subject: 'Partnership Application – ' + gv('f1'),
+      name: gv('f2'),
+      email: gv('f3'),
+      message: messageBody,
+      'Agency Name': gv('f1'),
+      'Phone / WhatsApp': gv('f4'),
+      'Country': hid.value,
+      'City / Region': gv('f6'),
+      'Company Website': gv('f7'),
+      'Social Media': gv('f8'),
+      'Business Type': gv('f9'),
+      'Years in Operation': gv('f10'),
+      'Monthly Requests': gv('f11'),
+      'Services': svcs.join(', '),
+      'Team Size': gv('f12') || 'Not provided',
+      'How They Found Us': gv('f13') || 'Not provided'
+    };
+
+    var btn     = document.getElementById('submitBtn');
+    var btnText = document.getElementById('btnText');
+    var gErr    = document.getElementById('gErr');
+
+    btn.disabled = true;
+    btnText.textContent = 'Sending…';
+    gErr.classList.remove('on');
+
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (result) {
+      if (result.success) {
+        document.getElementById('apForm').classList.add('hide');
+        document.getElementById('succPanel').classList.add('on');
+      } else {
+        throw new Error(result.message || 'Submission failed. Please try again.');
+      }
+    })
+    .catch(function (err) {
+      btn.disabled = false;
+      btnText.textContent = 'Submit Partnership Application';
+      gErr.textContent = '⚠ ' + (err.message || 'Something went wrong. Please try again.');
+      gErr.classList.add('on');
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
