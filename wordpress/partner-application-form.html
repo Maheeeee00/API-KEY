@@ -289,6 +289,58 @@ textarea { resize: vertical; min-height: 62px; line-height: 1.6 !important; }
 }
 .gerr.on { display: block; }
 
+/* ── OPTIONAL COLLAPSE ── */
+.sl-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 3px;
+  padding: 10px 12px;
+  border: 1.5px solid #C8DAEF;
+  border-radius: var(--r);
+  background: #F4F8FE;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  text-align: left;
+  transition: background .18s, border-color .18s;
+}
+.sl-toggle:hover {
+  background: #EEF6FF;
+  border-color: #1A6FD4;
+}
+.sl-toggle .sl-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: #1A6FD4;
+}
+.sl-toggle .sl-hint {
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #5A7A9E;
+  margin-left: 6px;
+}
+.sl-toggle .sl-arrow {
+  font-size: 12px;
+  color: #1A6FD4;
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.sl-toggle.open .sl-arrow { transform: rotate(180deg); }
+.optional-panel {
+  display: none;
+  flex-direction: column;
+  gap: 11px;
+  margin-top: 11px;
+  padding-top: 4px;
+}
+.optional-panel.open { display: flex; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 600px) {
   .ap-overlay { padding: 0; align-items: flex-end; }
@@ -471,41 +523,48 @@ textarea { resize: vertical; min-height: 62px; line-height: 1.6 !important; }
           <div class="em" id="eSvc">Please select at least one service</div>
         </div>
 
-        <!-- ⑤ ADDITIONAL INFORMATION (optional) -->
-        <div class="sl">⑤ Additional Information <span style="font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:#5A7A9E">(optional)</span></div>
-        <div class="row2">
-          <div class="fw">
-            <label class="lb" for="f12">Team Size <span class="opt">(optional)</span></label>
-            <div class="sw">
-              <select id="f12">
-                <option value="" selected>Select size</option>
-                <option>1 – 5</option>
-                <option>6 – 20</option>
-                <option>21 – 50</option>
-                <option>51 – 100</option>
-                <option>100+</option>
-              </select>
+        <!-- ⑤ ADDITIONAL INFORMATION (optional – click to expand) -->
+        <button type="button" class="sl-toggle" id="optionalToggle" aria-expanded="false" aria-controls="optionalPanel">
+          <span>
+            <span class="sl-title">⑤ Additional Information</span>
+            <span class="sl-hint">(optional – click to show)</span>
+          </span>
+          <span class="sl-arrow">▾</span>
+        </button>
+        <div class="optional-panel" id="optionalPanel">
+          <div class="row2">
+            <div class="fw">
+              <label class="lb" for="f12">Team Size <span class="opt">(optional)</span></label>
+              <div class="sw">
+                <select id="f12">
+                  <option value="" selected>Select size</option>
+                  <option>1 – 5</option>
+                  <option>6 – 20</option>
+                  <option>21 – 50</option>
+                  <option>51 – 100</option>
+                  <option>100+</option>
+                </select>
+              </div>
+            </div>
+            <div class="fw">
+              <label class="lb" for="f13">How did you hear about us? <span class="opt">(optional)</span></label>
+              <div class="sw">
+                <select id="f13">
+                  <option value="" selected>Select option</option>
+                  <option>Google Search</option>
+                  <option>Social Media</option>
+                  <option>Word of Mouth / Referral</option>
+                  <option>Industry Event / Conference</option>
+                  <option>Email Marketing</option>
+                  <option>Other</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="fw">
-            <label class="lb" for="f13">How did you hear about us? <span class="opt">(optional)</span></label>
-            <div class="sw">
-              <select id="f13">
-                <option value="" selected>Select option</option>
-                <option>Google Search</option>
-                <option>Social Media</option>
-                <option>Word of Mouth / Referral</option>
-                <option>Industry Event / Conference</option>
-                <option>Email Marketing</option>
-                <option>Other</option>
-              </select>
-            </div>
+            <label class="lb" for="f14">Additional Notes <span class="opt">(optional)</span></label>
+            <textarea id="f14" placeholder="Tell us about your business goals, current clients, or any questions for our partnership team..."></textarea>
           </div>
-        </div>
-
-        <div class="fw">
-          <label class="lb" for="f14">Additional Notes <span class="opt">(optional)</span></label>
-          <textarea id="f14" placeholder="Tell us about your business goals, current clients, or any questions for our partnership team..."></textarea>
         </div>
 
         <label class="agr">
@@ -598,6 +657,24 @@ textarea { resize: vertical; min-height: 62px; line-height: 1.6 !important; }
     upd();
     sel.addEventListener('change', upd);
   });
+
+  var optionalToggle = document.getElementById('optionalToggle');
+  var optionalPanel = document.getElementById('optionalPanel');
+  if (optionalToggle && optionalPanel) {
+    optionalToggle.addEventListener('click', function () {
+      var isOpen = optionalPanel.classList.toggle('open');
+      optionalToggle.classList.toggle('open', isOpen);
+      optionalToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      optionalToggle.querySelector('.sl-hint').textContent = isOpen
+        ? '(optional – click to hide)'
+        : '(optional – click to show)';
+      if (isOpen) {
+        setTimeout(function () {
+          optionalPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 80);
+      }
+    });
+  }
 
   function vField(fid, type) {
     var el = document.getElementById('f' + fid);
