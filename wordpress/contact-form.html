@@ -176,8 +176,7 @@
 </style>
 
 <script>
-// Replace with your NEW deployment /exec URL after deploying Code.gs
-const SCRIPT_URL = 'PASTE_YOUR_NEW_DEPLOY_URL_HERE';
+const W3F_ACCESS_KEY = 'ed8cf93a-ea5e-40b4-9b39-e7bb29f95b41';
 
 async function submitForm() {
     const name    = document.getElementById('name').value.trim();
@@ -195,35 +194,44 @@ async function submitForm() {
     }
     errMsg.style.display = 'none';
 
-    if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) {
-        alert('Form is not configured yet. Add your Google Apps Script /exec URL.');
-        return;
-    }
-
     const btn = document.querySelector('.submit-btn');
     btn.disabled = true;
     document.getElementById('btn-text').textContent = 'Sending...';
 
+    const formattedMessage = [
+        'Contact Form Submission',
+        '',
+        'Name    : ' + name,
+        'Email   : ' + email,
+        'Phone   : ' + (phone || 'Not provided'),
+        'Subject : ' + (subject || 'Not provided'),
+        '',
+        'Message:',
+        message || '(No message)'
+    ].join('\n');
+
+    const payload = {
+        access_key: W3F_ACCESS_KEY,
+        subject: subject ? 'Contact Form: ' + subject : 'Contact Form - Airport Passes',
+        name: name,
+        email: email,
+        replyto: email,
+        from_name: 'Airport Passes Contact Form',
+        message: formattedMessage,
+        Phone: phone || 'Not provided',
+        'Subject Line': subject || 'Not provided'
+    };
+
     try {
-        const res = await fetch(SCRIPT_URL, {
+        const res = await fetch('https://api.web3forms.com/submit', {
             method: 'POST',
-            redirect: 'follow',
-            // text/plain avoids CORS preflight issues with Google Apps Script
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ name, email, phone, subject, message })
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
-        const text = await res.text();
-        let result;
+        const result = await res.json();
 
-        try {
-            result = JSON.parse(text);
-        } catch (parseErr) {
-            console.error('Server response:', text);
-            throw new Error('Server returned an invalid response. Redeploy your Apps Script web app.');
-        }
-
-        if (result.status === 'success') {
+        if (result.success) {
             document.getElementById('form-container').style.display = 'none';
             document.getElementById('success-msg').style.display = 'block';
         } else {
