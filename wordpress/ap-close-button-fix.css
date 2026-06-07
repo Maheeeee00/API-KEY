@@ -1,0 +1,127 @@
+/* Airport Passes booking form — close button always visible (all steps/devices) */
+
+#apMegaWrap .ap-shell {
+  overflow: visible !important;
+}
+
+#apMegaWrap .ap-container {
+  overflow: visible !important;
+  max-height: min(92vh, 920px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-top: 12px !important;
+}
+
+#apMegaWrap .ap-form-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10001 !important;
+  background: #fff !important;
+  padding: 8px 48px 12px 8px !important;
+  margin: 0 0 14px !important;
+  flex-shrink: 0 !important;
+  border-bottom: 1.5px solid var(--border) !important;
+}
+
+#apMegaWrap .ap-close-btn {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 10002 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important;
+}
+
+#apMegaWrap #apMegaForm {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#apMegaWrap .section.active {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+#apMegaWrap .ap-sec-heading {
+  position: relative !important;
+  top: auto !important;
+  z-index: 1 !important;
+  flex-shrink: 0 !important;
+}
+
+#apMegaWrap .ap-sec-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: min(420px, calc(92vh - 230px)) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+@media (max-width: 860px) {
+  #apMegaWrap .ap-sec-scroll {
+    max-height: min(400px, calc(90vh - 220px)) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  #apMegaWrap {
+    padding: 8px !important;
+  }
+
+  #apMegaWrap .ap-container {
+    padding: 10px 10px 14px !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 12px !important;
+  }
+
+  #apMegaWrap .ap-form-header {
+    padding: 6px 42px 10px 6px !important;
+    margin-bottom: 10px !important;
+  }
+
+  #apMegaWrap .ap-close-btn {
+    top: 6px !important;
+    right: 6px !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+
+  #apMegaWrap .ap-sec-scroll {
+    max-height: calc(100dvh - 250px) !important;
+  }
+
+  #apMegaWrap .steps {
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #apMegaWrap .ap-close-btn {
+    top: 5px !important;
+    right: 5px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+
+  #apMegaWrap .ap-sec-scroll {
+    max-height: calc(100dvh - 235px) !important;
+  }
+}
+
+/* Elementor popup — avoid clipping the sticky header / close button */
+.elementor-popup-modal .dialog-message,
+.elementor-popup-modal .dialog-widget-content,
+.elementor-location-popup .dialog-message {
+  overflow: visible !important;
+}
