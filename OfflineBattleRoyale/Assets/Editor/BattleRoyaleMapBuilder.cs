@@ -16,6 +16,32 @@ public static class BattleRoyaleMapBuilder
   [MenuItem("Battle Royale/Build Complete Free Fire Style Map")]
   public static void BuildCompleteMap()
   {
+    BuildCompleteMapInternal(silent: false);
+  }
+
+  [MenuItem("Battle Royale/Regenerate Map (Clear and Rebuild)")]
+  public static void RegenerateMapMenu()
+  {
+    RegenerateMap(silent: false);
+  }
+
+  public static void RegenerateMap(bool silent)
+  {
+    if (!silent && !EditorUtility.DisplayDialog(
+          "Regenerate Map",
+          "This deletes the old scene, prefabs, and terrain data, then rebuilds everything fresh.\n\nContinue?",
+          "Regenerate",
+          "Cancel"))
+    {
+      return;
+    }
+
+    ClearGeneratedContent();
+    BuildCompleteMapInternal(silent: silent);
+  }
+
+  private static void BuildCompleteMapInternal(bool silent)
+  {
     EnsureFolders();
     Dictionary<string, GameObject> modelPrefabs = ImportModelPrefabs();
     CreateLootPrefabs(modelPrefabs);
@@ -37,7 +63,51 @@ public static class BattleRoyaleMapBuilder
     AssetDatabase.SaveAssets();
     AssetDatabase.Refresh();
 
-    Debug.Log("Free Fire style map built! Open Assets/Scenes/BattleRoyaleIsland.unity and press Play.");
+    string message = "Free Fire style map built! Open Assets/Scenes/BattleRoyaleIsland.unity and press Play.";
+    if (silent)
+    {
+      Debug.Log(message);
+    }
+    else
+    {
+      EditorUtility.DisplayDialog("Map Ready", message, "OK");
+      EditorSceneManager.OpenScene(ScenePath);
+    }
+  }
+
+  private static void ClearGeneratedContent()
+  {
+    string[] generatedPaths =
+    {
+      ScenePath,
+      "Assets/Scenes/IslandTerrainData.asset",
+      "Assets/Scenes/TerrainLayer_Sand.terrainlayer",
+      "Assets/Scenes/TerrainLayer_Grass.terrainlayer",
+      "Assets/Scenes/TerrainTex_Sand.asset",
+      "Assets/Scenes/TerrainTex_Grass.asset",
+      "Assets/Scenes/SafeZoneMat.mat"
+    };
+
+    foreach (string path in generatedPaths)
+    {
+      if (File.Exists(path))
+      {
+        AssetDatabase.DeleteAsset(path);
+      }
+    }
+
+    if (Directory.Exists(PrefabRoot))
+    {
+      string[] prefabGuids = AssetDatabase.FindAssets("", new[] { PrefabRoot });
+      foreach (string guid in prefabGuids)
+      {
+        AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid));
+      }
+    }
+
+    AssetDatabase.SaveAssets();
+    AssetDatabase.Refresh();
+    Debug.Log("Cleared old battle royale scene and prefabs.");
   }
 
   private static void EnsureFolders()

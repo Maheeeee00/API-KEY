@@ -40,12 +40,19 @@ Assets/Scripts/
 ## Quick Start
 
 1. **Open in Unity** — `File > Open Project` → select `OfflineBattleRoyale/`.
-2. **Build the map (one click)** — Menu: **Battle Royale → Build Complete Free Fire Style Map**
-   - Creates island terrain, places 300+ CC0 buildings/trees/props
-   - Imports Quaternius gun models (AK47, SCAR, MP40, M1014, AWM)
-   - Spawns loot prefabs, player, 49 bots, UI, safe zone
-   - Saves scene to `Assets/Scenes/BattleRoyaleIsland.unity`
+2. **Build or regenerate the map** — Unity top menu:
+   - **Battle Royale → Build Complete Free Fire Style Map** (first time)
+   - **Battle Royale → Regenerate Map (Clear and Rebuild)** (fresh island)
+   - Or just press **Play** — Unity will ask to regenerate if no scene exists yet
 3. **Press Play** — Jump from the plane (Space), loot weapons, survive the zone.
+
+### Regenerate anytime
+
+If the map looks broken or you want a fresh island:
+
+**Battle Royale → Regenerate Map (Clear and Rebuild)**
+
+This deletes the old scene and prefabs, then rebuilds everything.
 
 ### Included 3D Assets (CC0)
 
