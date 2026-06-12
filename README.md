@@ -40,11 +40,19 @@ Assets/Scripts/
 ## Quick Start
 
 1. **Open in Unity** — `File > Open Project` → select `OfflineBattleRoyale/`.
-2. **Create the island scene** — Follow `Assets/Scenes/README.md` for hierarchy and component wiring.
-3. **Bake NavMesh** — Required for bot movement.
-4. **Create loot prefabs** — Weapon/medkit/gear pickups with `LootTag` + pickup scripts.
-5. **Assign references** — Wire `GameManager`, `ItemSpawner`, `BotSpawnManager`, and UI in the Inspector.
-6. **Press Play** — Jump from the plane (Space), loot weapons, survive the zone.
+2. **Build the map (one click)** — Menu: **Battle Royale → Build Complete Free Fire Style Map**
+   - Creates island terrain, places 300+ CC0 buildings/trees/props
+   - Imports Quaternius gun models (AK47, SCAR, MP40, M1014, AWM)
+   - Spawns loot prefabs, player, 49 bots, UI, safe zone
+   - Saves scene to `Assets/Scenes/BattleRoyaleIsland.unity`
+3. **Press Play** — Jump from the plane (Space), loot weapons, survive the zone.
+
+### Included 3D Assets (CC0)
+
+Free low-poly assets styled like Free Fire — see `Assets/Art/CREDITS.md`:
+
+- **Kenney** — Buildings, trees, rocks, crates (City Kit, Modular Buildings, Survival Kit)
+- **Quaternius** — 50+ gun models mapped to in-game weapons
 
 ## Controls
 

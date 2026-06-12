@@ -1,5 +1,13 @@
 # Scene Setup
 
+## Automatic (recommended)
+
+In Unity, click **Battle Royale → Build Complete Free Fire Style Map**.
+
+This creates `BattleRoyaleIsland.unity` with terrain, buildings, trees, weapons, loot, bots, and UI.
+
+## Manual setup
+
 Create a scene named `BattleRoyaleIsland.unity` and wire these objects:
 
 ## Hierarchy
